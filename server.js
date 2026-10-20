@@ -18,6 +18,14 @@ var numCPUs = require('os').cpus().length;
 var rimraf = require("rimraf");
 var restartPolicy = require('./lib/restartPolicy');
 
+// Keys come from the environment: .env locally (see .env.example), /etc/vlr/env
+// on the server. Without a session secret express-session still starts but
+// breaks logins, so refuse to start instead.
+if (!config.session.secret) {
+    console.error('SESSION_SECRET is not set. Copy .env.example to .env (or set it in /etc/vlr/env on the server).');
+    process.exit(1);
+}
+
 function cleanUpOldFiles() {
     var uploadsDir = __dirname + '/uploads';
     fs.readdir(uploadsDir, function(err, files) {

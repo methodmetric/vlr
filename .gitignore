@@ -10,3 +10,6 @@ Scripts/.optimize_s3_failures.json
 config/aws.json
 docs/VLR website handover - final.md
 .DS_Store
+# Environment files hold real keys; only the example is committed
+.env*
+!.env.example

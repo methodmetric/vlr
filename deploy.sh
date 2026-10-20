@@ -8,6 +8,9 @@ set -uo pipefail
 
 APP_DIR=/opt/vlr/app   # must match WorkingDirectory in vlr.service
 APP_USER=vlr           # must match User/Group in vlr.service
+ENV_FILE=${ENV_FILE:-/etc/vlr/env}   # must match EnvironmentFile in vlr.service
+# Keys the site reads from ENV_FILE (see .env.example). Checked before anything is stopped.
+REQUIRED_ENV="SESSION_SECRET MAILGUN_API_KEY AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION"
 BRANCH=${1:-main}
 
 cd "$(dirname "$0")" || { echo "ERROR: cannot cd to script dir"; exit 1; }
@@ -19,6 +22,19 @@ git pull --ff-only origin "$BRANCH" || { echo "ERROR: git pull failed"; exit 1; 
 
 echo "==> Installing dependencies from package-lock.json..."
 npm ci --omit=dev || { echo "ERROR: npm ci failed"; exit 1; }
+
+echo "==> Checking $ENV_FILE..."
+# The code holds no keys; without them the new release can't log anyone in,
+# upload images or send email. Abort while the old release is still serving.
+missing=""
+for var in $REQUIRED_ENV; do
+  sudo grep -q "^$var=." "$ENV_FILE" 2>/dev/null || missing="$missing $var"
+done
+if [ -n "$missing" ]; then
+  echo "ERROR: missing or empty in $ENV_FILE:$missing"
+  echo "Add them (values: .env.production, or the password manager) and re-run. Nothing was changed."
+  exit 1
+fi
 
 echo "==> Stopping server..."
 # Stop before copying so a re-forked worker never loads a mix of old and new files.

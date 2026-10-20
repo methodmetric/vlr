@@ -8,7 +8,6 @@ var AdminModel = require('../models/admins').Admin;
 var AWS = require('aws-sdk');
 var config = require('config-lite')(__dirname);
 
-AWS.config.loadFromPath('config/aws.json');
 var s3 = new AWS.S3({
     params: {
         Bucket: config.bucket

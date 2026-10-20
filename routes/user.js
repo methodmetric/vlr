@@ -12,7 +12,6 @@ var default_img = "/img/1.Richmond-3Bedroom.png"
 var AWS = require('aws-sdk');
 var config = require('config-lite')(__dirname);
 
-AWS.config.loadFromPath('config/aws.json');
 var s3 = new AWS.S3({
     params: {
         Bucket: config.bucket

@@ -12,7 +12,6 @@ var resourcePages = require('../lib/resourcePages');
 var forRentPages = require('../lib/forRentPages');
 var propertiesRouter = require('./properties');
 
-AWS.config.loadFromPath('config/aws.json');
 var s3 = new AWS.S3({
   params: {
     Bucket: config.bucket,

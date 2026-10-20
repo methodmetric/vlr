@@ -1,7 +1,7 @@
 module.exports = {
   port: 80,
   session: {
-    secret: 'REDACTED-SESSION-SECRET',
+    secret: process.env.SESSION_SECRET,
     key: 'VLR',
     maxAge: 99999999999
   },

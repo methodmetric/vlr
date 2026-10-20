@@ -50,7 +50,7 @@ Server listens on port **3000** in dev, port **80** in production.
 
 ### Config
 
-Uses `config-lite` keyed off `__dirname` from `server.js`. Reads `config/default.js` in development, `config/production.js` when `NODE_ENV=production`. AWS credentials live in `config/aws.json` (loaded directly with `AWS.config.loadFromPath`).
+Uses `config-lite` keyed off `__dirname` from `server.js`. Reads `config/default.js` in development, `config/production.js` when `NODE_ENV=production`. Secrets come from environment variables, never the code: `SESSION_SECRET`, `MAILGUN_API_KEY`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` (the AWS SDK reads the last three itself), plus optional `MONGO_URL`. Locally they're in `.env` (template: `.env.example`), loaded by `npm run dev` via `node --env-file-if-exists=.env`; on the server they're in `/etc/vlr/env`, loaded by `vlr.service`. `.env.production` is a local, gitignored reference copy of the production values. `server.js` exits at startup if `SESSION_SECRET` is missing.
 
 ### Routing Tree
 

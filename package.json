@@ -5,8 +5,8 @@
   "main": "server.js",
   "scripts": {
     "test": "node test/unit/restartPolicy.test.js && node --test test/unit/mongooseCompat.test.js test/unit/imageProcessing.test.js",
-    "dev": "nodemon server.js",
-    "prod": "NODE_ENV=production nodemon server.js"
+    "dev": "nodemon --exec \"node --env-file-if-exists=.env\" server.js",
+    "prod": "NODE_ENV=production nodemon --exec \"node --env-file-if-exists=.env\" server.js"
   },
   "repository": {
     "type": "git",

@@ -25,7 +25,6 @@ var upload = multer({
 var config = require("config-lite")(__dirname);
 
 var AWS = require("aws-sdk");
-AWS.config.loadFromPath("config/aws.json");
 var s3 = new AWS.S3({
   params: {
     Bucket: config.bucket,

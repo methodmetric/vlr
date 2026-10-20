@@ -159,7 +159,6 @@ if (!apply) {
     console.log('DRY RUN — nothing will be written. Pass --apply to make changes.\n');
 }
 
-AWS.config.loadFromPath(path.join(__dirname, '..', 'config', 'aws.json'));
 var s3 = new AWS.S3({ maxRetries: 5 });
 var BUCKET = config.bucket;
 

@@ -17,7 +17,6 @@ var uploadedFilesPath = "uploads/";
 var config = require('config-lite')(__dirname);
 
 // set aws
-aws.config.loadFromPath('./config/aws.json');
 var s3 = new aws.S3();
 var vlrImages = {Bucket: config.bucket};
 s3.createBucket(vlrImages);
