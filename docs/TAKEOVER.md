@@ -1,0 +1,223 @@
+# VLR Takeover Notes
+
+Everything our team knows about VancouverLuxuryRentals.com (VLR) after taking it over from the previous vendor. Last updated 2026-10-20.
+
+The previous vendor's contract has ended and they will not answer further questions. This document is the source of truth from here on. The vendor's own documents (`HANDOVER.md`, `ARCHITECTURE.md`, `CLAUDE.md`, `TESTING.md`, `docs/VLR website handover - final.md`) still describe the old Node 8 servers in places. Where they disagree with this file, this file wins.
+
+**How facts are marked**
+- **verified**: we checked it ourselves (the code, the live site, DNS/whois, or read-only AWS and Mailgun API calls on 2026-10-19 and 10-20).
+- **per vendor**: stated in the vendor's final emails of 2026-10-20 and not yet checked by us.
+
+No passwords or keys are written here. See [Secrets](#secrets) for where they live.
+
+---
+
+## 1. Status at a glance
+
+| Area | State |
+|---|---|
+| Code | We hold the full source as `vlr-upgrade-new-vm.zip` (commit `dedbc40`). Installs cleanly, 41/41 tests pass on Node 24 and 26, boots locally. **verified** |
+| Git history | None. The vendor deployed from their own private GitHub repo, which is not part of the handover. Bitbucket is shut down. **per vendor** |
+| Production | Runs on EC2 `vlr-prod-2026`. We don't have shell access yet. |
+| Accounts | AWS, Mailgun, GoDaddy and Google all belong to VLR. **per vendor** |
+| Database | Only copy is on `vlr-prod-2026`, plus AWS snapshots of its data disk. We have no copy of our own yet. |
+| Security | Several passwords are known to the vendor and are written in the code. AWS root currently has **no two-factor**. See [section 8](#8-security-and-access-checklist). |
+| Monitoring | None. |
+
+---
+
+## 2. People
+
+| Who | Role |
+|---|---|
+| Shahram | Client contact at VLR. Has SuperAdmin on `/VLR-admin`. |
+| Annie, Lisa, Sadhbh | VLR staff with SuperAdmin on `/VLR-admin`. **per vendor** |
+| Sean / Annie | Contact on the AWS account (Vancouver Luxury Realty office number). **per vendor** |
+| jesse@methodandmetric.com | Has SuperAdmin on `/VLR-admin`. Unknown who this is. **Ask Shahram.** |
+| Edward (Ed), Oscar | Previous vendor. Contract ended 2026-10-20. |
+| Aman, Jose | Our team. |
+
+---
+
+## 3. Accounts and services
+
+| Service | Owner | Login | Notes |
+|---|---|---|---|
+| AWS | VLR, paid with VLR's card (**per vendor**) | Root: `webadmin@vlr.ca` | Region `us-west-2`. Vendor removed their MFA device; **root has no 2FA right now**. A root access key created 2026-10-06 must be deleted. Only IAM user is `vlr-web` (used by the site). |
+| Google (`webadmin@vlr.ca`) | VLR | Vendor sending via secure channel | Owns Tag Manager `GTM-K2XTMZ6S`, Google Ads `AW-947376741` and Search Console. Also the AWS root email and the Mailgun login, so whoever controls this mailbox controls all of those. GA4 unknown; if it exists it's set up in Tag Manager. |
+| Google Workspace (`vlr.ca`) | VLR | Admin **unknown** | Hosts email for all three main domains. The Workspace admin can reset `webadmin@` and `administrator@`. **Ask Shahram who it is.** |
+| Mailgun | VLR (**per vendor**) | `webadmin@vlr.ca` (reset password from that mailbox) | Sending domain `mg.vancouverluxuryrentals.com`. Account also holds `onepromisesolution.com` (vendor's 2018 test domain, delete) and two unverified `ec2-…amazonaws.com` domains (delete). `mg.vancouverluxuryrental.com` (singular) is a parked domain for sale, not VLR's. **verified** |
+| Cloudflare | VLR | `administrator@vlr.ca` | DNS, proxy and HTTPS for all five domains. Our team can log in. **verified** |
+| GoDaddy | VLR's own account (**per vendor**) | Unknown; vendor never had access | All five domains. Who pays auto-renew is unknown. **Ask Shahram.** |
+| `/VLR-admin` | VLR | Per-person accounts | Vendor deleted their own admin accounts. Ask any SuperAdmin to create ours (`/VLR-admin` → New Admin → SuperAdmin). |
+| GitHub (vendor) | Vendor | n/a | Private repo the server used to pull from. Not handed over; deploy key removed. **per vendor** |
+| Bitbucket `vlr_website/vlr_website` | n/a | n/a | Shut down. The URL in `package.json` is a leftover. **per vendor**; our key was refused (**verified**). |
+
+### Domains (all at GoDaddy, DNS on Cloudflare) **verified**
+
+| Domain | What it does | Expires |
+|---|---|---|
+| vancouverluxuryrentals.com | The main site (this codebase). `blog.` subdomain → WordPress blog. | 2030-02-09 |
+| vancouverluxuryrealty.com | Email domain; site sends from `info@vancouverluxuryrealty.com`. | 2030-11-21 |
+| vlr.ca | Google Workspace domain for `webadmin@` and `administrator@`. | 2031-05-06 |
+| burnabyluxuryrentals.com | Redirects to the main site's Burnaby page. Its email (MX) goes to GoDaddy's mail service, not Google Workspace like the other domains. | **2027-05-21** |
+| easyrent.ca | Separate EasyRent WordPress site hosted on Google Cloud (35.215.69.32). Not managed by the vendor; hosting and WordPress logins unknown. | **2027-05-10** |
+
+---
+
+## 4. Servers (AWS EC2, us-west-2)
+
+| Instance | State (2026-10-20) | What it is | Plan |
+|---|---|---|---|
+| **vlr-prod-2026** | running | **Production.** 32.191.149.254, t3.large, launched 2026-10-16. | Keep. |
+| vlr-prod | running (website stopped) | Old production, 34.217.51.226. Kept by the vendor as a rollback. Nothing written to its database after the move. | Final snapshot, then terminate once the move is confirmed. |
+| vlr-staging | stopped 2026-10-17 | Old dev server (was 18.237.239.200, `dev.` DNS removed). | Terminate once the move is confirmed. |
+| wordpress-bitami | running | `blog.vancouverluxuryrentals.com`, WordPress 6.5.13 on a Bitnami image running **Debian 10, which stopped getting security updates in 2024**. Ports 22, 80 and 443 are open to the internet. Last post Aug 2024, not linked from the main site. | Decide soon: rebuild on a supported OS, or retire it. |
+| easyrent-prod | stopped 2026-10-20 | Backend of the old EasyRent admin/beta. Final snapshot taken 2026-10-20 ("final archive before termination"). | Terminate. Delete `admin.easyrent.ca` and `beta.easyrent.ca` DNS records. |
+| easyrent-dev, easyrent-back, easy_rent_dev_old | stopped since 2020–2022 | Not VLR, unused. | Terminate. |
+
+State and snapshots **verified**; descriptions **per vendor**.
+
+### Production server: vlr-prod-2026
+
+| | |
+|---|---|
+| Access | AWS console → EC2 → vlr-prod-2026 → Connect → **EC2 Instance Connect**, user `ubuntu`. Then add our key (`~/.ssh/vlr_prod.pub`) to `~/.ssh/authorized_keys`. **per vendor** |
+| OS | Probably Ubuntu 24.04 (the unit file mentions systemd 255). Unconfirmed. |
+| Node | 24.22.0 LTS (supported to April 2028). **per vendor** (an earlier vendor email said 26; this is the correction) |
+| App | `/opt/vlr/app`, run by `vlr.service` as user `vlr`, binds port 80 directly. **verified from the zip** |
+| Config | `/etc/vlr/env` sets `NODE_ENV` and `MONGO_URL`. Not in the repo. **verified from the zip** |
+| Database | MongoDB on the same machine (8.x per the code comments). Moved here 2026-10-17 00:13 UTC. **per vendor** |
+| Disks | 200 GiB root + 20 GiB second disk, both encrypted. Daily AWS snapshots of the 20 GiB disk only. **verified** |
+| Network | Behind Cloudflare. Port 80 and 22 are open to the internet; 443 is closed (Cloudflare handles HTTPS). **verified** |
+| EC2 key pair | `vlr-production` (also on old vlr-prod). Vendor says they removed their keys; confirm in `authorized_keys`. |
+
+### Deploying
+
+`deploy.sh` in the zip is the current script for this server (not Node 8, despite what the docs say). It:
+1. pulls the branch from git (`origin`), runs `npm ci --omit=dev`
+2. stops `vlr.service` and copies the code to `/opt/vlr/app` (keeping `uploads/` and `log/`)
+3. installs `vlr.service`, starts it, and waits for `http://localhost/` to return 200
+
+It must run from a git checkout on the server, so **we need our own repo first** (see [section 9](#9-open-items)). The vendor warns: don't deploy any older copy of the code.
+
+---
+
+## 5. The code
+
+The zip is commit `dedbc40`, which the vendor says is exactly what's running. Folder-by-folder guide: https://claude.ai/artifact/3ouYCEkfiwtpZHjGKemt4v
+
+- **Stack:** Node/Express 4, EJS templates, MongoDB via Mongoose 8, sharp for image watermarking, AWS SDK v2 for S3, nodemailer + Mailgun.
+- **Upgrade layer:** `lib/mongooseCompat.js` lets the old Mongoose 4 callback code run on Mongoose 8. `lib/imageProcessing.js` replaced the old `images` package. `lib/restartPolicy.js` stops crash loops. All three have tests.
+- **Run locally:** `npm ci`, then `npm run dev` (port 3000). Needs MongoDB at `mongodb://localhost:27017/VLR` or `MONGO_URL`. There is no `.npmrc` despite what the docs say.
+- **Tests:** `npm test` runs 41 unit tests (Node's built-in runner). No tests for routes, SEO or email.
+- **S3 bucket name** `vancouverluxuryrental.com` is in `config/` and hardcoded in 5 more places (`lib/seoHelpers.js`, `views/listing.ejs`, `views/myFavorites.ejs` ×2, `views/tenant-forms.ejs`).
+
+### Known issues **verified**
+
+- `/properties/debug-search` is public and returns property data.
+- `/VLR-admin/maintenance` and `/VLR-admin/inspection` render views that don't exist; the admin menu links to Maintenance.
+- `routes/sell.js` and `routes/availability.js` are unused.
+- `og:image` URLs use the S3 website endpoint, which doesn't serve images, so shared links have no preview image.
+- Missing pages return HTTP 200 instead of 404.
+- `https://vancouverluxuryrentals.com/` (the bare-domain homepage) redirects to `http://www.vancouverluxuryrentals.com`, not `https://`, so visitors take one extra hop to reach HTTPS. **verified** This redirect is a **Cloudflare rule**, not the site's code: the response comes from Cloudflare with no `X-Powered-By: Express`, while other bare-domain paths (e.g. `/for-rent/richmond`) are redirected correctly to `https://www.…` by `server.js`. Fix: in Cloudflare → Rules (Redirect Rules or Page Rules), change the target to `https://`.
+- Views still include two Universal Analytics IDs, which Google has shut down.
+- `npm audit`: 33 vulnerable dependencies (10 critical), mostly via `nodemailer`, `nodemailer-mailgun-transport`, `config-lite`, `ejs`.
+- AWS SDK v2 is end-of-support.
+- The zip's text files have Windows (CRLF) line endings. Harmless for the app; run `dos2unix *.sh vlr.service` if copying scripts straight to Linux.
+
+---
+
+## 6. Secrets
+
+All committed in plain text in the zip:
+
+| Where | What | Action |
+|---|---|---|
+| `config/aws.json` | Access key for IAM user `vlr-web` (S3 + read access to EC2) | Rotate after we have our own repo; update the server too. |
+| `lib/mailer.js` | Mailgun API key, repeated 8 times | Rotate after taking over Mailgun; move to `/etc/vlr/env`. |
+| `config/default.js`, `config/production.js` | Session secret | Rotate (logs everyone out). |
+| `README.md` (bottom) | Cloudflare login and password | Change the password; delete from README. |
+| `docs/VLR website handover - final.md` (bottom) | AWS root and Cloudflare logins | Same password as above. Remove from the file. **Don't commit this file with passwords in it.** |
+
+The AWS root, Cloudflare and README passwords are **the same password**, and the vendor knows it, plus the `webadmin@vlr.ca` password.
+
+**Unresolved:** the vendor's final email says to "fill in the real keys first (see SECRETS-TO-FILL.md)" and that placeholders would break "photo uploads, email and the daily backup". Our zip has no `SECRETS-TO-FILL.md`, contains the real keys (not placeholders), and has no backup code. Either a later package exists that we never received, or the vendor is misremembering. **Resolve by comparing `/opt/vlr/app` on the server with the zip.**
+
+---
+
+## 7. Data and backups
+
+- **Database:** only on vlr-prod-2026. Holds listings, admin logins, tenants (names, emails, phones), owner leads, viewing requests, redirects. Tenant data is covered by BC's PIPA.
+- **AWS snapshots:** a scheduled policy (`policy-03fe8bd0aa0dcdae0`) snapshots the 20 GiB disk daily. Retention unknown. The 200 GiB root disk isn't snapshotted. Restores have never been tested. **verified**
+- **Old vlr-prod:** monthly snapshots on the 7th (last 2026-10-07). **verified**
+- **"Daily backup":** mentioned by the vendor, not found in the code. Check the server for a cron job.
+- **Photos:** S3 bucket `vancouverluxuryrental.com`, ~68,000 objects / ~71 GB. Versioning on, no lifecycle rule, so every original is recoverable. **verified**
+
+### Image optimization (paused)
+`Scripts/optimize_s3_images.js` compresses existing photos (JPEG quality 82, about −80%). Only properties 3606 and 5810 are done. No job is running or scheduled (**per vendor**). Full instructions in `IMAGE_OPTIMIZATION.md`; the vendor says it's tested and safe to follow. **Do not add an S3 lifecycle rule that expires old versions until the client approves the quality**: that permanently deletes the originals.
+
+---
+
+## 8. Security and access checklist
+
+### Today
+- [ ] AWS root: sign in, add our own MFA device, change the password
+- [ ] AWS root: delete the root access key created 2026-10-06 (Security credentials)
+- [ ] AWS: update the account contact details if needed (Account → Contact information)
+- [ ] `webadmin@vlr.ca`: when the vendor sends it, change the password, add 2FA, check the recovery email and phone aren't the vendor's, sign out other sessions
+- [ ] Cloudflare: change the password, add 2FA, review Members
+- [ ] EC2: delete key pair `vlr-blog2` (vendor holds its private key)
+
+### This week
+- [ ] Get onto vlr-prod-2026 via EC2 Instance Connect; add our SSH key
+- [ ] Take our own `mongodump` and store it somewhere we control
+- [ ] Compare `/opt/vlr/app` with the zip (resolves the SECRETS-TO-FILL question)
+- [ ] Copy `/etc/vlr/env` and `/etc/mongod.conf` into our own records (not the repo)
+- [ ] Check `authorized_keys` on vlr-prod-2026 and wordpress-bitami for leftover vendor keys
+- [ ] Look for the vendor's "daily backup" (crontab, systemd timers)
+- [ ] Take over Mailgun via `webadmin@`; create a new API key
+- [ ] Set up our own git repo from the zip
+- [ ] Set up uptime monitoring and automated database backups to S3
+
+### Cleanup, after the move is confirmed
+- [ ] Final snapshot of vlr-prod, then terminate it
+- [ ] Terminate vlr-staging, easyrent-prod, easyrent-dev, easyrent-back, easy_rent_dev_old
+- [ ] Delete `admin.easyrent.ca` and `beta.easyrent.ca` DNS records
+- [ ] Delete `onepromisesolution.com` and the two `ec2-…` domains from Mailgun
+- [ ] Rotate the `vlr-web` AWS key, the Mailgun key and the session secret; move them out of the code
+- [ ] Decide on the blog: its server runs Debian 10 (no security updates since 2024), so rebuild it on a supported OS or retire wordpress-bitami
+- [ ] Ask Shahram whether anyone uses email at burnabyluxuryrentals.com (it goes to GoDaddy mail); if not, remove the MX record
+
+---
+
+## 9. Open items
+
+### Ask Shahram
+- Who administers Google Workspace for `vlr.ca`?
+- Can someone create SuperAdmin accounts on `/VLR-admin` for our team?
+- Whose card pays for GoDaddy auto-renew, and who has that login?
+- Who is `jesse@methodandmetric.com`, and should they keep SuperAdmin?
+- Is EasyRent (`easyrent.ca`) part of our scope? If so, who has its hosting and WordPress logins?
+- Are the compressed photos on properties 3606 and 5810 approved?
+
+### Still unknown
+- Whether a newer code package with `SECRETS-TO-FILL.md` exists.
+- What the vendor's "daily backup" is.
+- The snapshot retention period.
+- Whether a GA4 property exists.
+
+---
+
+## 10. Timeline
+
+| Date | Event |
+|---|---|
+| 2026-09-05 | Vendor moved the old servers from `forever` to systemd. |
+| 2026-09-10 | Dev outage caused by a legacy deploy script (led to `lib/restartPolicy.js`). |
+| 2026-09-20 to 09-29 | Image optimization run on properties 3606 and 5810. |
+| 2026-10-06 | Vendor created a root access key for the migration. |
+| 2026-10-16 | `vlr-prod-2026` launched; code package `vlr-upgrade-new-vm.zip` exported (`dedbc40`). |
+| 2026-10-17 00:13 UTC | Database moved to `vlr-prod-2026`; vlr-staging stopped. |
+| 2026-10-19 | We audited the package and the live setup. |
+| 2026-10-20 | Our questions answered by Oscar and Edward; vendor contract ended. easyrent-prod stopped with a final snapshot. |
