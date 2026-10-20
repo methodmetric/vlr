@@ -2,7 +2,7 @@
 
 What the previous vendor's documentation got wrong, checked against the code on 2026-10-20 for VLR-16.
 
-**Method.** Every checkable claim in the eight vendor docs was compared with the source at commit `7b0fd42` (the handover code `dedbc40` plus our LF and secrets commits): about 270 claims. Then a second, independent round tried to disprove the findings that matter most, reading the code and testing where it could (running the tests, Mongoose pluralisation, Express param decoding). Only findings that survived both rounds are listed. Line numbers refer to the vendor versions (the archived files in this folder, or for the rewritten docs `git show 7b0fd42:<file>`), and code evidence to the code at `7b0fd42`.
+**Method.** Every checkable claim in the eight vendor docs was compared with the source at commit `7b0fd42` (the handover code `dedbc40` plus our LF and secrets commits): about 270 claims. Then a second, independent round tried to disprove the findings that matter most, reading the code and testing where it could (running the tests, Mongoose pluralisation, Express param decoding). Every entry was confirmed against the code; most also survived the second round, and the rest came out of it. Line numbers refer to the vendor versions (the archived files in this folder, or for the rewritten docs `git show 7b0fd42:<file>`), and code evidence to the code at `7b0fd42`.
 
 **Verdicts.** **Wrong**: contradicted by the code. **Outdated**: was true for the old servers or the handover zip, not for the code now. **Partly**: true with a missing condition that matters. Claims that checked out aren't listed. Statements about live servers and S3 contents can't be checked from the repo and are left out unless the repo contradicts them.
 
