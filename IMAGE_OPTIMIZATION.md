@@ -94,7 +94,7 @@ By extension: 64,706 jpg (68.1 GB) · 1,468 jpeg (1.7 GB) · 1,297 png (1.2 GB) 
 
 35,587 files sit in the 1–2 MB band alone (46.8 GB). That ~1 MB average for a 1920px photo is the quality-100 signature.
 
-**Measured savings** from a 24-image sample spread evenly across the whole bucket: **−77% to −81%**. (A dry run with `--limit N` takes the first N keys in listing order, i.e. the lowest-numbered properties, so it is not a spread sample.) Projected **71 GB → ~16 GB**.
+**Measured savings** from a 24-image sample spread evenly across the whole bucket: **−77% to −81%**. (A dry run with `--limit N` takes the first N keys in S3's lexicographic order (`10/` sorts before `2/`), so it is not a spread sample.) Projected **71 GB → ~16 GB**.
 
 Properties numbered below ~3800 have smaller 700×465 images (156–374 KB); properties 4000+ are 1920px at 0.8–2 MB. Both compress ~77%, but the absolute win is far larger on the newer ones.
 
@@ -127,15 +127,15 @@ The gallery works only because [`views/listing.ejs:111-113`](views/listing.ejs#L
 
 ### 4.2 Where to run it
 
-On the production server, `vlr-prod-2026` (us-west-2, same region as the bucket, so transfer is free). `sharp` is a normal dependency of the app now, so the checkout `deploy.sh` runs from already has it after `npm ci`; nothing extra to install. Run from that git checkout rather than `/opt/vlr/app`: every deploy's `rsync --delete` wipes the progress and failure files the script keeps in `Scripts/`. **Don't run `deploy.sh` while the backfill is running**: it pulls and runs `npm ci` (which replaces `node_modules`) in that same checkout.
+On the production server, `vlr-prod-2026` (us-west-2, same region as the bucket, so transfer is free). `sharp` is a normal dependency of the app now, so the checkout `deploy.sh` runs from already has it after `npm ci`; nothing extra to install. Run from that git checkout rather than `/opt/vlr/app`, which is the running site's copy (owned by the `vlr` user). The progress and failure files live in the checkout's `Scripts/`; `deploy.sh` excludes them from the copy to `/opt/vlr/app`. **Don't run `deploy.sh` while the backfill is running**: it pulls and runs `npm ci` (which replaces `node_modules`) in that same checkout.
 
-The script only needs the AWS keys. `/etc/vlr/env` is a systemd environment file, not a shell script, and `deploy.sh` reads it with `sudo`, so export just those three keys into the shell you run the script from:
+The script only needs the AWS keys. `/etc/vlr/env` is a systemd environment file, not a shell script, and `deploy.sh` reads it with `sudo`, so export just those three keys into the shell you run the script from, inside the tmux/screen session for a long run (a tmux server started earlier won't inherit them, and the SDK would fall back to other credentials):
 
 ```bash
 export $(sudo grep -E '^AWS_(ACCESS_KEY_ID|SECRET_ACCESS_KEY|REGION)=' /etc/vlr/env | xargs)
 ```
 
-We don't have shell access or our own git checkout on that server yet (TAKEOVER §4, §8). The old servers the vendor used (`18.237.239.200`, `34.217.51.226`) ran Node 8 and needed a Node 16 + `sharp@0.32.6` workaround under `~/imgopt`. They no longer serve the site (old vlr-prod is running with the site stopped, vlr-staging is stopped, both pending termination; TAKEOVER §4), and the workaround doesn't apply to the new server. In particular, **never delete `node_modules/sharp`** from the app as the old instructions said: `routes/properties.js` loads `lib/imageProcessing.js` at startup, so the site would fail to boot.
+We don't have shell access or our own git checkout on that server yet (TAKEOVER §4, §8). The old servers the vendor used (old dev and old vlr-prod) ran Node 8 and needed a Node 16 + `sharp@0.32.6` workaround under `~/imgopt`. They no longer serve the site (old vlr-prod is running with the site stopped, vlr-staging is stopped, both pending termination; TAKEOVER §4), and the workaround doesn't apply to the new server. In particular, **never delete `node_modules/sharp`** from the app as the old instructions said: `routes/properties.js` loads `lib/imageProcessing.js` at startup, so the site would fail to boot.
 
 vlr-prod-2026 is now the only server running the site (TAKEOVER §4), and it also runs MongoDB. It's a t3.large: 2 burstable vCPUs. The run is CPU-heavy (sharp with mozjpeg), and if the instance uses standard CPU credits, running out of them throttles the whole machine, site included. How long the full run takes on this box hasn't been measured. Time a single property first, check the instance's credit specification, and keep `nice -n 19` with `--concurrency 2` (§5.3).
 
@@ -170,7 +170,7 @@ nice -n 19 node Scripts/optimize_s3_images.js --apply --concurrency 2
 
 `nice` and `--concurrency 2` are deliberate: this is also the web and database server, it has 2 vCPUs, and sharp is CPU-hungry. Safe to interrupt and re-run — see §7.
 
-Until old versions are expired, the bucket keeps the ~71 GB of originals plus the ~16 GB of new copies (about +25%); expiring the originals would save roughly $1.6/month. **Do not add the S3 lifecycle rule that expires noncurrent versions until the client has signed off on the quality** — it deletes the originals permanently (§9). TAKEOVER §9 has the open question to the client.
+Until old versions are expired, the bucket keeps the ~71 GB of originals plus the ~16 GB of new copies (about +22%); expiring the originals would save roughly $1.6/month. **Do not add the S3 lifecycle rule that expires noncurrent versions until the client has signed off on the quality** — it deletes the originals permanently (§9). TAKEOVER §9 has the open question to the client.
 
 ### 5.4 Thumbnail variants — structural, do after 5.3
 
@@ -182,7 +182,7 @@ Also note `/properties` builds URLs with `s3.getSignedUrl` ([`routes/properties.
 
 ### 5.5 Agent portrait PNGs — repo bloat, not page weight
 
-Nine PNGs in `public/img/` totalling ~6.4 MB (`Baxter Welch.png` is 1011 KB at 469×550), referenced only as backgrounds by the `-pic` classes in [`public/libs/css/content.css:496-537`](public/libs/css/content.css#L496-L537). No view or script uses those classes, so no page downloads them (the vendor thought the team page did). Delete them with the §5.7 files, or convert them to JPEG if the classes are ever used again.
+Nine PNGs in `public/img/` totalling ~6.4 MB (`Baxter Welch.png` is 1011 KB at 469×550), referenced only as backgrounds by the `-pic` classes in [`public/libs/css/content.css:498-532`](public/libs/css/content.css#L498-L532). No view or script uses those classes, so no page downloads them (the vendor thought the team page did). Delete them with the §5.7 files, or convert them to JPEG if the classes are ever used again.
 
 ### 5.6 PNGs in the bucket — needs a DB migration, not just a bucket change
 
@@ -205,11 +205,11 @@ Costs a vendor dependency and a monthly bill. It was offered and the backfill wa
 ## 7. Gotchas for whoever runs this next
 
 - **The script is safe to interrupt.** Completed keys are appended to the progress file (`--progress`, default `Scripts/.optimize_s3_progress.log`); a re-run skips them. Rewritten objects also carry a `vlr-optimized` metadata tag and are always skipped, even if the log is lost.
-- **That progress log is gitignored on purpose.** It is per-machine state. **A laptop's log does not know what the server has done, and vice versa** — the metadata tag is the real defence. Keep it out of `/opt/vlr/app`, which deploys wipe (§4.2).
-- **Nothing writes without `--apply`.** Dry run is the default; `--dry-run` is accepted but does nothing.
+- **That progress log is gitignored on purpose.** It is per-machine state. **A laptop's log does not know what the server has done, and vice versa** — the metadata tag is the real defence. Run from the git checkout, not `/opt/vlr/app` (§4.2).
+- **Nothing writes without `--apply`.** Dry run is the default. Unknown or misspelled flags, including `--dry-run`, are silently ignored, so a typo in `--prefix` or `--listing` widens an `--apply` run to the whole bucket: check the printed prefix before letting it run.
 - **Rollback**: versioning is on. Every original survives as a previous version.
 - **A file is only replaced if it saves ≥15%** (`--min-saving`), so already-efficient files are not degraded for nothing.
-- **Per-file failures are skipped**, never aborting the run, and written to `Scripts/.optimize_s3_failures.json` only when a run finishes (replacing any earlier file). An interrupted run records none, but re-running retries them anyway because failed keys are never marked done.
+- **Per-file failures are skipped**, never aborting the run, and written to `Scripts/.optimize_s3_failures.json` only when a run finishes with failures (replacing any earlier file; a clean run leaves an old file in place). An interrupted run records none, but re-running retries them anyway because failed keys are never marked done.
 - **New uploads aren't tagged.** `uploadToS3` sets no `vlr-optimized` tag, so the backfill re-encodes photos uploaded since the q82 change (q82 → q82) wherever that saves 15%. Tag uploads in `uploadToS3` first, or accept the extra generation loss on recent photos.
 - **Quality is one flag** (`--quality`). Re-running a property at a different quality does nothing on its own: tagged objects are always skipped, and a fresh progress file doesn't change that. To redo a property, restore its previous S3 versions first (the originals carry no tag), clear its keys from the progress log, then re-run.
 - **Script flags are merged into the app config** by config-lite, as are the `CONFIG` / `NODE_CONFIG` environment variables. The script's own flags don't collide with config keys, but any flag named after one would override it: `--port`, `--session`, `--mongodb`, `--bucket` (which would send every write to another bucket), `--canonicalHost`, `--redirectHosts`.
@@ -239,7 +239,7 @@ Optimizing does not change filenames, keys or URLs: each `.jpg`/`.jpeg` object i
 | What | How to undo |
 |---|---|
 | S3 photos | Bucket versioning — restore the previous version of the key |
-| Static images under `public/` | Not from git: our history starts at the handover baseline, which already contains the optimized files. The originals are in the vendor's private repo and on old vlr-prod's disk and snapshots (§8); copy them off before that server is terminated if they matter |
+| Static images under `public/` | Not from git: our history starts at the handover baseline, which already contains the optimized files. The originals are in the vendor's private repo and on old vlr-prod's disk and snapshots (TAKEOVER §4, §7); copy them off before that server is terminated if they matter |
 | Upload-quality change | Change `JPEG_QUALITY` in `lib/imageProcessing.js` (only affects future uploads) |
 
 Confirmed live by the vendor on 2026-09-25 for a 3606 key:

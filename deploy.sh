@@ -47,7 +47,7 @@ echo "==> Copying release to $APP_DIR..."
 # uploads/ and log/ belong to the running site: create them if missing, never overwrite or delete them.
 sudo install -d -o "$APP_USER" -g "$APP_USER" "$APP_DIR" "$APP_DIR/uploads" "$APP_DIR/log" \
   || { echo "ERROR: cannot create $APP_DIR"; exit 1; }
-sudo rsync -a --delete --chown="$APP_USER:$APP_USER" --exclude=/.git --exclude=/uploads --exclude=/log ./ "$APP_DIR/" \
+sudo rsync -a --delete --chown="$APP_USER:$APP_USER" --exclude=/.git --exclude=/uploads --exclude=/log --exclude='/Scripts/.optimize_s3_*' ./ "$APP_DIR/" \
   || { echo "ERROR: cannot copy release to $APP_DIR"; exit 1; }
 
 echo "==> Installing systemd unit (vlr.service)..."

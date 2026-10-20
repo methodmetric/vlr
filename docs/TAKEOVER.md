@@ -8,7 +8,7 @@ The previous vendor's contract has ended and they will not answer further questi
 - **verified**: we checked it ourselves (the code, the live site, DNS/whois, or read-only AWS and Mailgun API calls on 2026-10-19 and 10-20).
 - **per vendor**: stated in the vendor's final emails of 2026-10-20 and not yet checked by us.
 
-No passwords or keys are written here. See [Secrets](#secrets) for where they live.
+No passwords or keys are written here. See [Secrets](#6-secrets) for where they live.
 
 ---
 
@@ -21,7 +21,7 @@ No passwords or keys are written here. See [Secrets](#secrets) for where they li
 | Production | Runs on EC2 `vlr-prod-2026`. We don't have shell access yet. |
 | Accounts | AWS, Mailgun, GoDaddy and Google all belong to VLR. **per vendor** |
 | Database | Only copy is on `vlr-prod-2026`, plus AWS snapshots of its data disk. We have no copy of our own yet. |
-| Security | Several passwords are known to the vendor and are written in the code. AWS root currently has **no two-factor**. See [section 8](#8-security-and-access-checklist). |
+| Security | Several passwords and keys are known to the vendor and were written in the code they handed over (our repo now reads keys from the environment; the values still need rotating). AWS root currently has **no two-factor**. See [section 8](#8-security-and-access-checklist). |
 | Monitoring | None. |
 
 ---
@@ -69,9 +69,9 @@ No passwords or keys are written here. See [Secrets](#secrets) for where they li
 
 | Instance | State (2026-10-20) | What it is | Plan |
 |---|---|---|---|
-| **vlr-prod-2026** | running | **Production.** 32.191.149.254, t3.large, launched 2026-10-16. | Keep. |
-| vlr-prod | running (website stopped) | Old production, 34.217.51.226. Kept by the vendor as a rollback. Nothing written to its database after the move. | Final snapshot, then terminate once the move is confirmed. |
-| vlr-staging | stopped 2026-10-17 | Old dev server (was 18.237.239.200, `dev.` DNS removed). | Terminate once the move is confirmed. |
+| **vlr-prod-2026** | running | **Production.** t3.large, launched 2026-10-16. Public IP in the EC2 console. | Keep. |
+| vlr-prod | running (website stopped) | Old production. Kept by the vendor as a rollback. Nothing written to its database after the move. | Final snapshot, then terminate once the move is confirmed. |
+| vlr-staging | stopped 2026-10-17 | Old dev server (`dev.` DNS removed). | Terminate once the move is confirmed. |
 | wordpress-bitami | running | `blog.vancouverluxuryrentals.com`, WordPress 6.5.13 on a Bitnami image running **Debian 10, which stopped getting security updates in 2024**. Ports 22, 80 and 443 are open to the internet. Last post Aug 2024, not linked from the main site. | Decide soon: rebuild on a supported OS, or retire it. |
 | easyrent-prod | stopped 2026-10-20 | Backend of the old EasyRent admin/beta. Final snapshot taken 2026-10-20 ("final archive before termination"). | Terminate. Delete `admin.easyrent.ca` and `beta.easyrent.ca` DNS records. |
 | easyrent-dev, easyrent-back, easy_rent_dev_old | stopped since 2020–2022 | Not VLR, unused. | Terminate. |
@@ -99,7 +99,7 @@ State and snapshots **verified**; descriptions **per vendor**.
 2. stops `vlr.service` and copies the code to `/opt/vlr/app` (keeping `uploads/` and `log/`)
 3. installs `vlr.service`, starts it, and waits for `http://localhost/` to return 200
 
-It must run from a git checkout on the server, so **we need our own repo first** (see [section 9](#9-open-items)). The vendor warns: don't deploy any older copy of the code.
+It must run from a git checkout on the server. Our repo is `github.com/seta-workshop/vlr`; the server doesn't have a checkout of it yet (see [section 8](#8-security-and-access-checklist)). The vendor warns: don't deploy any older copy of the code.
 
 ---
 
@@ -110,7 +110,7 @@ The zip is commit `dedbc40`, which the vendor says is exactly what's running. Fo
 - **Stack:** Node/Express 4, EJS templates, MongoDB via Mongoose 8, sharp for image watermarking, AWS SDK v2 for S3, nodemailer + Mailgun.
 - **Upgrade layer:** `lib/mongooseCompat.js` lets the old Mongoose 4 callback code run on Mongoose 8. `lib/imageProcessing.js` replaced the old `images` package. `lib/restartPolicy.js` stops crash loops. All three have tests.
 - **Run locally:** `npm ci`, copy `.env.example` to `.env` and set `SESSION_SECRET` (the server exits without it), then `npm run dev` (port 3000). Needs MongoDB at `mongodb://localhost:27017/VLR` or `MONGO_URL`. There is no `.npmrc` despite what the vendor docs say.
-- **Tests:** `npm test` runs 41 unit tests (Node's built-in runner). No tests for routes, SEO or email.
+- **Tests:** `npm test` runs 41 unit tests (26 on Node's built-in runner, 15 with their own small runner). No tests for routes, SEO or email.
 - **S3 bucket name** `vancouverluxuryrental.com` is in `config/` and hardcoded in 5 more places (`lib/seoHelpers.js`, `views/listing.ejs`, `views/myFavorites.ejs` ×2, `views/tenant-forms.ejs`).
 
 ### Known issues **verified**
@@ -136,7 +136,7 @@ All committed in plain text in the zip. In our repo they were redacted at the ba
 
 | Where (in the zip) | What | Action |
 |---|---|---|
-| `config/aws.json` | Access key for IAM user `vlr-web` (S3 + read access to EC2) | Rotate after we have our own repo; put the new key in `/etc/vlr/env`. |
+| `config/aws.json` | Access key for IAM user `vlr-web` (S3 + read access to EC2) | Rotate; put the new key in `/etc/vlr/env`. |
 | `lib/mailer.js` | Mailgun API key, repeated 8 times | Rotate after taking over Mailgun; put the new key in `/etc/vlr/env`. |
 | `config/default.js`, `config/production.js` | Session secret | Rotate (logs everyone out); put the new value in `/etc/vlr/env`. |
 | `README.md` (bottom; now `docs/vendor/README-notes.md`) | Cloudflare login and password | Change the password. Already redacted in our repo. |
@@ -179,7 +179,8 @@ The AWS root, Cloudflare and README passwords are **the same password**, and the
 - [ ] Check `authorized_keys` on vlr-prod-2026 and wordpress-bitami for leftover vendor keys
 - [ ] Look for the vendor's "daily backup" (crontab, systemd timers)
 - [ ] Take over Mailgun via `webadmin@`; create a new API key
-- [ ] Set up our own git repo from the zip
+- [x] Set up our own git repo from the zip (`github.com/seta-workshop/vlr`)
+- [ ] Clone it on vlr-prod-2026 for `deploy.sh`
 - [ ] Set up uptime monitoring and automated database backups to S3
 
 ### Cleanup, after the move is confirmed

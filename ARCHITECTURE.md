@@ -16,7 +16,7 @@ VLR is a server-rendered Node.js/Express monolith backed by MongoDB, with images
                           │                   Clients                     │
                           │   Public browsers · Admin agents · Crawlers   │
                           └───────────────────────┬───────────────────────┘
-                                                  │  HTTPS (Cloudflare) → HTTP :80
+                                                  │  HTTPS (Cloudflare, TAKEOVER §4) → HTTP :80
                           ┌───────────────────────▼───────────────────────┐
                           │        Node.js / Express (this app)            │
                           │                                                │
@@ -89,8 +89,8 @@ In registration order in `server.js`:
 
 ### 2.2 Configuration
 
-- `config-lite` loads `config/<NODE_ENV>.js` (if `NODE_ENV` is set) and **shallow-merges** it over `config/default.js` with `_.assign`, so a partial top-level key in `production.js` would replace the whole object from `default.js`. Every module calls `require('config-lite')(__dirname)` itself.
-- It also merges `NODE_CONFIG`/`CONFIG` JSON env vars and **all command-line flags** (via `optimist`) over the result. A script run with `--limit 200` gets `config.limit = 200`; a `--port` or `--bucket` flag would change those settings.
+- `config-lite` loads `config/<NODE_ENV>.js` (if `NODE_ENV` is set) and **shallow-merges** it over `config/default.js` with `_.assign`, so a partial top-level key in `production.js` would replace the whole object from `default.js`. Modules that need config call `require('config-lite')(__dirname)` themselves (several lib files and routes don't load it at all). `CONFIG_DIR`/`CONFIG_BASEDIR` (or `NODE_CONFIG_DIR`/`NODE_CONFIG_BASEDIR`) can relocate the config folder.
+- It also merges JSON from the `CONFIG` env var (or `NODE_CONFIG` if `CONFIG` is unset) and **all command-line flags** (via `optimist`) over the result. A script run with `--limit 200` gets `config.limit = 200`; a `--port` or `--bucket` flag would change those settings.
 - `default.js` and `production.js` differ only in `port` (3000 / 80), `canonicalHost` and `redirectHosts`. Both name the same S3 bucket.
 - Secrets come from the environment: `SESSION_SECRET`, `MAILGUN_API_KEY`, and AWS credentials through the SDK's own chain (`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` first, then `~/.aws/credentials` or an EC2 instance role). The S3 region comes only from `AWS_REGION`. `MONGO_URL` overrides `config.mongodb`. Locally they come from `.env` (loaded by `npm run dev`); in production from `/etc/vlr/env` (loaded by `vlr.service`, and it also sets `NODE_ENV=production`, which is what selects port 80).
 
@@ -141,6 +141,7 @@ req.query
    ├─ normalizeAvailabilityMonthQueryParam()  ─ decode availableDate<=N
    ├─ availability filter branch:
    │     • month-based (legacy bookmarks) → rewrite to an availableDate< upper bound
+   │       (N=12 becomes availableDate<=now)
    │       (already-rewritten keys from pagination pass through);
    │       any explicit status is passed through as-is
    │     • else → strip date keys, apply status default
@@ -182,7 +183,7 @@ On any query error — including a cast error from input like `?rent=abc` — th
 |---|---|---|---|---|
 | GET | `/properties/` | public | HTML | Search results page |
 | GET | `/properties/count` | public | JSON `{count}` | Result count; duplicates the pipeline logic |
-| GET | `/properties/random` | public | JSON | 3 random listings (+ favourites if logged in) |
+| GET | `/properties/random` | public | JSON | 3 random listings (+ favourites if logged in; ⚠️ includes favouriters' user ids — VLR-19) |
 | GET | `/properties/featured` | public | JSON | From the `showRoom` `featuredProperties` category |
 | GET | `/properties/recentlyRented` | public | JSON | From `recentlyRentedProperties` |
 | GET | `/properties/banner` | public | JSON | From `bannerProperties` |
@@ -241,7 +242,7 @@ POST /listing/scheduler/new   (from listing page form)
    ▼
 new ScheduleModel(...).save()          → MongoDB `schedules` collection
    │
-   ├─▶ mailer.sendScheduleMail()        → Mailgun → tenant (confirmation-style ack)
+   ├─▶ mailer.sendScheduleMail()        → Mailgun → tenant (acknowledgement; its subject says it is not a confirmation)
    │
    └─▶ AdminModel.findOne({name: agent})
           └─▶ mailer.sendTenantEnquiriesMail()  → Mailgun → assigned agent
@@ -287,7 +288,7 @@ Tenant identity is **an email address with no password or verification**: `POST 
 | GET | `/user/myfavorites` | session | Render favourites page |
 | POST | `/user/myfavorites` | none | Sign in by email + render favourites |
 | POST | `/user/newfavorite` | ⚠️ none (trusts `body.user`) | Add a property to a user's favourites |
-| POST | `/user/newfavoriteform` | none | Add favourite + capture name/phone (upserts the user) |
+| POST | `/user/newfavoriteform` | ⚠️ none (trusts `body.user`) | Add favourite + capture name/phone (upserts any email's user, overwriting name/phone) — VLR-19 |
 | POST | `/user/checkFavorites/:id` | session | Is this property favourited? (no response without a session — VLR-20) |
 | DELETE | `/user/favorite` | ⚠️ none (trusts `body.user`) | Remove favourite; also used by the email unsubscribe page |
 | GET | `/user/api/all` | SuperAdmin | List all users (admin view) |

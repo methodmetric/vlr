@@ -1,13 +1,13 @@
 /**
  * One-time (resumable) backfill: re-encode existing property photos in S3.
  *
- * Run it on the SERVER, from the git checkout deploy.sh runs in (not
- * /opt/vlr/app: every deploy's rsync --delete wipes the progress and failure
- * files this script keeps next to itself). The bucket and server are both in
- * us-west-2, so transfer is free there; from a laptop it pulls ~71 GB and costs
- * egress. The AWS keys come from the environment, so load the env file first
- * (see Scripts/readme.txt). Don't run deploy.sh while this runs: it runs
- * `npm ci` in the same checkout.
+ * Run it on the SERVER, from the git checkout deploy.sh runs in, not
+ * /opt/vlr/app (that is the running site's copy, owned by the vlr user). The
+ * progress and failure files live next to this script. The bucket and server
+ * are both in us-west-2, so transfer is free there; from a laptop it pulls
+ * ~71 GB and costs egress. The AWS keys come from the environment, so load
+ * them first (see Scripts/readme.txt). Don't run deploy.sh while this runs: it
+ * runs `npm ci` in the same checkout.
  *
  *     node Scripts/optimize_s3_images.js --limit 200                # measure a sample
  *     node Scripts/optimize_s3_images.js                            # measure everything
@@ -18,9 +18,9 @@
  *
  * Why this exists: photos uploaded by older versions of the code were saved by
  * the `images` package at its default quality of 100 (the last `images`-based
- * version already passed 82; see lib/imageProcessing.js). A 1920px photo at quality 100 averages ~1 MB
- * where quality 82 is ~230 KB, with no visible difference. A 24-image sample
- * across the bucket measured -77%.
+ * version already passed 82; see lib/imageProcessing.js). A 1920px photo at
+ * quality 100 averages ~1 MB where quality 82 is ~230 KB, with no visible
+ * difference. A 24-image sample across the bucket measured -77%.
  *
  * Safety properties:
  *   - Dry run is the DEFAULT. Nothing is written without --apply. Unknown or
@@ -28,8 +28,9 @@
  *     --prefix or --listing widens an --apply run to the whole bucket: check the
  *     printed prefix before letting it run.
  *   - The bucket has versioning ENABLED, so every overwrite keeps the previous
- *     version and any object can be rolled back. Storage roughly doubles until
- *     noncurrent versions are expired, which needs the client's sign-off first.
+ *     version and any object can be rolled back. Storage grows by the new
+ *     copies (~16 GB on top of ~71 GB, about +22%) until noncurrent versions are
+ *     expired, which needs the client's sign-off first.
  *   - Resumable. Every completed key is appended to a progress file (--progress,
  *     default Scripts/.optimize_s3_progress.log); a re-run skips them.
  *   - Idempotent. Re-encoded objects are tagged with metadata `vlr-optimized`,
@@ -37,8 +38,8 @@
  *   - A file is only replaced if the new version is meaningfully smaller
  *     (default: at least 15% off). Marginal gains are not worth generation loss.
  *   - Every re-encode's header is read back and must report non-zero dimensions
- *     before it is uploaded. Photos wider than --max-width (default 1920) are scaled down,
- *     and EXIF orientation is applied, so dimensions can change.
+ *     before it is uploaded. Photos wider than --max-width (default 1920) are
+ *     scaled down, and EXIF orientation is applied, so dimensions can change.
  *   - Per-file failures are logged and skipped; they never abort the run.
  *   - PNGs are skipped by default: they are stored under .png keys referenced by
  *     `imgs[]` in MongoDB, so converting them to JPEG is a database change, not
@@ -71,13 +72,13 @@ try {
     if (e.code === 'MODULE_NOT_FOUND' && /'sharp'/.test(e.message)) {
         console.error('sharp is a dependency of the app but is not installed next to this script.');
         console.error('Run `npm ci` in the git checkout and run the script from there. Never run');
-        console.error('npm ci in /opt/vlr/app: that is the running site\'s copy.\n');
-        console.error('sharp 0.35 needs Node 20.9+.');
+        console.error('npm ci in /opt/vlr/app: that is the running site\'s copy.');
     } else {
-        console.error('sharp resolved but its native binary would not load. This is usually a platform');
-        console.error('mismatch, e.g. node_modules copied from another OS. Run `npm ci` in the git');
-        console.error('checkout (never in /opt/vlr/app).');
+        console.error('sharp resolved but its native binary would not load: an old Node, or a');
+        console.error('platform mismatch (e.g. node_modules copied from another OS). Run `npm ci`');
+        console.error('in the git checkout (never in /opt/vlr/app).');
     }
+    console.error('\nsharp 0.35 needs Node 20.9+; this is ' + process.version + '.');
     process.exit(1);
 }
 
