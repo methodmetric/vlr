@@ -2,7 +2,7 @@
 
 Everything our team knows about VancouverLuxuryRentals.com (VLR) after taking it over from the previous vendor. Last updated 2026-10-20.
 
-The previous vendor's contract has ended and they will not answer further questions. This document is the source of truth from here on. The vendor's own documents (`HANDOVER.md`, `ARCHITECTURE.md`, `CLAUDE.md`, `TESTING.md`, `docs/VLR website handover - final.md`) still describe the old Node 8 servers in places. Where they disagree with this file, this file wins.
+The previous vendor's contract has ended and they will not answer further questions. This document is the source of truth from here on. The vendor's own documents are archived in `docs/vendor/` (plus the untracked `docs/VLR website handover - final.md`) and describe the old Node 8 servers in places. `CLAUDE.md`, `ARCHITECTURE.md` and `IMAGE_OPTIMIZATION.md` were checked against the code and corrected on 2026-10-20 (VLR-16). Where any doc disagrees with this file, this file wins.
 
 **How facts are marked**
 - **verified**: we checked it ourselves (the code, the live site, DNS/whois, or read-only AWS and Mailgun API calls on 2026-10-19 and 10-20).
@@ -86,7 +86,7 @@ State and snapshots **verified**; descriptions **per vendor**.
 | OS | Probably Ubuntu 24.04 (the unit file mentions systemd 255). Unconfirmed. |
 | Node | 24.22.0 LTS (supported to April 2028). **per vendor** (an earlier vendor email said 26; this is the correction) |
 | App | `/opt/vlr/app`, run by `vlr.service` as user `vlr`, binds port 80 directly. **verified from the zip** |
-| Config | `/etc/vlr/env` sets `NODE_ENV` and `MONGO_URL`. Not in the repo. **verified from the zip** |
+| Config | `/etc/vlr/env` sets `NODE_ENV` and `MONGO_URL` (**verified from the zip**). Since commit `7b0fd42` it must also hold `SESSION_SECRET`, `MAILGUN_API_KEY`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_REGION`; `deploy.sh` refuses to deploy until it does. Not in the repo. |
 | Database | MongoDB on the same machine (8.x per the code comments). Moved here 2026-10-17 00:13 UTC. **per vendor** |
 | Disks | 200 GiB root + 20 GiB second disk, both encrypted. Daily AWS snapshots of the 20 GiB disk only. **verified** |
 | Network | Behind Cloudflare. Port 80 and 22 are open to the internet; 443 is closed (Cloudflare handles HTTPS). **verified** |
@@ -109,13 +109,15 @@ The zip is commit `dedbc40`, which the vendor says is exactly what's running. Fo
 
 - **Stack:** Node/Express 4, EJS templates, MongoDB via Mongoose 8, sharp for image watermarking, AWS SDK v2 for S3, nodemailer + Mailgun.
 - **Upgrade layer:** `lib/mongooseCompat.js` lets the old Mongoose 4 callback code run on Mongoose 8. `lib/imageProcessing.js` replaced the old `images` package. `lib/restartPolicy.js` stops crash loops. All three have tests.
-- **Run locally:** `npm ci`, then `npm run dev` (port 3000). Needs MongoDB at `mongodb://localhost:27017/VLR` or `MONGO_URL`. There is no `.npmrc` despite what the docs say.
+- **Run locally:** `npm ci`, copy `.env.example` to `.env` and set `SESSION_SECRET` (the server exits without it), then `npm run dev` (port 3000). Needs MongoDB at `mongodb://localhost:27017/VLR` or `MONGO_URL`. There is no `.npmrc` despite what the vendor docs say.
 - **Tests:** `npm test` runs 41 unit tests (Node's built-in runner). No tests for routes, SEO or email.
 - **S3 bucket name** `vancouverluxuryrental.com` is in `config/` and hardcoded in 5 more places (`lib/seoHelpers.js`, `views/listing.ejs`, `views/myFavorites.ejs` ×2, `views/tenant-forms.ejs`).
 
 ### Known issues **verified**
 
-- `/properties/debug-search` is public and returns property data.
+Security problems and bugs found while checking the docs (VLR-16) are tracked in Linear: VLR-18 (the image upload endpoint has no auth and allows arbitrary file write/delete — urgent), VLR-19 (tenant auth and data exposure), VLR-20 (crash resilience), VLR-21 (correctness bugs).
+
+- `/properties/debug-search` is public and returns property data (and `/properties/api/all` returns every property, unlisted ones included).
 - `/VLR-admin/maintenance` and `/VLR-admin/inspection` render views that don't exist; the admin menu links to Maintenance.
 - `routes/sell.js` and `routes/availability.js` are unused.
 - `og:image` URLs use the S3 website endpoint, which doesn't serve images, so shared links have no preview image.
@@ -130,14 +132,14 @@ The zip is commit `dedbc40`, which the vendor says is exactly what's running. Fo
 
 ## 6. Secrets
 
-All committed in plain text in the zip:
+All committed in plain text in the zip. In our repo they were redacted at the baseline commit, and since `7b0fd42` the code reads the keys from the environment (see Config in §4). The values themselves are unchanged and still need rotating:
 
 | Where | What | Action |
 |---|---|---|
 | `config/aws.json` | Access key for IAM user `vlr-web` (S3 + read access to EC2) | Rotate after we have our own repo; update the server too. |
 | `lib/mailer.js` | Mailgun API key, repeated 8 times | Rotate after taking over Mailgun; move to `/etc/vlr/env`. |
 | `config/default.js`, `config/production.js` | Session secret | Rotate (logs everyone out). |
-| `README.md` (bottom) | Cloudflare login and password | Change the password; delete from README. |
+| `README.md` (bottom; now `docs/vendor/README-notes.md`) | Cloudflare login and password | Change the password. Already redacted in our repo. |
 | `docs/VLR website handover - final.md` (bottom) | AWS root and Cloudflare logins | Same password as above. Remove from the file. **Don't commit this file with passwords in it.** |
 
 The AWS root, Cloudflare and README passwords are **the same password**, and the vendor knows it, plus the `webadmin@vlr.ca` password.
@@ -155,7 +157,7 @@ The AWS root, Cloudflare and README passwords are **the same password**, and the
 - **Photos:** S3 bucket `vancouverluxuryrental.com`, ~68,000 objects / ~71 GB. Versioning on, no lifecycle rule, so every original is recoverable. **verified**
 
 ### Image optimization (paused)
-`Scripts/optimize_s3_images.js` compresses existing photos (JPEG quality 82, about −80%). Only properties 3606 and 5810 are done. No job is running or scheduled (**per vendor**). Full instructions in `IMAGE_OPTIMIZATION.md`; the vendor says it's tested and safe to follow. **Do not add an S3 lifecycle rule that expires old versions until the client approves the quality**: that permanently deletes the originals.
+`Scripts/optimize_s3_images.js` compresses existing photos (JPEG quality 82, about −80%). Only properties 3606 and 5810 are done. No job is running or scheduled (**per vendor**). Instructions in `IMAGE_OPTIMIZATION.md`, corrected 2026-10-20: the vendor's version had steps for the retired Node 8 servers, including one (deleting `node_modules/sharp`) that would now stop the site booting. **Do not add an S3 lifecycle rule that expires old versions until the client approves the quality**: that permanently deletes the originals.
 
 ---
 
@@ -185,7 +187,7 @@ The AWS root, Cloudflare and README passwords are **the same password**, and the
 - [ ] Terminate vlr-staging, easyrent-prod, easyrent-dev, easyrent-back, easy_rent_dev_old
 - [ ] Delete `admin.easyrent.ca` and `beta.easyrent.ca` DNS records
 - [ ] Delete `onepromisesolution.com` and the two `ec2-…` domains from Mailgun
-- [ ] Rotate the `vlr-web` AWS key, the Mailgun key and the session secret; move them out of the code
+- [ ] Rotate the `vlr-web` AWS key, the Mailgun key and the session secret (already out of the code since `7b0fd42`)
 - [ ] Decide on the blog: its server runs Debian 10 (no security updates since 2024), so rebuild it on a supported OS or retire wordpress-bitami
 - [ ] Ask Shahram whether anyone uses email at burnabyluxuryrentals.com (it goes to GoDaddy mail); if not, remove the MX record
 

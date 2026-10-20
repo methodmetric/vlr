@@ -1,141 +1,35 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## What This Project Is
-
-**VancouverLuxuryRentals.com (VLR)** — a Node.js/Express property rental website serving both public tenants and an internal admin panel for agents. Key flows:
-
-- Public users browse/filter rental properties, schedule viewings, and favourite listings
-- Property owners submit their properties via lead forms
-- Admins (agents and super admins) manage all properties, images, schedules, and owner leads via `/VLR-admin`
+VancouverLuxuryRentals.com (VLR): a Node/Express 4 + EJS + MongoDB rental site with an admin panel at `/VLR-admin`. Photos live in S3, email goes through Mailgun. Taken over from the previous vendor in October 2026; work is tracked in Linear team **VLR**.
 
 ## Commands
 
 ```bash
-# Install (must use --ignore-scripts due to semantic-ui interactive installer, already set in .npmrc)
-npm install
-
-# Development (auto-restart on file changes)
-npm run dev
-
-# Production
-npm run prod        # NODE_ENV=production nodemon server.js
-
-# Start without nodemon
-node server
-
-# Run unit tests (no DB or AWS needed)
-npm test
-npm run test:unit
-
-# Run a single test file
-npx mocha "test/unit/seoHelpers.test.js" --timeout 5000
-
-# Watch mode during development
-npm run test:watch
-
-# Integration tests (requires running MongoDB + AWS S3 + live server)
-npm run test:integration
-npm run test:all
+npm ci                                       # install (Node >= 22.9; prod runs 24)
+cp .env.example .env                         # then set SESSION_SECRET, or the server exits at startup
+npm run dev                                  # nodemon, loads .env, port 3000; needs MongoDB (MONGO_URL or localhost:27017/VLR)
+npm test                                     # 41 unit tests, no DB/AWS needed
+node --test test/unit/imageProcessing.test.js   # one node:test file
+node test/unit/restartPolicy.test.js            # this one has its own runner, not node:test
 ```
 
-Server listens on port **3000** in dev, port **80** in production.
+There are no route, SEO or email tests. Tests cover `lib/restartPolicy.js`, `lib/mongooseCompat.js` and `lib/imageProcessing.js`.
 
-## Architecture
+## Rules
 
-### Entry Point & Process Model
+- **The S3 bucket is live.** Dev and production use the same bucket (`vancouverluxuryrental.com`). With real AWS keys in `.env`, saving property images locally uploads to and deletes from production. Scripts in `Scripts/` hit it too: `optimize_s3_images.js` is a dry run unless given `--apply`; `migrate_team_photos.js` writes unless given `--dry-run`. Run image scripts on the server, not a laptop (the bucket is ~71 GB).
+- **Mail is live.** Any `MAILGUN_API_KEY` sends real email. Keep it empty in local `.env`.
+- **Secrets come from the environment.** `SESSION_SECRET`, `MAILGUN_API_KEY`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, optional `MONGO_URL`. Locally `.env`, on the server `/etc/vlr/env`. A new required variable goes in `.env.example` and in `REQUIRED_ENV` in `deploy.sh`.
+- **Deploy with `deploy.sh` only**, on the server, from the git checkout: `git pull`, then `./deploy.sh [branch]`. It checks `/etc/vlr/env` for every `REQUIRED_ENV` key before stopping anything, then rsyncs to `/opt/vlr/app` and restarts `vlr.service`. `server_restart.sh` restarts without pulling; `git_pull_and_update.sh` just runs `deploy.sh`. The site runs only under systemd (`sudo systemctl status vlr`, `sudo journalctl -u vlr -f`).
+- **Mongoose 8 runs old Mongoose 4 code.** Queries use callbacks, made to work by `lib/mongooseCompat.js`. It must be loaded before the first query (`lib/mongo.js` does this; standalone scripts require it themselves). It re-throws errors raised inside callbacks, and nothing catches them, so a throw in a DB callback kills the worker. Report errors through the response instead.
+- **config-lite merges command-line flags into the config.** A script flag with the same name as a config key (`--port`, `--bucket`, `--mongodb`) silently overrides it. `config/production.js` is shallow-merged over `config/default.js`, so a partial top-level key there replaces the whole default object.
+- **URLs have single sources of truth.** Listing paths come from `lib/urls.js` (shared by the canonical link, JSON-LD, sitemap and the 301 redirect; mismatches cause redirect loops). Search landing pages (`/for-rent/:slug`) come from `lib/forRentPages.js`. The sitemap is generated at `/sitemap.xml`; a `public/sitemap.xml` file would shadow it.
+- **Admin auth is per route.** Each admin route lists `AdminController.isAuthenticated` (and usually `isSuperAdmin`) itself. A new admin route needs both written out.
 
-`server.js` uses Node.js `cluster` to fork one worker per CPU. The **master process** handles logging and worker lifecycle. One worker is designated as the "cleaner" (via `process.send`) responsible for the periodic upload cleanup (every 10 min) and the daily availability check cron job (00:10 daily). All other workers just serve HTTP.
+## Where to look
 
-### Config
-
-Uses `config-lite` keyed off `__dirname` from `server.js`. Reads `config/default.js` in development, `config/production.js` when `NODE_ENV=production`. Secrets come from environment variables, never the code: `SESSION_SECRET`, `MAILGUN_API_KEY`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` (the AWS SDK reads the last three itself), plus optional `MONGO_URL`. Locally they're in `.env` (template: `.env.example`), loaded by `npm run dev` via `node --env-file-if-exists=.env`; on the server they're in `/etc/vlr/env`, loaded by `vlr.service`. `.env.production` is a local, gitignored reference copy of the production values. `server.js` exits at startup if `SESSION_SECRET` is missing.
-
-### Routing Tree
-
-All routes are wired through `routes/index.js`, which is the single router mounted at `/` in `server.js`:
-
-| Prefix | File | Notes |
-|---|---|---|
-| `/` | `routes/index.js` | Homepage, about, area landing pages, static resource pages |
-| `/properties` | `routes/properties.js` | Property search, CRUD API, image management, S3 ops |
-| `/for-rent/:slug` | `routes/index.js` | SEO landing pages for the search (`/for-rent/richmond`, `/for-rent/north-vancouver-furnished`); slug → query map in `lib/forRentPages.js` |
-| `/listing/:id` | `routes/listing.js` | Individual property page; URL slug format: `address-property-id-123` |
-| `/owners` | `routes/owners.js` | Owner landing pages + list-property lead form |
-| `/tenants` | `routes/tenants.js` | Tenant pages |
-| `/user` | `routes/user.js` | Tenant user auth (register/login/favourites) |
-| `/VLR-admin` | `routes/admin.js` | Admin panel — protected by `AdminController.isAuthenticated` |
-| `/VLR-admin/images` | `routes/images.js` | Fine Uploader endpoint for property images |
-| `/listing` (POST scheduler) | `routes/listing.js` | Viewing schedule submission |
-
-### Authentication & Authorization
-
-Two separate auth systems coexist:
-
-- **Admin (Passport.js)**: `passport-local` strategy defined in `lib/passportLocal.js`. Sessions stored in MongoDB via `connect-mongo`. Middleware at `middlewares/admin.js` — `isAuthenticated` checks `req.user`, `isSuperAdmin` checks `req.user.role === 'SuperAdmin'`. Admins are in the `admins` collection.
-- **Tenant users**: Session-based via `req.session.user` (email string). Defined in `models/users.js`.
-
-### Property Model
-
-`models/properties.js` — ~90 fields, all flat on one document. Key fields: `propertyId` (numeric, unique), `status` (`"Available"` / `"Rented"` / `"Not list property"`), `imgs[]` (filenames), `coverImg` (filename), `searchColumn` (JSON.stringify of the whole document for full-text regex search). Images are stored in AWS S3 bucket `vancouverluxuryrental.com` under key `{propertyId}/{filename}`.
-
-### Property Search & Filtering
-
-`routes/properties.js` `router.getProperties` middleware translates query params to a Mongoose query using `api-query-params` (`aqp`). Key transformations:
-- `searchBar` → regex on `searchColumn`
-- `availableDate<N` (month number) → computed date range filter
-- `furnished=Yes/No` → negation filter (`furnished!`)
-- `allowPets=Yes` → `allowPets! = "No"`
-- Default: exclude `status = "Not list property"`
-
-### SEO Layer
-
-Added recently. Two-file pattern:
-- `lib/seoHelpers.js` — pure functions generating `{ seoTitle, seoDescription, canonicalUrl, ogImage, structuredData }` per page type (`homepage`, `owners`, `area`, `property`, `blog`)
-- `middlewares/seo.js` — Express middleware factory; calls `generateSeoMetadata` and attaches results to `res.locals` so EJS templates can render them
-
-For listing pages specifically, SEO is built inline in `routes/listing.js` via `buildListingSeo()` (which also generates `RealEstateListing` and `FAQPage` schema.org JSON-LD).
-
-**Search landing pages (`lib/forRentPages.js`)**: every indexable search filter has a clean URL as well as its query URL — `/for-rent/richmond` alongside `/properties?city=Richmond&status=Available`. The slug map is the single source of truth: `routes/index.js` serves `/for-rent/:slug` by translating the slug into `req.query` and running the same `getProperties` + `renderPropertiesPage` as `/properties`, `routes/properties.js` canonicalises the query form onto the clean URL, and `lib/sitemap.js` advertises the clean URL. Filters with no landing page (keyword, bedrooms, price, rented facets) keep their query URL. Slugs are `<city>`, `<city>-furnished`, `<city>-unfurnished`, plus `all`.
-
-### Email (Mailgun)
-
-`lib/mailer.js` — all email sending. Uses `nodemailer` + `nodemailer-mailgun-transport`. Email templates are EJS files in `views/emailTemplate/`. Each mail function reads the EJS template, renders it, then sends. Types: `schedule`, `listYourProperty`, `tenantEnquiries`, `ownerLead`, `renewal`, `available`, `priceChange`.
-
-### Automated Notifications (`lib/setAvailable.js`)
-
-- `checkAvailable()` — runs daily; finds properties where `availableDate <= today` and `status = "Rented"`, then calls `sendAvailableForProperty` to email all users who favourited that property
-- `sendAvailableForProperty()` / `setPriceChangeForProperty()` — triggered on property save (in `routes/properties.js` PUT) when status transitions to Available or rent changes
-
-### Image Uploads
-
-Images are uploaded via the Fine Uploader library to `/VLR-admin/images` (`routes/images.js`). Uploaded to a temp `uploads/` directory, then:
-1. Watermarked using the `images` package (`public/img/vlr-logo-watermark.png`)
-2. Uploaded to S3 via `uploadToS3()`
-3. Temp files cleaned up periodically (every 10 min) and on save
-
-### Views
-
-EJS templates in `views/`. Admin views are prefixed `admin*`. The `/resources/:slug` route in `routes/index.js` renders static SEO content pages from a hardcoded `pages` map (no DB).
-
-### Scheduled Tasks (Server-side)
-
-Configured in `server.js` on the designated cleaner worker:
-- `setInterval(cleanUpOldFiles, 600000)` — cleans `uploads/` every 10 min
-- `schedule.scheduleJob('0 10 0 * * *', ...)` — daily availability check at 00:10
-
-### Tests
-
-Located in `test/unit/` and `test/integration/`. Unit tests cover `lib/seoHelpers.js` and `middlewares/seo.js` only (no DB/AWS). Integration tests in `test/integration/routes.test.js` require a live server. The `.npmrc` sets `ignore-scripts=true` to bypass semantic-ui's interactive post-install script.
-
-## Work In Progress
-
-**Image optimization** — see [IMAGE_OPTIMIZATION.md](IMAGE_OPTIMIZATION.md). Partially
-complete and safe to pause. Static banners and the listing page's placeholder PNGs are
-re-encoded (committed, **not yet deployed**); the upload path now writes JPEG at quality
-82 instead of 100 (forward-only); and `Scripts/optimize_s3_images.js` backfills the
-~68,000 existing photos in S3, of which one property (3606) has been done as a test.
-
-Read that document before touching anything image-related — it records measured numbers,
-the server's Node 8 / glibc constraints, and which things were already tried and ruled out.
+- `ARCHITECTURE.md`: read before changing request flow, search, listing pages, emails, the data model or the image pipeline. Checked against the code 2026-10-20.
+- `docs/TAKEOVER.md`: accounts, servers, secrets, backups, open questions. Wins over any other doc.
+- `IMAGE_OPTIMIZATION.md`: read before touching images in S3, the upload path or `Scripts/optimize_s3_images.js`. The backfill is paused with properties 3606 and 5810 done (per vendor); don't add an S3 lifecycle rule that expires old versions.
+- `docs/vendor/`: the previous vendor's docs, kept for history. Several of their claims are wrong; check the code before trusting one.
+- Known security problems and bugs: Linear VLR-18 (unauthenticated upload endpoint), VLR-19 (tenant auth, data exposure), VLR-20 (crash resilience), VLR-21 (correctness bugs).
