@@ -1,0 +1,94 @@
+<%- include('header') %>
+<script>
+// update title and meta tag
+document.title = "Move Out | Cleaning Checklist | Ending a Tenancy in BC | Vancouver Luxury Rentals";
+// $("meta[name='description'").attr("content", 'VancouverLuxuryRentals: Search Luxury Furnished and Unfurnished Rental Listings in Vancouver.');
+</script>
+    <link href="/libs/css/content.css" rel="stylesheet">
+    <div class="container" id="tenant-forms-page">
+
+
+        <div class="col-md-12">
+            <div class="tenant-header-img">
+                <div class="layer">
+                    <h1>Forms Download</h1>
+                </div>
+            </div>
+
+            <h2 class="mobile-title">Forms Download</h2>
+            <hr class="margin-top-100">
+            
+            <div class="row no-margin-lr">
+                <div class="title">
+                    <h2 class="feature-title">Application Form</h2>
+                    <br>
+                    <!-- <a href="https://app.propertyware.com/pw/portals/vancouverluxuryrentals/tenantApplication.action"> -->
+                    <a onclick="$('#applicationFormModal').modal();">
+                        <div class="col-md-4 download-button no-padding-lr">
+                            <div class="custom-box">
+                                <span>Tenancy Application Link</span>
+                                <a href="/Disclosure-for-Residential-Tenancies.pdf" download id="ForceDownload" hidden></a>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <hr class="margin-top-100">
+            <div class="title">
+                <div id= "uploadForms">
+                </div>
+            </div>
+        </div>
+        <hr class="margin-top-100">
+        <div class="tenant-forms-button">
+            <a href="/owners/list-properties" class="button btn btn-default">List Your Properties</a>
+
+            <p class="bottom-phone">
+            Or Call: <a href="tel:6048990220" class="mobile_call_me">604.899.0220</a></p>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="modal fade" id="applicationFormModal" role="dialog">
+                <div class="modal-dialog applicationFormModal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-body">
+                            <iframe src="https://www.vancouverluxuryrentals.com/Disclosure-for-Residential-Tenancies.pdf#zoom=65"
+                                frameborder="0" width="100%" height="511px"></iframe>
+                            <div class="modal-footer applicationFormModal-footer">
+                                <label class="applicationFormModal-disclaim">
+                                    <input type="checkbox" value="" onchange="document.getElementById('agreeToClaim').disabled = !this.checked;"> I understand that the following form, as required by the Real Estate Council for all tenancies in BC, will be downloaded to my device as a PDF for my review and completion to submit with my application for tenancy.
+                                </label>
+                                <button type="button" class="btn applicationFormModal-btn" data-dismiss="modal">Cancel</button>
+                                <button id="agreeToClaim" disabled type="button" class="btn applicationFormModal-btn"  onClick="downloadAndNavi()">OK</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+</div>
+    <%- include('footer') %>
+
+    <script type='text/javascript'>
+        $(document).ready(function () {
+            var data = <%-JSON.stringify(data) %>;
+            var forms = JSON.parse(data.value);
+            var htmlContent = '<h2 class="feature-title">Forms Download</h2><br><div class="row no-margin-lr">';
+            var i;
+            for (i = 0; i < forms.length; i++){
+                htmlContent += '<div class="col-md-4"><a href="' + forms[i].url.replace("vancouverluxuryrental.com.s3-website-us-west-2.amazonaws.com/uploadForms/", "s3-us-west-2.amazonaws.com/vancouverluxuryrental.com/uploadForms/") + '" download="' + forms[i].file + '"><div class="custom-box" style="height:85px; margin-bottom:30px;"><span>' + forms[i].file + '</span><img src="/img/download-icon.png" class="download-icon" alt="VLR-download-icon"></div></a></div>';
+            }
+            htmlContent += '<br/></div>';
+            $("#uploadForms").html(htmlContent);
+        });
+
+        function downloadAndNavi() {
+            document.getElementById('ForceDownload').click();
+            window.location = 'https://app.propertyware.com/pw/portals/vancouverluxuryrentals/tenantApplication.action';
+        }
+    </script>

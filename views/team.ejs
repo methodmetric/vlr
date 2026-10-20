@@ -1,0 +1,98 @@
+<%- include('header') %>
+<script>
+// update title and meta tag
+document.title = "Meet Vancouver Luxury Rentals Team | Property Managers Vancouver";
+// $("meta[name='description'").attr("content", 'VancouverLuxuryRentals: Search Luxury Furnished and Unfurnished Rental Listings in Vancouver.');
+</script>
+<link href="/libs/css/content.css" rel="stylesheet">
+
+<div class="container" id="team">
+    <div class="col-md-12">
+        <div class="aboutus-header-img">
+            <div class="layer">
+            </div>
+        </div>
+        <div class="title">
+            <h1 class="feature-title h2">
+                Meet VLR Team
+            </h1>
+            <p>Vancouver Luxury Rentals (VLR) is a licensed British Columbia real estate corporation that specializes in
+                <a href="">sales</a>, <a href=""> property</a>
+                <a href="">management</a> and <a href="">luxury property rentals</a> in Greater Vancouver. Vancouver
+                is a world class destination with a high demand for outstanding luxurious rental properties. VLR's
+                properties
+                include <a href=""> luxurious condominiums</a>, magnificent estates, gorgeous city homes and a selection
+                of high end <a href="">penthouses</a>.
+            </p>
+            <h2 class="feature-title">Top Level Service 为您提供最顶级的服务</h2>
+            <p>Our elite team of Luxury Rental Specialists is available 7 days a week for all your renting needs. VLR
+                offers
+                premium services that allow our properties to stand out above the rest. With professional photography,
+                in-depth market knowledge, high-def videos and much more, we ensure every property we list meets our
+                rigorous standards.</p>
+            <a href="#team-team" id="team-arrow-down"><img src="/new-img/icon-down.png" alt="down arrow img"
+                    width="30"></a>
+        </div>
+
+        <div class="" id="team-team">
+            <!-- hard code the boss at begining -->
+            <div>
+                <div class="profile-picture-wrapper">
+                <% if (data.length && data[0].photoUrl) { %>
+                <img src="<%= data[0].photoUrl %>" alt="Shahram Rafati" class="profile-picture" width="220" height="220">
+                <% } %>
+                </div>
+                <div class="profile-contact-box">
+                <div class="profile-name">
+                <span class="profile-name-bold">Shahram Rafati</span><br>
+                Managing Broker/ Principal
+                </div>
+                <div class="profile-contact">
+                <a class="profile-contact-phone" href="tel:6048990220">604.899.0220</a><br>
+                <a class="profile-contact-email" href="mailto:info@vancouverluxuryrealty.com">srafati@vancouverluxuryrealty.com</a>
+                </div>
+                <div class="clearfix"></div>
+                </div>
+                <div class="profile-description title">
+                <p>With over two decades of experience in the real estate industry, I bring a deep understanding of Vancouver’s dynamic market. Since 2004, I’ve worked across all facets of real estate, specializing in residential property management, luxury properties and sales. As the Principal and Managing Broker of both Vancouver Luxury Realty and EasyRent Real Estate Services, I lead a dedicated team focused on delivering exceptional service and results. My approach combines market insight, negotiation expertise, and a commitment to integrity—ensuring every client experience is seamless and successful. </p>
+                </div>
+                <hr>
+            </div>
+            <% for (var i=1; i < data.length; i++) { %>
+            
+            <div>
+                <div class="profile-picture-wrapper">
+                    <% if (data[i].photoUrl) { %>
+                    <img src="<%= data[i].photoUrl %>" alt="<%= data[i].name %>" class="profile-picture"
+                         width="220" height="220" loading="lazy">
+                    <% } %>
+                </div>
+                <div class="profile-contact-box">
+                    <div class="profile-name">
+                        <span class="profile-name-bold"><%= data[i].name %></span><br>
+                        <%= data[i].role %>
+                    </div>
+                    <div class="profile-contact">
+                        <a class="profile-contact-phone" href="tel:<%= data[i].phone.replace(/\D/g, '') %>"><%= data[i].phone %></a><br>
+                        <a class="profile-contact-email" href="mailto:<%= data[i].email %>"><%= data[i].email %></a>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="profile-description title">
+                    <p><%= data[i].detail %></p>
+                </div>
+                <hr>
+            </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+<br>
+<script>
+    $(document).ready(function () {
+        //for SEO and meta keywords
+        $("meta[name=description]").attr("content", "Our elite team of Luxury Rental Specialists is available 7 days a week for all your renting needs. VLR offers premium services that allow our properties to stand out above the rest.")
+    });
+    $("title").html("Vancouver Luxury Rentals: Meet VLR Team");
+</script>
+<%- include('footer') %>

@@ -1,0 +1,497 @@
+<%- include('header') %>
+<link href="/libs/css/home.css" rel="stylesheet">
+<%- include('banner', {
+  heroTitle: 'Professional Property Management Services in Metro Vancouver',
+  heroSubtitle: 'Tenant selection, upkeep, marketing. Our team of experts takes care of it all so you don’t have to.',
+  heroCtaText: 'Get a Rental Income Assessment',
+  heroCtaHref: '/owners/list-properties',
+  searchIntro: 'Are you a tenant? Explore our available properties below'
+}) %>
+
+<!-- Rendered immediately: the static sections need no JS, and the reviews slider
+     measures card heights on ready, which returns 0 inside a hidden container.
+     The Vue-driven lists below are covered by [v-cloak]. -->
+<div class="container" id="home_container">
+  <div class="col-md-12">
+
+    <!-- SECTION 2: For rent / rented counters -->
+    <div class="citySearch">
+      <div class="row">
+        <div class="col-md-7 citySearch-rent">
+          <span class="citySearch-no for-rent-counter" data-count="122">1</span>
+          FOR RENT
+          <select
+            name="city"
+            id="citySearch-rent-city"
+            class="el-select-dropdown__item"
+          >
+            <option disabled selected value="">City</option>
+            <option value="Vancouver">Downtown Vancouver</option>
+            <option value="Vancouver West Side">Vancouver West Side</option>
+            <option value="UBC">UBC</option>
+            <option value="Vancouver East Side">Vancouver East Side</option>
+            <option value="West Vancouver">West Vancouver</option>
+            <option value="North Vancouver">North Vancouver</option>
+            <option value="Richmond">Richmond</option>
+            <option value="Burnaby">Burnaby</option>
+            <option value="Surrey">Surrey</option>
+            <option value="White Rock">White Rock</option>
+            <option value="Coquitlam">Coquitlam</option>
+            <option value="New Westminster">New Westminster</option>
+            <option value="Langley">Langley</option>
+            <option value="Port Moody">Port Moody</option>
+            <option value="Delta">Delta</option>
+            <option value="Tsawwassen">Tsawwassen</option>
+          </select>
+          <select
+            name="city"
+            id="citySearch-rent-furnished"
+            class="el-select-dropdown__item"
+          >
+            <option selected value="Both%20Possible"
+              >Unfurnished or Furnished</option
+            >
+            <option value="Yes">Furnished</option>
+            <option value="No">Unfurnished</option>
+          </select>
+          <button type="button" class="" id="for-rent-search-button">
+            <span>Search</span>
+            <img
+              src="/new-img/searchicon.png"
+              alt="vlr-facebook"
+              class="searchIcon"
+            />
+          </button>
+        </div>
+        <div class="col-md-5 citySearch-rented">
+          <span class="citySearch-no rented-counter" data-count="1822">1</span>
+          RENTED
+          <select
+            name="city"
+            id="citySearch-rented-city"
+            class="el-select-dropdown__item"
+          >
+            <option disabled selected value="">City</option>
+            <option value="Vancouver">Downtown Vancouver</option>
+            <option value="Vancouver West Side">Vancouver West Side</option>
+            <option value="UBC">UBC</option>
+            <option value="Vancouver East Side">Vancouver East Side</option>
+            <option value="West Vancouver">West Vancouver</option>
+            <option value="North Vancouver">North Vancouver</option>
+            <option value="Richmond">Richmond</option>
+            <option value="Burnaby">Burnaby</option>
+            <option value="Surrey">Surrey</option>
+            <option value="White Rock">White Rock</option>
+            <option value="Coquitlam">Coquitlam</option>
+            <option value="New Westminster">New Westminster</option>
+            <option value="Langley">Langley</option>
+            <option value="Port Moody">Port Moody</option>
+            <option value="Delta">Delta</option>
+            <option value="Tsawwassen">Tsawwassen</option>
+          </select>
+          <button type="button" class="" id="rented-search-button">
+            <span>Search</span>
+            <img
+              src="/new-img/searchicon.png"
+              alt="vlr-facebook"
+              class="searchIcon"
+            />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3 + 4: Why VLR is Right for Your Property -->
+    <div class="home-why-section">
+      <h2 class="home-section-title">Why VLR is Right for Your Property</h2>
+      <p class="home-why-intro">
+        Established in 2009, Vancouver Luxury Rentals (VLR) is a premier property
+        management company that specializes in managing high-end rental properties.
+      </p>
+      <div class="row home-why-row">
+        <div class="col-xs-6 col-md-3 home-why-col">
+          <div class="home-why-item">
+            <h3>Maximum Exposure</h3>
+            <p>We provide highly targeted online marketing and advertising of your property</p>
+          </div>
+        </div>
+        <div class="col-xs-6 col-md-3 home-why-col">
+          <div class="home-why-item">
+            <h3>Trustworthy Tenants</h3>
+            <p>We go through a rigorous tenant screening process and leverage our extensive network to find the best candidate</p>
+          </div>
+        </div>
+        <div class="col-xs-6 col-md-3 home-why-col">
+          <div class="home-why-item">
+            <h3>Full Transparency</h3>
+            <p>You will receive monthly and annual owner statements, as well as move in, move out, and periodic inspection reports</p>
+          </div>
+        </div>
+        <div class="col-xs-6 col-md-3 home-why-col">
+          <div class="home-why-item">
+            <h3>Multilingual Services</h3>
+            <p>All our services are available in English, Mandarin, and Farsi</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 5: What Property Owners and Tenants Love About Us -->
+    <div class="home-stats-section">
+      <h2 class="home-section-title">What Property Owners and Tenants Love About Us</h2>
+    </div>
+
+    <!-- SECTION 6: Google reviews slider -->
+    <div class="home-reviews-section">
+      <div class="home-reviews-slider">
+        <button class="home-slider-btn home-slider-arrow" id="home-reviews-prev">
+          <span class="glyphicon glyphicon-chevron-left"></span>
+        </button>
+        <div class="home-reviews-viewport">
+          <div class="home-reviews-track">
+            <div class="home-review-slide">
+              <div class="review-card">
+                <div class="review-head">
+                  <span class="review-avatar" style="background-color: #db4437;">R</span>
+                  <span class="review-author">Roman D.</span>
+                </div>
+                <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                <p class="review-text">I recently worked with Vancouver Luxury Rentals while searching for a high-end property in the Vancouver area, and overall, my experience was very positive. From the start, the team was professional, responsive, and well-organized. My agent took the time to understand what I was looking for and provided several suitable options within days. The booking process was smooth, and all paperwork was handled efficiently with clear communication throughout.</p>
+                <a class="review-source" href="https://share.google/ezC68yh9W5CEW41Fu" target="_blank" rel="noopener noreferrer">View on Google</a>
+              </div>
+            </div>
+            <div class="home-review-slide">
+              <div class="review-card">
+                <div class="review-head">
+                  <span class="review-avatar" style="background-color: #f4b400;">S</span>
+                  <span class="review-author">Saaed A.</span>
+                </div>
+                <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                <p class="review-text">I've had an excellent experience as a tenant with VLR. The team is friendly, responsive, and genuinely cares about keeping the property well-maintained. Any issues I've raised have been handled quickly and professionally, which makes a big difference as a renter. It's been refreshing to deal with a property management company that's so organized and respectful. Highly recommend them to anyone looking for a smooth and reliable rental experience!</p>
+                <a class="review-source" href="https://share.google/mpQ0VYCRi87W9kRZk" target="_blank" rel="noopener noreferrer">View on Google</a>
+              </div>
+            </div>
+            <div class="home-review-slide">
+              <div class="review-card">
+                <div class="review-head">
+                  <span class="review-avatar" style="background-color: #0f9d58;">M</span>
+                  <span class="review-author">Maddalen P.</span>
+                </div>
+                <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                <p class="review-text">Vancouver Luxury Rentals is the by far the best rental company in Vancouver. I have moved 4 times in the last 8 years, and every apartment I have found has been through VLR. They are the most professional when it comes to their standards and the way they conduct business. They have all the best listings and options out of any other company. I have also listed with them and their preparation and standards got my unit rented right away. Every touch point of the business has been intentionally thought out. Not to mention all their staff are extremely knowledgeable and efficient.</p>
+                <a class="review-source" href="https://share.google/070YQuxiNrwQKE5UG" target="_blank" rel="noopener noreferrer">View on Google</a>
+              </div>
+            </div>
+            <div class="home-review-slide">
+              <div class="review-card">
+                <div class="review-head">
+                  <span class="review-avatar" style="background-color: #4285f4;">H</span>
+                  <span class="review-author">Harrison N.</span>
+                </div>
+                <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                <p class="review-text">I have been working with VLR since my move to Vancouver four years ago. From finding my first apartment to each subsequent place, VLR has consistently delivered in helping me find and secure a home that fit my requirements. Expect unparalleled care, strict attention to detail and a seamless rental experience every time. Can't recommend this team enough.</p>
+                <a class="review-source" href="https://share.google/Jp0xtW3T9AVTCiwdz" target="_blank" rel="noopener noreferrer">View on Google</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="home-slider-btn home-slider-arrow" id="home-reviews-next">
+          <span class="glyphicon glyphicon-chevron-right"></span>
+        </button>
+      </div>
+      <ol class="home-slider-dots" id="home-reviews-dots"></ol>
+    </div>
+
+    <!-- SECTION 7: New Listings slider -->
+    <h2 class="home-section-title">New Listings</h2>
+    <div id="featured-view" class="listing-wrapper home-listing-slider">
+      <div class="home-slider-outer">
+        <button class="home-slider-btn home-slider-arrow" @click="prev" :disabled="currentSlide === 0">
+          <span class="glyphicon glyphicon-chevron-left"></span>
+        </button>
+        <div class="row home-slider-track">
+          <div
+            v-for="item in visibleProps"
+            :key="item.property.propertyId"
+            class="col-xs-12 col-md-4"
+          >
+            <figure v-cloak>
+              <a :href="'/listing/' + item.property.address.replace(/,?\s|#/g, '-') + '-property-id-' + item.property.propertyId">
+                <img :src="item.img" alt="property" />
+                <figcaption>
+                  <span class="propertyId hidden">{{ item.property.propertyId }}</span>
+                  <p class="h6">{{ item.property.typeOfProperty }} in {{ item.property.city }}, {{ item.property.province }}</p>
+                  <h2>{{ item.property.address }}</h2>
+                  <p>{{ item.property.bedrooms }} Bedroom | {{ item.property.bathrooms }} Bathroom | {{ item.property.squareFeet }} SqFt</p>
+                  <p class="home-listing-price">${{ item.property.rent }}</p>
+                </figcaption>
+              </a>
+            </figure>
+          </div>
+        </div>
+        <button class="home-slider-btn home-slider-arrow" @click="next" :disabled="currentSlide >= maxSlide">
+          <span class="glyphicon glyphicon-chevron-right"></span>
+        </button>
+      </div>
+      <ol class="home-slider-dots" v-cloak v-if="maxSlide > 0">
+        <li
+          v-for="n in maxSlide + 1"
+          :class="{ active: n - 1 === currentSlide }"
+          @click="currentSlide = n - 1"
+        ></li>
+      </ol>
+    </div>
+    <div class="home-listing-cta">
+      <a href="/for-rent/all">See Our Available Properties</a>
+    </div>
+
+    <!-- SECTION 8: Recently Rented slider -->
+    <h2 class="home-section-title">Recently Rented</h2>
+    <div id="recently-rented-view" class="listing-wrapper home-listing-slider">
+      <div class="home-slider-outer">
+        <button class="home-slider-btn home-slider-arrow" @click="prev" :disabled="currentSlide === 0">
+          <span class="glyphicon glyphicon-chevron-left"></span>
+        </button>
+        <div class="row home-slider-track">
+          <div
+            v-for="item in visibleProps"
+            :key="item.property.propertyId"
+            class="col-xs-12 col-md-4"
+          >
+            <figure v-cloak>
+              <a :href="'/listing/' + item.property.address.replace(/,?\s|#/g, '-') + '-property-id-' + item.property.propertyId">
+                <img :src="item.img" alt="property" />
+                <figcaption>
+                  <span class="propertyId hidden">{{ item.property.propertyId }}</span>
+                  <p class="h6">{{ item.property.typeOfProperty }} in {{ item.property.city }}, {{ item.property.province }}</p>
+                  <h2>{{ item.property.address }}</h2>
+                  <p>{{ item.property.bedrooms }} Bedroom | {{ item.property.bathrooms }} Bathroom | {{ item.property.squareFeet }} SqFt</p>
+                </figcaption>
+                <div class="home-rented-badge">RENTED</div>
+              </a>
+            </figure>
+          </div>
+        </div>
+        <button class="home-slider-btn home-slider-arrow" @click="next" :disabled="currentSlide >= maxSlide">
+          <span class="glyphicon glyphicon-chevron-right"></span>
+        </button>
+      </div>
+      <ol class="home-slider-dots" v-cloak v-if="maxSlide > 0">
+        <li
+          v-for="n in maxSlide + 1"
+          :class="{ active: n - 1 === currentSlide }"
+          @click="currentSlide = n - 1"
+        ></li>
+      </ol>
+    </div>
+
+  </div>
+</div>
+
+<!-- SECTION 9: Ready to get started CTA -->
+<div class="home-cta-section">
+  <h2 class="home-cta-heading">Ready to get started?</h2>
+  <a href="/owners/list-properties" class="home-cta-btn">List Your Property</a>
+</div>
+
+<script>
+  var user = localStorage.getItem("User");
+  var userId = localStorage.getItem("UserId");
+
+  $("#for-rent-search-button").click(function () {
+    var city = $("#citySearch-rent-city option:checked").val();
+    var furnished = $("#citySearch-rent-furnished option:checked").val();
+    window.location.href =
+      "/properties?status=Available&city=" + city + "&furnished=" + furnished;
+  });
+
+  $("#rented-search-button").click(function () {
+    var city = $("#citySearch-rented-city option:checked").val();
+    window.location.href = "/properties?status=Rented&city=" + city;
+  });
+
+  $(".for-rent-counter").each(function () {
+    var $this = $(this);
+    $.ajax({
+      type: "GET",
+      url: "/properties/forRent",
+      success: function (data) {
+        var countTo = data["count"];
+        $({ countNum: $this.text() }).animate(
+          { countNum: countTo },
+          {
+            duration: 2000,
+            easing: "linear",
+            step: function () { $this.text(Math.floor(this.countNum)); },
+            complete: function () { $this.text(this.countNum); },
+          }
+        );
+      },
+    });
+  });
+
+  $(".rented-counter").each(function () {
+    var $this = $(this);
+    $.ajax({
+      type: "GET",
+      url: "/properties/rented",
+      success: function (data) {
+        var countTo = data["count"];
+        $({ countNum: $this.text() }).animate(
+          { countNum: countTo },
+          {
+            duration: 2000,
+            easing: "linear",
+            step: function () { $this.text(Math.floor(this.countNum)); },
+            complete: function () { $this.text(this.countNum); },
+          }
+        );
+      },
+    });
+  });
+
+  // Shared listing slider: 3 cards per view on desktop, 1 on mobile.
+  // Data still comes from the same endpoints as before; only the layout changed.
+  function initListingSlider(el, url) {
+    $.ajax({
+      type: "GET",
+      url: url,
+      success: function (response) {
+        new Vue({
+          el: el,
+          data: {
+            properties: response.data,
+            coverImgs: response.coverImgs,
+            currentSlide: 0,
+            perPage: window.innerWidth < 992 ? 1 : 3,
+          },
+          computed: {
+            maxSlide: function () {
+              return Math.max(0, this.properties.length - this.perPage);
+            },
+            // pair each property with its cover image so the slice keeps them aligned
+            visibleProps: function () {
+              var start = Math.min(this.currentSlide, this.maxSlide);
+              var out = [];
+              for (var i = start; i < start + this.perPage && i < this.properties.length; i++) {
+                out.push({ property: this.properties[i], img: this.coverImgs[i] });
+              }
+              return out;
+            },
+          },
+          methods: {
+            prev: function () {
+              if (this.currentSlide > 0) this.currentSlide--;
+            },
+            next: function () {
+              if (this.currentSlide < this.maxSlide) this.currentSlide++;
+            },
+            onResize: function () {
+              var per = window.innerWidth < 992 ? 1 : 3;
+              if (per === this.perPage) return;
+              this.perPage = per;
+              if (this.currentSlide > this.maxSlide) this.currentSlide = this.maxSlide;
+            },
+          },
+          mounted: function () {
+            $(window).on("resize", this.onResize);
+          },
+        });
+      },
+    });
+  }
+
+  initListingSlider("#featured-view", "/properties/featured");
+  initListingSlider("#recently-rented-view", "/properties/recentlyRented");
+
+  // Google reviews slider: 3 per view on desktop with arrows, 1 with dots on mobile.
+  $(function () {
+    var $viewport = $(".home-reviews-viewport");
+    var $track = $(".home-reviews-track");
+    var $slides = $track.children(".home-review-slide");
+    var $dots = $("#home-reviews-dots");
+    var currentReview = 0;
+
+    function perPage() {
+      return $(window).width() < 992 ? 1 : 3;
+    }
+
+    function maxReview() {
+      return Math.max(0, $slides.length - perPage());
+    }
+
+    function renderReviews() {
+      var per = perPage();
+      var step = 100 / per;
+      if (currentReview > maxReview()) currentReview = maxReview();
+      $slides.css({ width: step + "%", height: "" });
+      $track.css("transform", "translateX(-" + currentReview * step + "%)");
+      // size the viewport and the cards on show to the tallest review of the page
+      var height = 0;
+      $slides.slice(currentReview, currentReview + per).each(function () {
+        height = Math.max(height, $(this).outerHeight());
+      });
+      $slides.css("height", height + "px");
+      $viewport.css("height", height + "px");
+      $("#home-reviews-prev").prop("disabled", currentReview === 0);
+      $("#home-reviews-next").prop("disabled", currentReview === maxReview());
+      $dots.children().removeClass("active").eq(currentReview).addClass("active");
+    }
+
+    function buildReviewDots() {
+      $dots.empty();
+      for (var i = 0; i <= maxReview(); i++) {
+        $dots.append('<li data-slide-to="' + i + '"></li>');
+      }
+      renderReviews();
+    }
+
+    $("#home-reviews-prev").click(function () {
+      if (currentReview > 0) currentReview--;
+      renderReviews();
+    });
+
+    $("#home-reviews-next").click(function () {
+      if (currentReview < maxReview()) currentReview++;
+      renderReviews();
+    });
+
+    $dots.on("click", "li", function () {
+      currentReview = $(this).data("slide-to");
+      renderReviews();
+    });
+
+    $(window).on("load resize", buildReviewDots);
+    buildReviewDots();
+  });
+
+  $(document).ready(function () {
+    $("figure button").click(function (event) {
+      return false;
+    });
+
+    // make the ajax call and get the announcement content
+    $.ajax({
+      type: "GET",
+      url: "/VLR-admin/showRoom/announcement",
+      success: function (response) {
+        // note: use value (arr) to store title(value[0]) and body (value[1])
+        if (response.data != null) {
+          // fill the content
+          $("#announcementTitle").html(response.data.value[1]);
+          $("#announcementBody").html(response.data.value[2]);
+          if (response.data.value[0] == "1") {
+            $("#WFHModel").modal();
+          }
+        }
+      },
+    });
+
+    // show new model for WFH alert
+    $("#WFHModelClose").on("click", function () {
+      $("#WFHModel").modal("hide");
+    });
+  });
+</script>
+
+<%- include('footer') %>

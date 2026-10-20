@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head><link rel="icon" href="/new-img/favicon.ico">
+    <meta charset="UTF-8">
+    <title>VLR Admin Database</title>
+    <link rel="stylesheet" href="/libs/css/style.css">
+    <script type="text/javascript" src="/libs/jquery/jquery.js"></script>
+    <script type="text/javascript" src="/libs/js/vue.min.js"></script>
+    <script type='text/javascript'>
+        $(document).ready(function() {
+            var schedules = <%-JSON.stringify(data) %>;
+            var tableHeader = "<tr><th>Created At</th><th><Property Id></th><th>Full Name</th><th>Email</th><th>Phone</th><th>Date</th><th>Time</th><th>#Occupants</th><th>#Pets</th><th>US/CA Credit Card</th><th>Start Date</th><th>Preferred Visit Date</th><th>Message</th><th>Forward To</th><th>Action</th></tr>"
+            $("#table-view").append(tableHeader);
+            for (schedule of schedules) {
+                var markUp = "<tr><td>" +
+                    schedule.createdAt + "</td><td>" +
+                    schedule.propertyId + "</td><td>" +
+                    schedule.fullName + "</td><td>" +
+                    schedule.email + "</td><td>" +
+                    schedule.phone + "</td><td>" +
+                    schedule.scheduleDate + "</td><td>" +
+                    schedule.numberOfOccupants + "</td><td>" +
+                    schedule.numberOfPets + "</td><td>" +
+                    schedule.creditCard + "</td><td>" +
+                    schedule.startDate + "</td><td>" +
+                    schedule.preferredDate + "</td><td>" +
+                    schedule.message + "</td><td>" +
+                    '<select id="selectTable"class="dropbtn"><option class="dropbtn"value="Agent1">Agent1</option><option class="dropbtn" value="Agent2">Agent2</option><option class="dropbtn" value="Agent3">Agent3</option></select></td><td><a onClick="deletePopup(this)"  class="deleteButton">Delete</a>' +
+                    "</td></tr>";
+                $("#table-view").append(markUp);
+            }
+        });
+    </script>
+</head>
+
+
+<body>
+    <div class="topnav" id="myTopnav">
+        <a href="/VLR-admin/">Home</a>
+        <a href="/VLR-admin/csv">Import CSV</a>
+        <a href="/VLR-admin/property/new">New Property</a>
+        <a href="/VLR-admin/owner">Owner Leads</a>
+        <a href="/VLR-admin/viewRequest" class="current">Tenant Enquiries</a>
+        <a href="/VLR-admin/available90">Available in 90 days</a>
+        <a href="/VLR-admin/database">Database</a>
+
+        <a href="/VLR-admin/maintenance">Maintenance Request</a>
+        <a href="javascript:void(0);" class="icon" onclick="show()">&#9776;</a>
+    </div>
+    <div style="overflow-x:auto;">
+        <table id="table-view">
+
+        </table>
+    </div>
+</body>

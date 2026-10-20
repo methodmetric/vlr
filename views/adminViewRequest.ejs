@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+
+<head><link rel="icon" href="/new-img/favicon.ico">
+    <meta charset="UTF-8">
+    <title>VLR Admin Database</title>
+    <link rel="stylesheet" href="/libs/css/admin-style.css">
+    <script type="text/javascript" src="/libs/jquery/jquery.js"></script>
+    <script type="text/javascript" src="/libs/js/vue.min.js"></script>
+    <script type="text/javascript" src="/libs/js/moment.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+    <link href="/libs/css/vendor/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css" rel="stylesheet">
+    <style type="text/css">
+        .invisible{
+            display: none;
+        }
+        .sentButton{
+            color: red;
+            font-weight: bold;
+        }
+
+        #admin_owner_leads{
+            width: inherit;
+        }
+
+        #table-view{
+            width: inherit !important;
+        }
+
+        #table-view tr { 
+            max-height: 100px; 
+        }
+
+        #table-view tr div {
+            /* //display: inline-block; // is this necessary? */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 380px;
+            max-width: 380px; 
+            /* // width or max-width must be specified */
+            /* //word-wrap: normal; //  */
+        
+            
+            /* // on a touch device, a click is equivalent to hover - text will expand and remain that way */
+        }
+
+        #table-view tr div:hover {
+            white-space: normal;
+            min-width: 380px;
+            max-width: 380px;
+        }
+    </style>
+</head>
+
+
+<body class="admin_body">
+    <div class="topnav" id="myTopnav">
+        <a href="/VLR-admin/">Home</a>
+        <a href="/VLR-admin/csv">Import CSV</a>
+        <a href="/VLR-admin/property/new">New Property</a>
+        <a href="/VLR-admin/owner">Owner Leads</a>
+        <a href="/VLR-admin/viewRequest" class="current">Tenant Enquiries</a>
+        <a href="/VLR-admin/available90">Available in 90 days</a>
+        <a href="/VLR-admin/database">Database</a>
+        <a href="/VLR-admin/redirects">Redirects</a>
+        <a href="/VLR-admin/logout">Log out</a>
+        <a href="javascript:void(0);" class="icon" onclick="show()">&#9776;</a>
+    </div>
+
+    <div class="container" id="admin_owner_leads">
+        <h1 class="center">View Schedule Management</h1>
+        <table id="table-view" class="table">
+            <thead>
+                <tr>
+                    <th class='invisible'>Id</th>
+                    <th class='invisible'>Forwarded</th>
+                    <th>Property Status</th>
+                    <th>Created At</th>
+                    <th>Property Id</th>
+                    <th>Property Agent</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th># Occupants</th>
+                    <th># Pets</th>
+                    <th>Credit History</th>
+                    <th>Start Date</th>
+                    <th>Preferred Visit Date</th>
+                    <th style="min-width: 380px">Message</th>
+                    <th>Forward To</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</body>
+
+<script type='text/javascript'>
+    function show() {
+        var x = document.getElementById("myTopnav");
+        if (x.className === "topnav") {
+            x.className += " responsive";
+        } else {
+            x.className = "topnav";
+        }
+    }
+
+    function sendEmail(row) {
+        const propertyStatus = row.parentNode.parentNode.children[2].innerText;
+        const propertyId = row.parentNode.parentNode.children[4].innerText;
+        const tenantName = row.parentNode.parentNode.children[6].innerText;
+        const tenantEmail = row.parentNode.parentNode.children[7].innerText;
+        const tenantPhone = row.parentNode.parentNode.children[8].innerText;
+        const numberOfOccupants = row.parentNode.parentNode.children[9].innerText;
+        const numberOfPets = row.parentNode.parentNode.children[10].innerText;
+        const creditCard = row.parentNode.parentNode.children[11].innerText;
+        const startDate = row.parentNode.parentNode.children[12].innerText;
+        const preferredDate = row.parentNode.parentNode.children[13].innerText;
+        const comment = row.parentNode.parentNode.children[14].innerText;
+        const agentName = row.parentNode.parentNode.children[15].children[0].selectedOptions[0].textContent;
+        const agentEmail = row.parentNode.parentNode.children[15].children[0].selectedOptions[0].value;
+
+        // send ajax to email sender
+        $.ajax({
+            type: 'POST',
+            url: '/VLR-admin/mail/schedule/' + row.parentNode.parentNode.children[0].innerText, //todo, update this API
+            data: {
+                propertyId: propertyId,
+                tenantName: tenantName,
+                tenantEmail: tenantEmail,
+                tenantPhone: tenantPhone,
+                numberOfPets: numberOfPets,
+                numberOfOccupants: numberOfOccupants,
+                creditCard: creditCard,
+                comment: comment,
+                agentName: agentName,
+                agentEmail: agentEmail,
+                startDate: startDate,
+                preferredDate: preferredDate,
+                propertyStatus: propertyStatus
+            },
+            success: function(response) {
+                alert("Email Sent") 
+
+                // change current button to "sent!"
+                row.innerText="Sent";
+                $(row).attr('class', 'sentButton');
+            }
+        });
+    }
+
+    $.fn.dataTable.moment = function ( format, locale ) {
+        var types = $.fn.dataTable.ext.type;
+    
+        // Add type detection
+        types.detect.unshift( function ( d ) {
+            return moment( d, format, locale, true ).isValid() ?
+                'moment-'+format :
+                null;
+        } );
+    
+        // Add sorting method - use an integer for the sorting
+        types.order[ 'moment-'+format+'-pre' ] = function ( d ) {
+            return moment( d, format, locale, true ).unix();
+        };
+    };
+
+   
+    $(document).ready(function() {
+        $.ajax({
+            type: 'GET',
+            url: '/VLR-admin/api/all',
+            success: function(response) {
+                let allAgents = response.data;
+                $.fn.dataTable.moment( 'YYYY/MM/DD HH:mm:ss' );
+
+                var tableData = [];
+                var table = $('#table-view').DataTable({
+                    "data": tableData,
+                    "order": [[ 3, 'dsc' ]],
+                    "fnCreatedRow": function( nRow, aData, iDataIndex ) {
+                        $('td:eq(0)', nRow).addClass('invisible');
+                        $('td:eq(1)', nRow).addClass('invisible');
+                        if (aData[1] == false)
+                            $('td:eq(16)', nRow).append('<a onClick="sendEmail(this)" class="sendButton">Send</a>');
+                        else
+                            $('td:eq(16)', nRow).append('<a onClick="sendEmail(this)" class="sentButton">Sent</a>');
+                    },
+                });
+                $.ajax({
+                    type: 'GET',
+                    url: '/VLR-admin/schedules', //todo, update this API
+                    success: function(response) {
+                        for (schedule of response.data) {
+                            var agentsList = "<select name='agents'>";
+                            var added = 0;
+                            for (agent of allAgents) {
+                                if (schedule.agent != undefined && schedule.agent != null && agent.name === schedule.agent){
+                                    agentsList += "<option selected value='" + agent.email + "'>" + agent.name + "</option>";
+                                    added = 1;
+                                }
+                                else{
+                                    agentsList += "<option value='" + agent.email + "'>" + agent.name + "</option>";
+                                }
+                            }
+                            if (added == 0 && schedule.agent != undefined && schedule.agent != null && schedule.agent != ''){
+                                agentsList += "<option selected>" + schedule.agent + "</option>";
+                            }
+                            agentsList += "</select>";
+                            schedule.agent = agentsList;
+                            createdAt = new moment(schedule.createdAt).format("YYYY/MM/DD HH:mm");
+                            startDate = schedule.preferredDate ? new moment(schedule.startDate).format("YYYY/MM/DD") : "";
+                            preferredDate = schedule.preferredDate ? new moment(schedule.preferredDate).format("YYYY/MM/DD HH:mm") : "";
+                            // update propertyStatus
+                            tableData.push([
+                                schedule._id,
+                                schedule.forwarded,
+                                schedule.propertyStatus ? schedule.propertyStatus : "",
+                                createdAt,
+                                schedule.propertyId,
+                                schedule.propertyAgent,
+                                schedule.fullName,
+                                schedule.email,
+                                schedule.phone,
+                                schedule.numberOfOccupants ? schedule.numberOfOccupants : "-",
+                                schedule.numberOfPets,
+                                schedule.creditCard,
+                                startDate,
+                                preferredDate,
+                                `<div><span>${schedule.message?schedule.message:""}</span></div>`,
+                                schedule.agent,
+                                ''
+                            ]);
+                        }
+                        table.rows.add(tableData).draw(true);
+                    },
+                    error: function(e) {
+                        console.log("ajax for getting available in 90 days failed, message = ", e)
+                    }
+                });
+            },
+            error: function(e) {
+                console.log("ajax for getting all owner details failed, message = ", e)
+            }
+        });
+
+    });
+</script>
+
+</html>

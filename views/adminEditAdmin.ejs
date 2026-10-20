@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+
+<head><link rel="icon" href="/new-img/favicon.ico">
+    <meta charset="UTF-8">
+    <title>VLR Admin Home</title>
+    <link rel="stylesheet" href="/libs/css/admin-style.css">
+    <link href="/libs/css/vendor/bootstrap.min.css" rel="stylesheet">
+    <script type="text/javascript" src="/libs/jquery/jquery.js"></script>
+</head>
+
+<body>
+    <div class="topnav" id="myTopnav">
+        <a href="/VLR-admin/">Home</a>
+        <a href="/VLR-admin/csv">Import CSV</a>
+        <a href="/VLR-admin/property/new">New Property</a>
+        <a href="/VLR-admin/owner">Owner Leads</a>
+        <a href="/VLR-admin/viewRequest">Tenant Enquiries</a>
+        <a href="/VLR-admin/available90">Available in 90 days</a>
+        <a href="/VLR-admin/database">Database</a>
+        <a href="/VLR-admin/redirects">Redirects</a>
+        <a href="/VLR-admin/logout">Log out</a>
+        <a href="javascript:void(0);" class="icon" onclick="show()">&#9776;</a>
+    </div>
+
+    <div class="container">
+        <h2>Edit Admin</h2>
+        <form action="/VLR-admin/admin" method="post">
+
+            <input type="hidden" name="id" value="" id="id">
+            <input type="hidden" name="profile" value="" id="profile">
+            <div class="form-group row">
+                <label class="col-xs-6 col-md-3" for="name">Name: </label>
+                <input id="name" name="name" value="">
+            </div>
+
+            <div class="form-group row">
+                <label class="col-xs-6 col-md-3" for="email">Email: </label>
+                <input id="email" name="email" value="">
+                <!-- todo: add disabled if not editable -->
+            </div>
+
+            <div class="form-group row">
+                <label class="col-xs-6 col-md-3" for="phone">Phone: </label>
+                <input id="phone" name="phone" value="">
+            </div>
+
+            <div class="form-group row">
+                <label class="col-xs-6 col-md-3" for="email">Role: </label>
+                <select id="role" name="role">
+                  <option value="SuperAdmin">SuperAdmin</option>
+                  <option value="Agent">Agent</option>
+                </select>
+            </div>
+
+            <div class="form-group row">
+                <label class="col-xs-6 col-md-3" for="email">Detail: </label>
+                <textarea id="detail" name="detail"></textarea>
+            </div>
+
+            <div>
+                <h4> Choose profile image: </h4>
+                <input id='file' type='file' onchange="readURL(this);" />
+                <img id="profile_img" src="#" style="display: none;" />
+            </div>
+
+            <button type="submit" class="newbtn">Save</button>
+        </form>
+
+    </div>
+</body>
+<script>
+    var readURL;
+    $(document).ready(function() {
+        var admin = <%-JSON.stringify(data)%>;
+        $("#id").val(admin._id);
+        $("#name").val(admin.name);
+        $("#email").val(admin.email);
+        $("#phone").val(admin.phone);
+        $("#role").val(admin.role);
+        $("#detail").val(admin.detail);
+        if (admin.profile != null && admin.profile != '') {
+            var byteArray = new Uint8Array(admin.profile.data.data);
+            var blob = new Blob([byteArray], {
+                type: "image/png"
+            });
+            var urlCreator = window.URL || window.webkitURL;
+            var imageUrl = urlCreator.createObjectURL(blob);
+            $('#profile_img').attr('src', imageUrl);
+            $('#profile_img').css('display', 'block');
+        }
+    });
+    function readURL(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#profile_img').attr('src', e.target.result);
+                    $('#profile_img').css('display', 'block');
+                    $("#profile").val(e.target.result);
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+</script>
+
+</html>

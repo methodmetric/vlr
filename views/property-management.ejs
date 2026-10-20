@@ -1,0 +1,891 @@
+<%- include('pm-header', { canonicalUrl: 'https://www.vancouverluxuryrentals.com/property-management/' }) %>
+
+<script src="/libs/js/vue.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="/libs/js/en.js"></script>
+<script src="/libs/js/axios.min.js"></script>
+<link href="/libs/css/content.css" rel="stylesheet">
+
+<style>
+  /* Hero banner with lead form */
+  .backGroundImages {
+    background-size: cover;
+    background-position: 50% 50%;
+    overflow: hidden;
+    margin-top: -70px;
+  }
+  .backGroundImageEffect {
+    background: linear-gradient(to right, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.35) 100%);
+    padding: 140px 0 80px;
+  }
+  .pm-hero-inner { max-width: 1170px; margin-left: auto; margin-right: auto; padding: 0 50px; }
+  .pm-hero-copy { padding-top: 20px; }
+  .pm-hero-copy p.pm-hero-subtitle { 
+    background: #fe2210;
+    font-size: 15px;
+    padding: 5px;
+    border-radius: 4px;
+    width: fit-content;
+   }
+  .pm-hero-copy h1 {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 44px;
+    line-height: 1.3;
+    color: #fff;
+    margin: 0 0 22px;
+    text-shadow: 2px 2px rgb(0 0 0 / 30%);
+  }
+  .pm-hero-copy p {
+    font-size: 17px;
+    line-height: 1.6;
+    color: #f0f0f0;
+    max-width: 440px;
+    margin: 0;
+  }
+  .pm-hero-form {
+    background: #fff;
+    padding: 28px 30px 22px;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.25);
+  }
+  .pm-hero-form-title {
+    color: #fe1111;
+    font-size: 18px;
+    line-height: 1.4;
+    font-weight: 400;
+    margin: 0 0 22px;
+  }
+  .pm-hero-form-subtitle {
+    font-size: 15px;
+    font-weight: 700;
+    color: #2e2f2f;
+    margin: 18px 0 14px;
+  }
+  .pm-hero-form .el-form-item { margin-bottom: 18px !important; }
+  .pm-hero-form .el-form-item__label {
+    width: 110px !important;
+    color: #7a7a7a;
+    font-size: 14px;
+    line-height: 34px;
+    padding-top: 0 !important;
+    padding-right: 8px !important;
+    text-align: left !important;
+  }
+  .pm-hero-form .el-form-item.is-required .el-form-item__label:before { color: #fe1111; }
+  .pm-hero-form .el-form-item__content {
+    width: auto;
+    margin-left: 110px !important;
+    line-height: 34px;
+  }
+  .pm-hero-form .el-input, .pm-hero-form .el-select { width: 100%; }
+  .pm-hero-form .el-input__inner {
+    border-bottom-color: #c9c9c9 !important;
+    height: 34px;
+    line-height: 34px;
+    padding: 0 15px 0 0;
+  }
+  .pm-hero-form .el-input__icon { line-height: 34px; }
+  .pm-hero-form .pm-hero-submit { text-align: center; margin-bottom: 0 !important; }
+  .pm-hero-form .pm-hero-submit .el-form-item__content { margin-left: 0 !important; }
+  .pm-hero-form .el-button--primary {
+    background-color: #0a0c0a;
+    border-color: #0a0c0a;
+    border-radius: 2px;
+    padding: 10px 32px;
+    font-size: 15px;
+  }
+  .pm-hero-form .el-button--primary:hover {
+    background-color: #333;
+    border-color: #333;
+  }
+  .pm-hero-form .message-holder {
+    color: #fe1111;
+    font-size: 14px;
+    text-align: center;
+    margin-top: 12px;
+  }
+  @media (max-width: 991px) {
+    .backGroundImageEffect {
+      background: rgba(0,0,0,0.6);
+      padding: 90px 0 50px;
+    }
+    .pm-hero-inner { padding: 0 15px; }
+    .pm-hero-copy { padding-top: 0; text-align: center; }
+    .pm-hero-copy h1 { font-size: 30px; }
+    .pm-hero-copy p { margin: 0 auto; }
+    .pm-hero-form { margin-top: 35px; }
+  }
+
+  /* Google reviews slider */
+  .pm-reviews-section { padding: 10px 0 50px; }
+  .pm-reviews-slider { display: flex; align-items: center; }
+  .pm-reviews-viewport { flex: 1; overflow: hidden; transition: height 0.4s ease; }
+  .pm-reviews-track {
+    display: flex;
+    align-items: flex-start;
+    transition: transform 0.4s ease;
+  }
+  .pm-review-slide { flex: 0 0 auto; width: 33.3333%; padding: 0 12px; }
+  .review-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    padding: 20px 22px;
+    height: 100%;
+    text-align: left;
+  }
+  .review-head { margin-bottom: 14px; }
+  .review-avatar {
+    display: inline-block;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 34px;
+    text-align: center;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+  .review-author {
+    font-size: 15px;
+    font-weight: 700;
+    color: #222;
+    vertical-align: middle;
+  }
+  .review-stars {
+    color: #fbbc04;
+    font-size: 15px;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+  .review-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #444;
+    margin: 0;
+  }
+  .pm-reviews-dots {
+    display: none;
+    list-style: none;
+    text-align: center;
+    padding: 0;
+    margin: 25px 0 0;
+  }
+  .pm-reviews-dots li {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #c9c9c9;
+    margin: 0 5px;
+    cursor: pointer;
+  }
+  .pm-reviews-dots li.active { background-color: #fe1111; }
+  @media (max-width: 991px) {
+    .pm-review-slide { width: 100%; padding: 0; }
+    .pm-reviews-arrow { display: none; }
+    .pm-reviews-dots { display: block; }
+  }
+
+  /* Listing slider layout */
+  .pm-slider-outer {
+    display: flex;
+    align-items: center;
+  }
+  /* min-width lets the track shrink below the fixed width of the figcaption inside it */
+  .pm-slider-track { flex: 1; min-width: 0; }
+  .pm-slider-btn {
+    background: none;
+    border: none;
+    font-size: 26px;
+    color: #333;
+    cursor: pointer;
+    padding: 0 10px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .pm-slider-btn:disabled { opacity: 0.15; cursor: default; }
+  @media (max-width: 991px) {
+    /* body > .container has no padding on mobile, so drop the row gutters to stay inside the viewport */
+    .pm-slider-track { margin-left: 0; margin-right: 0; }
+    .pm-slider-btn { font-size: 22px; padding: 0 5px; }
+    .listing-wrapper > div figure figcaption h2 { width: auto; max-width: 90%; }
+  }
+
+  /* Match listing-wrapper figure rules that main.css omits for recent-rented-wrapper */
+  .recent-rented-wrapper > div figure {
+    position: relative;
+    height: 230px;
+    overflow: hidden;
+  }
+  .recent-rented-wrapper > div figure img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .recent-rented-wrapper > div figure figcaption{
+    width: 100%;
+  }
+
+  /* RENTED badge */
+  .pm-rented-badge {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    background: #fe1111;
+    color: #fff;
+    text-align: center;
+    padding: 7px 0;
+    font-weight: bold;
+    font-size: 14px;
+    letter-spacing: 2px;
+    z-index: 5;
+    width: 100px;
+    margin: 0 auto;
+  }
+
+  /* CTA section */
+  .pm-cta-section {
+    padding: 70px 20px 80px;
+    text-align: center;
+  }
+  .pm-cta-heading {
+    color: red;
+    font-size: 36px;
+    font-weight: bold;
+    margin-bottom: 28px;
+    font-family: 'Libre Baskerville', serif;
+  }
+  .pm-cta-btn {
+    display: inline-block;
+    background: #000;
+    color: #fff !important;
+    padding: 14px 45px;
+    font-size: 17px;
+    text-decoration: none !important;
+    margin-bottom: 18px;
+    border-radius: 2px;
+  }
+  .pm-cta-btn:hover { background: #222; }
+  .pm-cta-secondary { margin-top: 8px; }
+  .pm-cta-secondary a { color: #555; font-size: 15px; text-decoration: underline; }
+
+  /* Why VLR section */
+  .pm-why-section {
+    padding: 70px 20px 60px;
+    background: #f9f9f9;
+  }
+  .pm-why-title {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 28px;
+    font-weight: bold;
+    color: #111;
+    text-align: center;
+    margin-bottom: 50px;
+  }
+  .pm-why-item {
+    text-align: center;
+    padding: 0 20px 30px;
+  }
+  .pm-why-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #fe1111;
+    color: #fff;
+    font-size: 30px;
+    margin-bottom: 18px;
+  }
+  .pm-why-label {
+    font-size: 16px;
+    font-weight: 700;
+    color: #222;
+    line-height: 1.4;
+  }
+
+  /* Stats bar */
+  .pm-stats-section {
+    padding: 30px 20px 20px;
+  }
+  .pm-stats-section .feature-title { border-left-width: 5px; }
+  .pm-stat-item {
+    text-align: center;
+    padding: 15px 10px 25px;
+  }
+  .pm-stat-number {
+    font-size: 40px;
+    font-weight: bold;
+    color: #fe1111;
+    display: block;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+  .pm-stat-label {
+    display: block;
+    font-size: 15px;
+    color: #3d4b56;
+    line-height: 1.4;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  @media (max-width: 991px) {
+    .pm-stats-section { padding: 10px 20px 0; }
+    .pm-stat-item { padding: 0 10px 22px; }
+    .pm-stat-number { font-size: 34px; }
+  }
+</style>
+
+<!-- SECTION 1: Banner with rental income assessment form -->
+<div class="container" style="width: inherit; padding: 0px;">
+  <div class="col-md-12 home-banner" style="padding: 0px;">
+    <div class="backGroundImages">
+      <div class="backGroundImageEffect">
+        <div class="container-fluid pm-hero-inner">
+          <div class="row">
+            <div class="col-md-6 pm-hero-copy">
+              <p class="pm-hero-subtitle"><b>New Clients Get 2 Months of Free Property Management</b></p>
+              <h1>Maximize Your Rental Income With VLR Property Management</h1>
+              <p>From upkeep to tenant screenings, our licensed and certified team is here to
+                ensure the success of your investment.</p>
+            </div>
+            <div class="col-md-5 col-md-offset-1">
+              <div id="pm-hero-form" class="pm-hero-form">
+                <template>
+                  <el-form ref="heroForm" :model="heroForm" :rules="rules" label-width="110px" label-position="left">
+                    <p class="pm-hero-form-title">Receive a Free Rental Income Assessment For Your Property</p>
+                    <el-form-item label="Full name: " prop="fullName">
+                      <el-input v-model="heroForm.fullName"></el-input>
+                    </el-form-item>
+                    <el-form-item label="Email: " prop="email">
+                      <el-input v-model="heroForm.email"></el-input>
+                    </el-form-item>
+                    <el-form-item label="Phone: " prop="phone">
+                      <el-input onkeypress="return event.charCode >= 48 && event.charCode <= 57" v-model="heroForm.phone"></el-input>
+                    </el-form-item>
+                    <p class="pm-hero-form-subtitle">Property Information</p>
+                    <el-form-item label="Location: " prop="city">
+                      <el-select v-model="heroForm.city" placeholder="Choose City">
+                        <el-option label="Downtown Vancouver" value="Downtown Vancouver"></el-option>
+                        <el-option label="Vancouver West Side" value="Vancouver West Side"></el-option>
+                        <el-option label="Vancouver East Side" value="Vancouver East Side"></el-option>
+                        <el-option label="North Vancouver" value="North Vancouver"></el-option>
+                        <el-option label="West Vancouver" value="West Vancouver"></el-option>
+                        <el-option label="Burnaby" value="Burnaby"></el-option>
+                        <el-option label="Richmond" value="Richmond"></el-option>
+                        <el-option label="White Rock" value="White Rock"></el-option>
+                        <el-option label="Delta" value="Delta"></el-option>
+                        <el-option label="Coquitlam" value="Coquitlam"></el-option>
+                      </el-select>
+                    </el-form-item>
+                    <el-form-item label="Type: " prop="type">
+                      <el-select v-model="heroForm.type" placeholder="Choose Type">
+                        <el-option label="Condo" value="Condo"></el-option>
+                        <el-option label="Penthouse" value="Penthouse"></el-option>
+                        <el-option label="Loft" value="Loft"></el-option>
+                        <el-option label="Townhouse" value="Townhouse"></el-option>
+                        <el-option label="House" value="House"></el-option>
+                        <el-option label="Basement Legal Suite" value="Basement Legal Suite"></el-option>
+                      </el-select>
+                    </el-form-item>
+                    <el-form-item label="Bedrooms: " prop="bedroom">
+                      <el-select v-model="heroForm.bedroom" placeholder="Choose Bedroom">
+                        <el-option label="Studio" value="0"></el-option>
+                        <el-option label="1" value="1"></el-option>
+                        <el-option label="2" value="2"></el-option>
+                        <el-option label="3" value="3"></el-option>
+                        <el-option label="4" value="4"></el-option>
+                        <el-option label="5" value="5"></el-option>
+                        <el-option label="6" value="6"></el-option>
+                        <el-option label="7" value="7"></el-option>
+                        <el-option label="8" value="8"></el-option>
+                      </el-select>
+                    </el-form-item>
+                    <el-form-item class="pm-hero-submit">
+                      <el-button type="primary" @click="submit('heroForm')">Submit</el-button>
+                    </el-form-item>
+                    <div class="message-holder"></div>
+                  </el-form>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  ELEMENT.locale(ELEMENT.lang.en);
+  new Vue({
+    el: '#pm-hero-form',
+    data: {
+      submitting: false,
+      heroForm: {
+        fullName: '',
+        email: '',
+        phone: '',
+        city: '',
+        type: '',
+        bedroom: '',
+        bathroom: '',
+        propertyCondition: '',
+        leaseTerm: '',
+        date: '',
+        comment: '',
+        formSource: 'property-management',
+        leadSource: 'Organic',
+        utmSource: '',
+        utmMedium: '',
+        utmCampaign: ''
+      },
+      rules: {
+        fullName: [{
+          required: true,
+          message: "Please enter your name",
+          pattern: /^[a-zA-Z-,]+(\s{0,1}[a-zA-Z-, ])*$/,
+          trigger: 'blur'
+        }],
+        email: [{
+          required: true,
+          message: "Please enter your email",
+          trigger: 'blur'
+        }, {
+          type: 'email',
+          message: 'Please enter correct email address',
+          trigger: 'blur,change'
+        }],
+        phone: [{
+          required: true,
+          message: "Please enter your phone number",
+          trigger: 'blur'
+        }],
+        city: [{
+          required: true,
+          message: "Please choose one city option",
+          trigger: 'change'
+        }],
+        type: [{
+          required: true,
+          message: "Please choose one type option",
+          trigger: 'change'
+        }],
+        bedroom: [{
+          required: true,
+          message: "Please choose one bedroom option",
+          trigger: 'change'
+        }]
+      }
+    },
+    computed: {
+      formString: function() {
+        return JSON.stringify(this.heroForm);
+      }
+    },
+    mounted: function() {
+      var params = new URLSearchParams(window.location.search);
+      var src = params.get('utm_source') || '';
+      var med = params.get('utm_medium') || '';
+      var camp = params.get('utm_campaign') || '';
+      if (src || med || camp) {
+        this.heroForm.leadSource = 'Paid';
+        this.heroForm.utmSource = src;
+        this.heroForm.utmMedium = med;
+        this.heroForm.utmCampaign = camp;
+      }
+    },
+    methods: {
+      submit: function(formName) {
+        var self = this;
+        // guard against double-clicks queueing a second request/push
+        if (this.submitting) return;
+
+        this.$refs[formName].validate(function(valid) {
+          if (!valid) return false;
+          self.submitting = true;
+          axios.post('/owners/list-properties/new', { formString: self.formString })
+            .then(function() {
+              // GTM conversion tracking — event-based signal, fired once per confirmed
+              // successful submission, alongside (not instead of) the thank-you page view.
+              window.dataLayer = window.dataLayer || [];
+              window.dataLayer.push({
+                'event': 'pm_hero_form_submit',
+                'form_name': 'pm_hero_paid'
+              });
+
+              // small delay to give GTM time to fire the tag before navigating away
+              setTimeout(function() {
+                window.location.href = '/property-management/thank-you';
+              }, 250);
+            })
+            .catch(function() {
+              self.submitting = false;
+              $('#pm-hero-form .message-holder')
+                .html('Something went wrong with your submission, please call us at 604-899-0220.');
+            });
+        });
+      }
+    }
+  });
+</script>
+
+<!-- Why VLR is Right for Your Property Section -->
+<div class="pm-stats-section">
+  <div class="container" style="text-align: center;">
+    <h2 class="pm-why-title feature-title">Delivering the Best in Property Management</h2>
+    <div class="row">
+      <div class="col-xs-12 col-md-4">
+        <div class="pm-stat-item">
+          <span class="pm-stat-number">3,500+</span>
+          <span class="pm-stat-label">Rented<br/> Properties</span>
+        </div>
+      </div>
+      <div class="col-xs-12 col-md-4">
+        <div class="pm-stat-item">
+          <span class="pm-stat-number">$5,000</span>
+          <span class="pm-stat-label">Average<br/> Monthly Rent</span>
+        </div>
+      </div>
+      <div class="col-xs-12 col-md-4">
+        <div class="pm-stat-item">
+          <span class="pm-stat-number">17</span>
+          <span class="pm-stat-label">Years of<br/> Experience</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Google Reviews Section -->
+<div class="pm-reviews-section">
+  <div class="container">
+    <div class="pm-reviews-slider">
+      <button class="pm-slider-btn pm-reviews-arrow" id="pm-reviews-prev">
+        <span class="glyphicon glyphicon-chevron-left"></span>
+      </button>
+      <div class="pm-reviews-viewport">
+        <div class="pm-reviews-track">
+          <div class="pm-review-slide">
+            <div class="review-card">
+              <div class="review-head">
+                <span class="review-avatar" style="background-color: #a142f4;">H</span>
+                <span class="review-author">Houra Moslehi</span>
+              </div>
+              <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+              <p class="review-text">I've had a great experience with VLR managing my rental property. They're professional, responsive, and proactive with maintenance and tenant care. Most importantly, they've consistently secured top rent for my unit, which I really appreciate. Their attention to detail and market knowledge make being a landlord completely stress-free. Highly recommend their services to any property owner looking for a solid, trustworthy management team.</p>
+            </div>
+          </div>
+          <div class="pm-review-slide">
+            <div class="review-card">
+              <div class="review-head">
+                <span class="review-avatar" style="background-color: #0f9d58;">L</span>
+                <span class="review-author">Laurie Richardson</span>
+              </div>
+              <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+              <p class="review-text">We weren't able to sell our beautiful, longtime home to finance the purchase of a newly constructed home, so we decided to rent instead. But this was uncharted territory for us. In researching companies that could manage our property so we could focus on our new circumstances, I landed on Vancouver Luxury Rentals and I am sooo glad I did! Maryam and the staff have been absolutely wonderful at every step of the way: from marketing our home, to finding the right tenants, and now managing whatever issues may come up. Maryam and the team are experienced, very professional, respectful, and considerate. We are confident that our home is in the best of hands. My husband and I are so grateful that we decided to go with Vancouver Luxury Rentals. I would highly recommend this company to help manage your property.</p>
+            </div>
+          </div>
+          <div class="pm-review-slide">
+            <div class="review-card">
+              <div class="review-head">
+                <span class="review-avatar" style="background-color: #4285f4;">D</span>
+                <span class="review-author">Darren Little</span>
+              </div>
+              <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+              <p class="review-text">If you are looking for the best property management company in Vancouver, you've found it with Vancouver Luxury Realty. The company is very well organized and had my 2 bedroom and den condo leased out to a professional business couple within 2 weeks. They do all of the screening, background checks, reference checks and credit checks to ensure you will have long term dependable tenants. I highly recommend this company and will use them again on other properties. Two thumbs up!!</p>
+            </div>
+          </div>
+          <div class="pm-review-slide">
+            <div class="review-card">
+              <div class="review-head">
+                <span class="review-avatar" style="background-color: #db4437;">R</span>
+                <span class="review-author">Richard Lowy</span>
+              </div>
+              <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+              <p class="review-text">As a landlord with high standards and a deep personal connection to our home, I'll admit&mdash;I haven't always been the easiest to please. That said, Vancouver Luxury Rentals, and in particular Hayley Croft, have consistently exceeded my expectations. Time and again, they've delivered exceptional tenants who have treated our home with the same care, love, and respect we would give it ourselves.</p>
+            </div>
+          </div>
+          <div class="pm-review-slide">
+            <div class="review-card">
+              <div class="review-head">
+                <span class="review-avatar" style="background-color: #f4b400;">S</span>
+                <span class="review-author">Saeed M Moayyed</span>
+              </div>
+              <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+              <p class="review-text">It's been about 8 years that we're working with VLR. We've had a great experience with them managing our rental property in downtown Vancouver. They're really professional and have consistently secured qualified tenants with top rent for our unit, which we really appreciate. Highly recommend their services to any property owner looking for a professional and trustworthy management team.</p>
+            </div>
+          </div>
+          <div class="pm-review-slide">
+            <div class="review-card">
+              <div class="review-head">
+                <span class="review-avatar" style="background-color: #00897b;">G</span>
+                <span class="review-author">Gil McKinnon</span>
+              </div>
+              <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+              <p class="review-text">I highly recommend VLR. For the past 7.5 years they have consistently upheld very high standards in managing the rental of my condominium by:<br>
+                (1) finding responsible tenants in a timely manner;<br>
+                (2) promptly resolving issues that crop up during a tenancy;<br>
+                (3) maintaining an efficient accounting system for the receipt and payment of monthly rentals;<br>
+                (4) communicating quickly and clearly with the tenants, Strata Corporation and owner; and<br>
+                (5) fostering cordial relations with everyone.<br>
+                I appreciate the diligent work of all the VLR team.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="pm-slider-btn pm-reviews-arrow" id="pm-reviews-next">
+        <span class="glyphicon glyphicon-chevron-right"></span>
+      </button>
+    </div>
+    <ol class="pm-reviews-dots"></ol>
+  </div>
+</div>
+
+<script type="text/javascript">
+  $(function() {
+    var $viewport = $('.pm-reviews-viewport');
+    var $track = $('.pm-reviews-track');
+    var $slides = $track.children('.pm-review-slide');
+    var $dots = $('.pm-reviews-dots');
+    var currentSlide = 0;
+
+    function perPage() {
+      return $(window).width() < 992 ? 1 : 3;
+    }
+
+    function maxSlide() {
+      return Math.max(0, $slides.length - perPage());
+    }
+
+    function render() {
+      var per = perPage();
+      var step = 100 / per;
+      if (currentSlide > maxSlide()) currentSlide = maxSlide();
+      $slides.css({ width: step + '%', height: '' });
+      $track.css('transform', 'translateX(-' + (currentSlide * step) + '%)');
+      // size the viewport and the cards on show to the tallest review of the page
+      var height = 0;
+      $slides.slice(currentSlide, currentSlide + per).each(function() {
+        height = Math.max(height, $(this).outerHeight());
+      });
+      $slides.css('height', height + 'px');
+      $viewport.css('height', height + 'px');
+      $('#pm-reviews-prev').prop('disabled', currentSlide === 0);
+      $('#pm-reviews-next').prop('disabled', currentSlide === maxSlide());
+      $dots.children().removeClass('active').eq(currentSlide).addClass('active');
+    }
+
+    function buildDots() {
+      $dots.empty();
+      for (var i = 0; i <= maxSlide(); i++) {
+        $dots.append('<li data-slide-to="' + i + '"></li>');
+      }
+      render();
+    }
+
+    $('#pm-reviews-prev').click(function() {
+      if (currentSlide > 0) currentSlide--;
+      render();
+    });
+
+    $('#pm-reviews-next').click(function() {
+      if (currentSlide < maxSlide()) currentSlide++;
+      render();
+    });
+
+    $dots.on('click', 'li', function() {
+      currentSlide = $(this).data('slide-to');
+      render();
+    });
+
+    $(window).on('load resize', buildDots);
+    buildDots();
+  });
+</script>
+
+<!-- New Listings Slider -->
+<div class="container">
+  <div class="title text-center">
+    <h2 class="feature-title">Properties We Manage</h2>
+  </div>
+  <div id="pm-featured-view" class="listing-wrapper">
+    <div class="pm-slider-outer">
+      <button class="pm-slider-btn" @click="prev" :disabled="currentSlide === 0">
+        <span class="glyphicon glyphicon-chevron-left"></span>
+      </button>
+      <div class="row pm-slider-track">
+        <div
+          v-for="(property, idx) in visibleProps"
+          :key="property.propertyId"
+          class="col-xs-12 col-md-4"
+          :class="{ 'hidden-xs hidden-sm': idx > 0 }"
+        >
+          <figure v-cloak>
+            <a :href="'/listing/' + property.address.replace(/,?\s|#/g, '-') + '-property-id-' + property.propertyId">
+              <img :src="coverImgs[currentSlide + idx]" alt="property" />
+              <figcaption>
+                <span class="propertyId hidden">{{ property.propertyId }}</span>
+                <p class="h6">{{ property.typeOfProperty }} in {{ property.city }}, {{ property.province }}</p>
+                <h2>{{ property.address }}</h2>
+                <p>${{ property.rent }}/Month | {{ property.bedrooms }} Bed | {{ property.bathrooms }} Bath | {{ property.squareFeet }} SqFt</p>
+              </figcaption>
+            </a>
+          </figure>
+        </div>
+      </div>
+      <button class="pm-slider-btn" @click="next" :disabled="currentSlide + 3 >= properties.length">
+        <span class="glyphicon glyphicon-chevron-right"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Contact Us Today? CTA -->
+<div class="pm-cta-section">
+  <div>
+    <a href="#pm-hero-form" class="pm-cta-btn" onclick="event.preventDefault(); document.getElementById('pm-hero-form').scrollIntoView({ behavior: 'smooth' });">Contact Us Today</a>
+  </div>
+</div>
+
+<!-- Favorites modal -->
+<div class="container-fluid">
+  <div class="row">
+    <div class="modal fade" id="myFavoritesModal" role="dialog">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body">
+            <span class="modal-title">ADD TO MY FAVOURITE</span>
+            <p class="modal-p">Get a list of your personal favourite properties and be the first
+              to know about similar options, new properties and our special offers.</p>
+            <form class="email" onsubmit="saveUser(this)">
+              <input type="email" name="email" placeholder="Your Email" class="email-box">
+              <input type="submit" class="email-button" value="GO">
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var user = localStorage.getItem('User');
+  var userId = localStorage.getItem('UserId');
+
+  function saveUser(form) {
+    if (form.children[0].value) {
+      $.ajax({
+        type: 'POST',
+        url: '/user/new/',
+        data: { email: form.children[0].value },
+        success: function(response) {
+          if (response) {
+            localStorage.setItem('User', response.user);
+            localStorage.setItem('UserId', response.userId);
+            location.reload();
+          }
+        }
+      });
+    }
+    event.preventDefault();
+  }
+
+  $('#pm-for-rent-btn').click(function() {
+    var city = $('#pm-rent-city option:checked').val();
+    var furnished = $('#pm-rent-furnished option:checked').val();
+    window.location.href = '/properties?status=Available&city=' + city + '&furnished=' + furnished;
+  });
+
+  $('#pm-rented-btn').click(function() {
+    var city = $('#pm-rented-city option:checked').val();
+    window.location.href = '/properties?status=Rented&city=' + city;
+  });
+
+  $('.for-rent-counter').each(function() {
+    var $this = $(this);
+    $.ajax({
+      type: 'GET', url: '/properties/forRent',
+      success: function(data) {
+        var countTo = data['count'];
+        $({ countNum: $this.text() }).animate({ countNum: countTo }, {
+          duration: 2000, easing: 'linear',
+          step: function() { $this.text(Math.floor(this.countNum)); },
+          complete: function() { $this.text(this.countNum); }
+        });
+      }
+    });
+  });
+
+  $('.rented-counter').each(function() {
+    var $this = $(this);
+    $.ajax({
+      type: 'GET', url: '/properties/rented',
+      success: function(data) {
+        var countTo = data['count'];
+        $({ countNum: $this.text() }).animate({ countNum: countTo }, {
+          duration: 2000, easing: 'linear',
+          step: function() { $this.text(Math.floor(this.countNum)); },
+          complete: function() { $this.text(this.countNum); }
+        });
+      }
+    });
+  });
+
+  $.ajax({
+    type: 'GET',
+    url: '/properties/featured',
+    success: function(response) {
+      new Vue({
+        el: '#pm-featured-view',
+        data: {
+          properties: response.data,
+          coverImgs: response.coverImgs,
+          currentSlide: 0
+        },
+        computed: {
+          visibleProps: function() {
+            return this.properties.slice(this.currentSlide, this.currentSlide + 3);
+          }
+        },
+        methods: {
+          prev: function() { if (this.currentSlide > 0) this.currentSlide--; },
+          next: function() { if (this.currentSlide + 3 < this.properties.length) this.currentSlide++; }
+        }
+      });
+    }
+  });
+
+  $.ajax({
+    type: 'GET',
+    url: '/properties/recentlyRented',
+    success: function(response) {
+      new Vue({
+        el: '#pm-rented-view',
+        data: {
+          properties: response.data,
+          coverImgs: response.coverImgs,
+          currentSlide: 0
+        },
+        computed: {
+          visibleProps: function() {
+            return this.properties.slice(this.currentSlide, this.currentSlide + 3);
+          }
+        },
+        methods: {
+          prev: function() { if (this.currentSlide > 0) this.currentSlide--; },
+          next: function() { if (this.currentSlide + 3 < this.properties.length) this.currentSlide++; }
+        }
+      });
+    }
+  });
+
+  $(document).ready(function() {
+    $('figure button').click(function(event) { return false; });
+    $('#pm_home_container').show();
+  });
+</script>

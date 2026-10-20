@@ -1,0 +1,83 @@
+<%- include('header') %>
+<script>
+    document.title = "Contact Vancouver Luxury Rentals | VLR";
+    $(document).ready(function () {
+        $("meta[name=description]").attr("content", "Contact Vancouver Luxury Rentals for property management services, rental inquiries, or to speak with our expert team. We're here to help with all your real estate needs.");
+        $("title").html("Vancouver Luxury Rentals: Contact Us");
+    });
+</script>
+<link href="/libs/css/content.css" rel="stylesheet">
+<div class="container">
+    <div class="col-md-12">
+        <div class="aboutus-header-img">
+            <div class="layer">
+                <h1>Contact Us</h1>
+            </div>
+        </div>
+        <div class="title">
+            <h2 class="feature-title">Get in Touch</h2>
+            <p>We're here to answer your questions and help you find the perfect property management solution. Whether you're a property owner, tenant, or investor, reach out to our team today.</p>
+        </div>
+
+        <div class="contact-info" style="margin-top: 40px;">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="contact-card" style="background: #f5f5f5; padding: 30px; border-radius: 5px; margin-bottom: 20px;">
+                        <h3 style="color: #1a7e6a; margin-top: 0;">Phone</h3>
+                        <p><a href="tel:6048990220" style="color: #1a7e6a; text-decoration: none; font-weight: bold; font-size: 18px;">604.899.0220</a></p>
+                        <p style="margin: 0; color: #666; font-size: 14px;">Call us during business hours for immediate assistance</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="contact-card" style="background: #f5f5f5; padding: 30px; border-radius: 5px; margin-bottom: 20px;">
+                        <h3 style="color: #1a7e6a; margin-top: 0;">Email</h3>
+                        <p><a href="mailto:info@vancouverluxuryrealty.com" style="color: #1a7e6a; text-decoration: none; font-weight: bold; font-size: 16px;">info@vancouverluxuryrealty.com</a></p>
+                        <p style="margin: 0; color: #666; font-size: 14px;">We'll respond to your inquiry within 24 business hours</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="title" style="margin-top: 60px;">
+            <h2 class="feature-title">Our Services</h2>
+        </div>
+
+        <div class="services-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px;">
+            <div class="service-item">
+                <h4 style="color: #1a7e6a;">For Property Owners</h4>
+                <ul style="color: #666;">
+                    <li><a href="/owners/list-properties" style="color: #1a7e6a; text-decoration: none;">List Your Property</a></li>
+                    <li><a href="/owners/property-management" style="color: #1a7e6a; text-decoration: none;">Property Management Services</a></li>
+                    <li><a href="/owners/tenant-placement" style="color: #1a7e6a; text-decoration: none;">Tenant Placement</a></li>
+                    <li><a href="/owners/FAQ" style="color: #1a7e6a; text-decoration: none;">Owners FAQ</a></li>
+                </ul>
+            </div>
+            <div class="service-item">
+                <h4 style="color: #1a7e6a;">For Tenants</h4>
+                <ul style="color: #666;">
+                    <li><a href="/properties" style="color: #1a7e6a; text-decoration: none;">Browse Available Properties</a></li>
+                    <li><a href="/tenants/services" style="color: #1a7e6a; text-decoration: none;">Rental Services</a></li>
+                    <li><a href="/tenants/forms" style="color: #1a7e6a; text-decoration: none;">Forms & Documents</a></li>
+                    <li><a href="/tenants/FAQ" style="color: #1a7e6a; text-decoration: none;">Tenants FAQ</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="title" style="margin-top: 60px;">
+            <h2 class="feature-title">Why Choose Vancouver Luxury Rentals?</h2>
+            <ul style="color: #666; font-size: 16px;">
+                <li>Licensed and experienced property management professionals</li>
+                <li>Deep expertise in the luxury rental market across Greater Vancouver</li>
+                <li>Transparent communication and regular updates</li>
+                <li>Comprehensive property management services</li>
+                <li>Multilingual team ready to assist</li>
+                <li>Proven track record of satisfied clients</li>
+            </ul>
+        </div>
+    </div>
+    <div class="tenant-forms-button margin-top-100">
+        <a href="/owners/list-properties" class="button btn btn-default">List Your Property</a>
+        <p class="bottom-phone">Or Call: <a href="tel:6048990220" class="mobile_call_me">604.899.0220</a></p>
+    </div>
+</div>
+<%- include('footer') %>

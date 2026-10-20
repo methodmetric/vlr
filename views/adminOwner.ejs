@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+
+<head><link rel="icon" href="/new-img/favicon.ico">
+    <meta charset="UTF-8">
+    <title>VLR Admin Database</title>
+    <link rel="stylesheet" href="/libs/css/admin-style.css">
+    <script type="text/javascript" src="/libs/jquery/jquery.js"></script>
+    <script type="text/javascript" src="/libs/js/vue.min.js"></script>
+    <script type="text/javascript" src="/libs/js/moment.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+    <link href="/libs/css/vendor/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css" rel="stylesheet">
+    <style type="text/css">
+        .invisible{
+            display: none;
+        }
+        .sentButton{
+            color: red;
+            font-weight: bold;
+        }
+        #admin_owner_leads{
+            width: inherit;
+        }
+        #table-view{
+            width: inherit !important;
+        }
+        #table-view tr { 
+            max-height: 100px; 
+        }
+
+        #table-view tr div {
+            /* //display: inline-block; // is this necessary? */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 380px;
+            max-width: 380px; 
+            /* // width or max-width must be specified */
+            /* //word-wrap: normal; //  */
+        
+            
+            /* // on a touch device, a click is equivalent to hover - text will expand and remain that way */
+        }
+
+        #table-view tr div:hover {
+            white-space: normal;
+            min-width: 380px;
+            max-width: 380px;
+        }
+        .leads-filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            align-items: center;
+            padding: 14px 0 18px;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .filter-label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #555;
+            margin-right: 4px;
+        }
+        .filter-btn {
+            padding: 4px 12px;
+            border: 1px solid #ccc;
+            background: #fff;
+            border-radius: 3px;
+            font-size: 13px;
+            cursor: pointer;
+            color: #333;
+        }
+        .filter-btn.active { background: #337ab7; border-color: #337ab7; color: #fff; }
+        .filter-btn:hover:not(.active) { background: #f0f0f0; }
+        .badge-paid {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            background: #5cb85c;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-organic {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            background: #5bc0de;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-pm {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            background: #f0ad4e;
+            color: #fff;
+            font-size: 12px;
+        }
+        .badge-list {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            background: #9b59b6;
+            color: #fff;
+            font-size: 12px;
+        }
+        .utm-detail {
+            display: block;
+            font-size: 11px;
+            color: #777;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+
+
+<body class="admin_body">
+    <div class="topnav" id="myTopnav">
+        <a href="/VLR-admin/">Home</a>
+        <a href="/VLR-admin/csv">Import CSV</a>
+        <a href="/VLR-admin/property/new">New Property</a>
+        <a href="/VLR-admin/owner" class="current">Owner Leads</a>
+        <a href="/VLR-admin/viewRequest">Tenant Enquiries</a>
+        <a href="/VLR-admin/available90">Available in 90 days</a>
+        <a href="/VLR-admin/database">Database</a>
+        <a href="/VLR-admin/redirects">Redirects</a>
+        <a href="/VLR-admin/logout">Log out</a>
+        <a href="javascript:void(0);" class="icon" onclick="show()">&#9776;</a>
+    </div>
+
+    <div class="container" id="admin_owner_leads">
+        <h1 class="center">Manage Owner Leads</h1>
+        <p style="color:#555;font-size:13px;margin-bottom:16px;">
+            <strong>Lead Source</strong> indicates how a lead arrived.
+            <span class="badge-paid" style="vertical-align:middle;">Paid</span> leads came through a Google Ads campaign (UTM parameters were detected in the URL).
+            <span class="badge-organic" style="vertical-align:middle;">Organic</span> leads arrived without any ad tracking — direct visits or other unpaid traffic.
+            Use the filters below to segment leads by source or by which form they submitted.
+        </p>
+        <div class="leads-filter-bar">
+            <div class="filter-group">
+                <span class="filter-label">Lead Source:</span>
+                <button class="filter-btn active" data-col="15" data-value="">All</button>
+                <button class="filter-btn" data-col="15" data-value="Paid">Paid</button>
+                <button class="filter-btn" data-col="15" data-value="Organic">Organic</button>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Form:</span>
+                <button class="filter-btn active" data-col="14" data-value="">All</button>
+                <button class="filter-btn" data-col="14" data-value="Property Management Landing Page">Property Management Landing Page</button>
+                <button class="filter-btn" data-col="14" data-value="List Properties">List Properties</button>
+            </div>
+        </div>
+        <table id="table-view" class="table">
+            <thead>
+                <tr>
+                    <th class='invisible'>Id</th>
+                    <th class='invisible'>Forwarded</th>
+                    <th>Created At</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Location</th>
+                    <th>Type</th>
+                    <th>Bed</th>
+                    <th>Bath</th>
+                    <th>Property Condition</th>
+                    <th style="min-width: 380px">Comment</th>
+                    <th>Foward To</th>
+                    <th>Action</th>
+                    <th>Form</th>
+                    <th>Lead Source</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</body>
+
+<script type='text/javascript'>
+    function show() {
+        var x = document.getElementById("myTopnav");
+        if (x.className === "topnav") {
+            x.className += " responsive";
+        } else {
+            x.className = "topnav";
+        }
+    }
+
+    function sendEmail(row) {
+        var ownerName = row.parentNode.parentNode.children[3].innerText;
+        var ownerEmail = row.parentNode.parentNode.children[4].innerText;
+        var ownerPhone = row.parentNode.parentNode.children[5].innerText;
+        var location = row.parentNode.parentNode.children[6].innerText;
+        var type = row.parentNode.parentNode.children[7].innerText;
+        var bed = row.parentNode.parentNode.children[8].innerText;
+        var bath = row.parentNode.parentNode.children[9].innerText;
+        var condition = row.parentNode.parentNode.children[10].innerText;
+        var comment = row.parentNode.parentNode.children[11].innerText;
+        var agentName = row.parentNode.parentNode.children[12].children[0].selectedOptions[0].textContent;
+        var agentEmail = row.parentNode.parentNode.children[12].children[0].selectedOptions[0].value;
+        // var message = "Please contact owner " + ownerName +
+        //                 ", phone number: " + ownerPhone +
+        //                 ", email: " + ownerEmail +
+        //                 ". The property is a " + condition + " " + type +
+        //                 " with " + bed + " beds and " + bath + " bath." +
+        //                 " Located at " + location + ". Additional comment: " + comment;
+        $.ajax({
+            type: 'POST',
+            url: '/VLR-admin/mail/ownerLeads/' + row.parentNode.parentNode.children[0].innerText,
+            data: {
+                ownerName: ownerName,
+                ownerPhone: ownerPhone,
+                ownerEmail: ownerEmail,
+                condition: condition,
+                type: type,
+                bed: bed,
+                bath: bath,
+                location: location,
+                comment: comment,
+                agentName: agentName,
+                agentEmail: agentEmail
+            },
+            success: function(response) {
+                alert("Email Sent") //todo: the return message should get from response
+                row.innerText="Sent";
+                $(row).attr('class', 'sentButton');
+            }
+        });
+    }
+
+    $(document).ready(function() {
+        var table;
+
+        $.ajax({
+            type: 'GET',
+            url: '/VLR-admin/api/all',
+            success: function(response) {
+                let allAgents = response.data;
+                $.ajax({
+                    type: 'GET',
+                    url: '/VLR-admin/list-properties',
+                    success: function(response) {
+                        table = $('#table-view').DataTable({
+                            "order": [[ 2, 'dsc' ]],
+                            "fnCreatedRow": function(nRow, aData, iDataIndex) {
+                                $('td:eq(0)', nRow).addClass('invisible');
+                                $('td:eq(1)', nRow).addClass('invisible');
+                                $('td:eq(13)', nRow).append('<a onClick="sendEmail(this)" class="sentButton">Sent</a>');
+                            },
+                        });
+                        for (item of response.data) {
+                            var agentsList = "<select name='agents'>";
+                            var added = 0;
+                            for (agent of allAgents) {
+                                if (item.agent != undefined && item.agent != null && agent.name === item.agent){
+                                    agentsList += "<option selected value='" + agent.email + "'>" + agent.name + "</option>";
+                                    added = 1;
+                                }
+                                else{
+                                    agentsList += "<option value='" + agent.email + "'>" + agent.name + "</option>";
+                                }
+                            }
+                            if (added == 0 && item.agent != undefined && item.agent != null && item.agent != ''){
+                                agentsList += "<option selected>" + item.agent + "</option>";
+                            }
+                            agentsList += "</select>";
+                            item.agent = agentsList;
+                            createdAt = new moment(item.createdAt).format("YYYY/MM/DD HH:mm:ss");
+
+                            var formLabel = '';
+                            if (item.formSource === 'property-management') {
+                                formLabel = '<span class="badge-pm">Property Management Landing Page</span>';
+                            } else if (item.formSource === 'list-properties') {
+                                formLabel = '<span class="badge-list">List Properties</span>';
+                            } else {
+                                formLabel = '<span style="color:#aaa">—</span>';
+                            }
+
+                            var leadLabel = '';
+                            var source = item.leadSource || 'Organic';
+                            if (source === 'Paid') {
+                                var utmTitle = [item.utmSource, item.utmMedium, item.utmCampaign].filter(Boolean).join(' / ');
+                                leadLabel = '<span class="badge-paid"' + (utmTitle ? ' title="' + utmTitle + '"' : '') + '>Paid</span>';
+                                if (item.utmCampaign) {
+                                    leadLabel += '<span class="utm-detail">' + item.utmCampaign + '</span>';
+                                }
+                            } else {
+                                leadLabel = '<span class="badge-organic">Organic</span>';
+                            }
+
+                            table.row.add([
+                                item._id,
+                                item.forwarded,
+                                createdAt,
+                                item.fullName,
+                                item.email,
+                                item.phone,
+                                item.location,
+                                item.type,
+                                item.bedroom,
+                                item.bathroom,
+                                item.propertyCondition,
+                                '<div><span>' + item.comment + '</span></div>',
+                                item.agent,
+                                '',
+                                formLabel,
+                                leadLabel
+                            ]).draw(false);
+                        }
+
+                        // Filter buttons
+                        $('.filter-btn').on('click', function() {
+                            var col = parseInt($(this).data('col'));
+                            var val = $(this).data('value');
+                            $(this).closest('.filter-group').find('.filter-btn').removeClass('active');
+                            $(this).addClass('active');
+                            table.column(col).search(val).draw();
+                        });
+                    },
+                    error: function(e) {
+                        console.log("ajax for getting all owner details failed, message = ", e)
+                    }
+                });
+            },
+            error: function(e) {
+                console.log("ajax for getting all owner details failed, message = ", e)
+            }
+        });
+    });
+</script>
+
+</html>

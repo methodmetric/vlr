@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="/new-img/favicon.ico">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VLR Admin — Redirect Manager</title>
+    <link href="/libs/css/vendor/bootstrap.min.css" rel="stylesheet">
+    <link href="/libs/css/admin-style.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css" rel="stylesheet">
+    <script type="text/javascript" src="/libs/jquery/jquery.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+    <style>
+        .redirect-form { margin: 24px 0 8px; }
+        .redirect-form input[type="text"] {
+            padding: 6px 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            width: 300px;
+            margin-right: 8px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-badge.active   { background: #d4edda; color: #155724; }
+        .status-badge.inactive { background: #f8d7da; color: #721c24; }
+        .toggleButton {
+            background-color: #f0ad4e;
+            border-radius: 24px;
+            display: inline-block;
+            cursor: pointer;
+            color: #fff;
+            font-size: 10px;
+            padding: 5px 12px;
+            text-decoration: none;
+        }
+        .toggleButton:hover { background-color: #ec971f; color: #fff; text-decoration: none; }
+        #add-error { color: #c0392b; font-size: 13px; margin-top: 6px; display: none; }
+    </style>
+</head>
+<body class="admin_body">
+
+    <div class="topnav" id="myTopnav">
+        <a href="/VLR-admin/">Home</a>
+        <a href="/VLR-admin/csv">Import CSV</a>
+        <a href="/VLR-admin/property/new">New Property</a>
+        <a href="/VLR-admin/owner">Owner Leads</a>
+        <a href="/VLR-admin/viewRequest">Tenant Enquiries</a>
+        <a href="/VLR-admin/available90">Available in 90 days</a>
+        <a href="/VLR-admin/database">Database</a>
+        <a href="/VLR-admin/redirects" class="current">Redirects</a>
+        <a href="/VLR-admin/logout">Log out</a>
+        <a href="javascript:void(0);" class="icon" onclick="show()">&#9776;</a>
+    </div>
+
+    <div class="container" style="margin-top: 30px;">
+        <h1 class="center">Redirect Manager</h1>
+        <p class="center" style="color:#666; margin-bottom: 24px;">
+            Define URL redirects. Active rules issue a <strong>301</strong> redirect to visitors.
+            Changes take effect within 60 seconds.
+        </p>
+
+        <!-- Add new redirect form -->
+        <div class="redirect-form">
+            <strong>Add new redirect:</strong><br><br>
+            <input type="text" id="input-from" placeholder="From path  e.g. /old-page">
+            <input type="text" id="input-to"   placeholder="To path  e.g. /new-page">
+            <button class="newbtn" onclick="addRedirect()">Add</button>
+            <div id="add-error"></div>
+        </div>
+
+        <!-- Redirect table -->
+        <table id="redirect-table" class="table" style="margin-top: 20px;">
+            <thead>
+                <tr>
+                    <th>From (source path)</th>
+                    <th>To (destination)</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+</body>
+
+<script type="text/javascript">
+    function show() {
+        var x = document.getElementById("myTopnav");
+        x.className = (x.className === "topnav") ? "topnav responsive" : "topnav";
+    }
+
+    var table;
+
+    function renderRow(r) {
+        var statusBadge = r.active
+            ? '<span class="status-badge active">Active</span>'
+            : '<span class="status-badge inactive">Inactive</span>';
+        var createdAt = r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '-';
+        return '<tr data-id="' + r._id + '">' +
+            '<td>' + escHtml(r.from) + '</td>' +
+            '<td>' + escHtml(r.to) + '</td>' +
+            '<td>' + statusBadge + '</td>' +
+            '<td>' + createdAt + '</td>' +
+            '<td>' +
+                '<a class="toggleButton" onclick="toggleRedirect(this)">Toggle</a> ' +
+                '<a class="deleteButton" onclick="deleteRedirect(this)">Delete</a>' +
+            '</td>' +
+        '</tr>';
+    }
+
+    function escHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function loadRedirects() {
+        $.ajax({
+            type: 'GET',
+            url: '/VLR-admin/redirects/api/all',
+            success: function(response) {
+                if (table) { table.destroy(); }
+                var tbody = '';
+                for (var i = 0; i < response.data.length; i++) {
+                    tbody += renderRow(response.data[i]);
+                }
+                $('#redirect-table tbody').html(tbody);
+                table = $('#redirect-table').DataTable({
+                    order: [[3, 'desc']],
+                    columnDefs: [{ orderable: false, targets: 4 }]
+                });
+            },
+            error: function() { alert('Failed to load redirects.'); }
+        });
+    }
+
+    function addRedirect() {
+        var from = $('#input-from').val().trim();
+        var to   = $('#input-to').val().trim();
+        $('#add-error').hide();
+        if (!from || !to) {
+            $('#add-error').text('Both fields are required.').show();
+            return;
+        }
+        $.ajax({
+            type: 'POST',
+            url: '/VLR-admin/redirects',
+            contentType: 'application/json',
+            data: JSON.stringify({ from: from, to: to }),
+            success: function() {
+                $('#input-from').val('');
+                $('#input-to').val('');
+                loadRedirects();
+            },
+            error: function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Failed to add redirect.';
+                $('#add-error').text(msg).show();
+            }
+        });
+    }
+
+    function toggleRedirect(btn) {
+        var id = $(btn).closest('tr').data('id');
+        $.ajax({
+            type: 'PUT',
+            url: '/VLR-admin/redirects/' + id + '/toggle',
+            success: function() { loadRedirects(); },
+            error: function() { alert('Toggle failed.'); }
+        });
+    }
+
+    function deleteRedirect(btn) {
+        var id = $(btn).closest('tr').data('id');
+        var from = $(btn).closest('tr').find('td:first').text();
+        if (!confirm('Delete redirect "' + from + '"?')) return;
+        $.ajax({
+            type: 'DELETE',
+            url: '/VLR-admin/redirects/' + id,
+            success: function() { loadRedirects(); },
+            error: function() { alert('Delete failed.'); }
+        });
+    }
+
+    $(document).ready(function() {
+        loadRedirects();
+    });
+</script>
+</html>

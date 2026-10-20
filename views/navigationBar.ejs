@@ -1,0 +1,300 @@
+<script type="text/javascript">
+  function myFavorites() {
+    var user = localStorage.getItem("User");
+    if (user) {
+      window.location.replace("/user/myfavorites", {
+        email: user,
+      });
+    } else {
+      $("#myFavoritesModal").modal();
+    }
+  }
+
+  function logOut() {
+    localStorage.removeItem("User");
+    localStorage.removeItem("UserId");
+    window.location.href = "/user/signout";
+    return false;
+  }
+
+  function saveUser(form) {
+    if (form.children[0].value) {
+      $.ajax({
+        type: "POST",
+        url: "/user/new/",
+        data: {
+          email: form.children[0].value,
+        },
+        success: function (response) {
+          if (response) {
+            localStorage.setItem("User", response.user);
+            localStorage.setItem("UserId", response.userId);
+            location.reload();
+          }
+        },
+      });
+    }
+    event.preventDefault();
+  }
+
+  $("#logout").ready(function () {
+    var user = localStorage.User;
+    if (user) {
+      $("#logout").css("display", "block");
+    }
+  });
+</script>
+
+<div class="container" style="width: inherit; padding: 0px;">
+  <!-- Static navbar -->
+  <div class="col-md-12" style="padding: 0px;">
+    <nav class="navbar navbar-default navbar-custom">
+      <div class="navbar-header">
+        <button
+          type="button"
+          class="navbar-toggle collapsed"
+          data-toggle="collapse"
+          data-target="#navbar"
+          aria-expanded="false"
+          aria-controls="navbar"
+        >
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a href="/">
+          <img
+            src="/new-img/logo.png"
+            alt="vancouverluxuryrentals"
+            class="logo"
+            style="margin-left: 25px;"
+          />
+        </a>
+      </div>
+      <div id="navbar" class="collapse navbar-collapse">
+        <ul class="nav navbar-nav" style="margin-left: 50px;">
+          <!-- List With Us -->
+          <li>
+            <a href="/owners/list-properties">List With Us</a>
+          </li>
+          <!-- Property Management -->
+          <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown">Property Management</a>
+            <ul class="dropdown-menu">
+              <li>
+                <a href="/owners/property-management">Services</a>
+              </li>
+              <li>
+                <a href="/owners/FAQ">FAQ</a>
+              </li>
+            </ul>
+          </li>
+          <!-- Sell -->
+          <li>
+            <a href="https://www.filerwelch.com/">Sell</a>
+          </li>
+          <!-- Properties -->
+          <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown">For Rent</a>
+            <ul class="dropdown-menu">
+              <li>
+                <a href="/for-rent/all"
+                  >All Available Properties</a
+                >
+              </li>
+              <li>
+                <a href="/for-rent/downtown-vancouver"
+                  >Downtown Vancouver</a
+                >
+              </li>
+              <li>
+                <a
+                  href="/for-rent/vancouver-west-side"
+                  >Vancouver West Side</a
+                >
+              </li>
+              <li>
+                <a href="/for-rent/ubc">UBC</a>
+              </li>
+              <li>
+                <a
+                  href="/for-rent/vancouver-east-side"
+                  >Vancouver East Side</a
+                >
+              </li>
+              <li>
+                <a href="/for-rent/west-vancouver"
+                  >West Vancouver</a
+                >
+              </li>
+              <li>
+                <a href="/for-rent/north-vancouver"
+                  >North Vancouver</a
+                >
+              </li>
+              <li>
+                <a href="/for-rent/richmond"
+                  >Richmond</a
+                >
+              </li>
+              <li>
+                <a href="/for-rent/burnaby">Burnaby</a>
+              </li>
+              <li>
+                <a href="/for-rent/coquitlam"
+                  >Coquitlam</a
+                >
+              </li>
+              <li>
+                <a href="/for-rent/new-westminster"
+                  >New Westminster</a
+                >
+              </li>
+            </ul>
+          </li>
+          <!-- Tenants -->
+          <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown">For Tenants</a>
+            <ul class="dropdown-menu">
+              <li>
+                <a href="/tenants/services">Rent With Us</a>
+              </li>
+              <li>
+                <a href="/tenants/forms">Forms Download</a>
+              </li>
+              <li>
+                <a href="/tenants/FAQ">FAQ</a>
+              </li>
+              <li>
+                <a class="clickable" onclick="javascript:myFavorites()" >
+                  My Favourite</a
+                >
+              </li>
+            </ul>
+          </li>
+          <!-- Listing -->
+          <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown"
+              >Rented Listings</a
+            >
+            <ul class="dropdown-menu">
+              <li>
+                <a href="/properties?status=Rented">All Rented Properties</a>
+              </li>
+              <li>
+                <a href="/properties?typeOfProperty=Condo&status=Rented"
+                  >Rented Condo</a
+                >
+              </li>
+              <li>
+                <a href="/properties?typeOfProperty=House&status=Rented"
+                  >Rented House</a
+                >
+              </li>
+              <li>
+                <a href="/properties?typeOfProperty=Townhouse&status=Rented"
+                  >Rented Townhouse</a
+                >
+              </li>
+              <li>
+                <a href="/properties?typeOfProperty=Penthouse&status=Rented"
+                  >Rented Penthouse</a
+                >
+              </li>
+            </ul>
+          </li>
+          <!-- About Us -->
+          <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown">About Us</a>
+            <ul class="dropdown-menu">
+              <li>
+                <a href="/about/profile">Company</a>
+              </li>
+              <li>
+                <a href="/about/team">Team</a>
+              </li>
+              <li>
+                <a href="/about/testimonials">Testimonials</a>
+              </li>
+              <li>
+                <a href="/about/career">Career</a>
+              </li>
+            </ul>
+          </li>
+          <!-- Contact Us -->
+          <li>
+            <a href="/contact">Contact</a>
+          </li>
+          <li class="nav-logout">
+            <a
+              id="logout"
+              class="clickable logout"
+              onclick="javascript:logOut()"
+              >Log out</a
+            >
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="modal fade" id="myFavoritesModal" role="dialog">
+          <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+              <div class="modal-body">
+                <span class="modal-title">ADD TO MY FAVOURITE</span>
+                <p class="modal-p">
+                  Get a list of your personal favourite properties and be the
+                  first to know about similar options, new properties and our
+                  special offers.
+                </p>
+                <form class="email" onsubmit="saveUser(this)">
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="Your Email"
+                    class="email-box"
+                  />
+                  <input type="submit" class="email-button" value="GO" />
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="modal fade" id="WFHModel" role="dialog">
+          <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+              <div class="modal-body">
+                <span
+                  class="modal-title"
+                  style="display: block; padding-bottom: 30px;"
+                  id="announcementTitle"
+                  ></span
+                >
+                <div id="announcementBody"></div>
+                <p class="modal-p">
+                  <button
+                    class="el-button el-button--primary"
+                    id="WFHModelClose"
+                  >
+                    Close
+                  </button>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- /container -->

@@ -1,0 +1,332 @@
+<%- include('header') %>
+<link href="/libs/css/properties.css" rel="stylesheet" />
+<script type="text/javascript">
+
+  // update title based on URL
+  function updatePropertySearchPageTitle() {
+    // note: converted by title_convert_script.py
+    const titleMap = {'?status=Available': '"Vancouver Apartment, Condo and House For Rent Listings | VLR"', '?city=Downtown%20Vancouver&status=Available': 'Downtown Vancouver Condo For Rent Listings | Vancouver Luxury Rentals', '?city=Vancouver%20West%20Side&status=Available': '"Vancouver West Side, Dunbar, Point Grey, Arbutus Condo and House For Rent | VLR"', '?city=UBC&status=Available': 'UBC Condo and House For Rent | Vancouver Luxury Rentals', '?city=Vancouver%20East%20Side&status=Available': 'Vancouver East Side Condo and House For Rent | VLR', '?city=West%20Vancouver&status=Available': 'West Vancouver Condo and House For Rent | VLR', '?city=North%20Vancouver&status=Available': '"North Vancouver Apartment, Condo and House For Rent Listings | VLR"', '?city=Richmond&status=Available': '"Richmond Apartment, Condo and House For Rent | VLR"', '?city=Burnaby&status=Available': '"Burnaby  Apartment, Condo and House For Rent Listings | VLR"', '?city=Surrey&status=Available': 'Surrey Luxury House For Rent | VLR', '?city=White%20Rock&status=Available': 'White Rock Water Front Home For Rent | VLR', '?city=Coquitlam&status=Available': '"Coquitlam Apartment, Condo and House For Rent | VLR"', '?city=Delta&status=Available': 'Delta Luxury House For Rent | VLR', '?city=New%20Westminster&status=Available': '"New Westminster Apartment, Townhouse, Condo and House For Rent | VLR"', '?city=Langley&status=Available': 'Langley Luxury Homes For Rent | VLR', '?city=Tsawwassen&status=Available': 'Tsawwassen Luxury House For Rent | VLR', '?status=Rented': 'Property Manager in Vancouver | Vancouver Luxury Rentals', '?typeOfProperty=Condo&status=Rented': '"Vancouver Apartment, Townhouse, Condo and House For Rent Listings | VLR"', '?typeOfProperty=House&status=Rented': 'Property Management Companies Vancouver Rented Houses | VLR', '?typeOfProperty=Townhouse&status=Rented': 'Vancouver Townhouse Rented | VLR', '?typeOfProperty=Penthouse&status=Rented': 'Best | Top Penthouse Rental Agent Vancouver  | Vancouver Luxury Realty', 'tenants/services': 'Tenant Services Properties for Rent | Rentals VLR', 'tenants/forms': 'Vancouver Luxury Rentals Application Form | VLR', 'tenants/FAQ': 'How To Rent A Property in Vancouver BC | VLR', 'owners': 'Best Vancouver Property Management Companies | VLR', 'owners/list-properties': 'Investment Property Service | Rental Manager | VLR', 'owners/tenant-placement': 'How To Look For Tenants Vancouver Condo and House | VLR', 'owners/property-management': '"Property Management Vancouver, Downtown, West Side, West Vancouver | VLR"', 'about': 'About Us | Vancouver Luxury Rentals | Property Managers', 'about/profile': 'About Us | Investment Property Rental Management | VLR', 'about/team': 'Meet The Team | Vancouver Luxury Rentals Management ', 'about/career': 'Property Manager Leasing Agents Career | VLR', 'terms': 'Vancouver Luxury Furnished & Unfurnished Rentals | Vancouver Luxury Rentals', '?status=Available&furnished=Yes': 'Furnished Rental Properties in Vancouver | Vancouver Luxury Realty', '?status=Available&furnished=No': 'Unfurnished Rentals Properties in Vancouver | Vancouver Luxury Rentals', '?city=Vancouver': '"Apartment, Condo and House For Rent Listings | Vancouver "', '?city= Langley&status=Available': '"Apartment, Condo and House For Rent Listings | Langley"', '?city=West%20Vancouver/?city=Vancouver&status=Available': '"Apartment, Condo and House Property Management | Rental Agents  | West Vancouver"', '?city=North%20Vancouver': '"Apartment, Condo and House Property Management | Rental Agents | North Vancouver "', '?city=Richmond': '"Apartment, Condo and House Property Management | Rental Agents | Richmond"', '?city=Coquitlam': '"Apartment, Condo and House Property Management | Rental Agents | Coquitlam"', '?city=Burnaby/': '"Apartment, Condo and House Property Management | Rental Agents | Burnaby"', '?status=Available/': '"Apartment, Condo and House For Rent Listings | Vancouver Rentals"', '?city=Downtown%20Vancouver&status=Available/': '"Apartment, Condo and House For Rent Listings | Downtown Vancouver"', '?city=Vancouver%20West%20Side&status=Available/': '"Apartment, Condo and House For Rent Listings | Vancouver West Side"', '?city=UBC&status=Available/': '"Apartment, Condo and House For Rent Listings | UBC"', '?city=Vancouver%20East%20Side&status=Available/': '"Apartment, Condo and House For Rent Listings | Vancouver East Side"', '?city=West%20Vancouver&status=Available/': '"Apartment, Condo and House For Rent Listings | West Vancouver"', '?city=North%20Vancouver&status=Available/': '"Apartment, Condo and House For Rent Listings | North Vancouver"', '?city=Richmond&status=Available/': '"Apartment, Condo and House For Rent Listings | Richmond"', '?city=Burnaby&status=Available/': '"Apartment, Condo and House For Rent Listings | Burnaby"', '?city=Surrey&status=Available/': '"Apartment, Condo and House For Rent Listings | Surrey"', '?city=White%20Rock&status=Available/': '"Apartment, Condo and House For Rent Listings | White Rock"', '?city=Coquitlam&status=Available/': '"Apartment, Condo and House For Rent Listings | Coquitlam"', '?city=Delta&status=Available/': '"Apartment, Condo and House For Rent Listings | Delta"', '?city=New%20Westminster&status=Available/': '"Apartment, Condo and House For Rent Listings | New Westminster"', '?city=Langley&status=Available/': 'VLR - Property Management in Vancouver', '?city=Tsawwassen&status=Available/': 'VLR - Property Management in Vancouver', '?status=Rented/': 'VLR - Property Management | Property Rental Services  in Vancouver', '?typeOfProperty=Condo&status=Rented/': 'Condo Rental Price in Vancouver | Vancouver Luxury Realty', '?typeOfProperty=House&status=Rented/': 'Single House Rental Price in Vancouver | Vancouver Luxury Realty', '?typeOfProperty=Townhouse&status=Rented/': 'Townhouse Rental Price in Vancouver | Vancouver Luxury Realty', '?city=Port%20Moody&status=Available': '"Port Moody Apartment, Condo and House For Rent | VLR"',}
+
+    // Parse query params safely
+  const params = new URLSearchParams(window.location.search);
+
+  // Build a normalized key
+  const normalizedPairs = [];
+
+  if (params.has('city')) {
+    normalizedPairs.push(
+      `city=${decodeURIComponent(params.get('city')).toLowerCase()}`
+    );
+  }
+
+  if (params.has('status')) {
+    normalizedPairs.push(
+      `status=${params.get('status').toLowerCase()}`
+    );
+  }
+
+  const normalizedKey = normalizedPairs.join('&');
+
+  // Only update title if we have a match
+  if (titleMap[normalizedKey]) {
+    document.title = titleMap[normalizedKey];
+  }
+
+  }
+
+  var user = localStorage.getItem("User");
+  var userId = localStorage.getItem("UserId");
+  function setFavorite(property) {
+    if (!user) {
+      $("#myFavoritesModal").modal();
+    } else {
+      $.ajax({
+        type: "POST",
+        url: "/user/newfavorite",
+        data: {
+          user: user,
+          _id: property._id,
+          propertyId: property.propertyId,
+        },
+        success: function (response) {
+          $(".property_" + property.propertyId)
+            .find(".addFavouriteIconImg")
+            .attr("src", "/new-img/heart_icon_filled.png");
+        },
+        error: function (result) {
+          console.log(result);
+        },
+      });
+    }
+  }
+  
+  function checkFavorite(propertyId, userId, propertyFavorites) {
+    for (var i = 0; i < propertyFavorites.length; i++) {
+      if (propertyFavorites[i].propertyId == propertyId) {
+        return propertyFavorites[i].users.indexOf(userId) == -1;
+      }
+    }
+    return true;
+  }
+  $(document).ready(function() {
+      // dynamically update the title
+      updatePropertySearchPageTitle();
+      var _properties = <%-JSON.stringify(data)%>;
+      var _coverImgs = <%-JSON.stringify(coverImgs)%>;
+      var currentPage = <%-JSON.stringify(currentPage)%>;
+      // On a /for-rent/... landing page the filters live in the path instead of
+      // the address bar, so the server hands them over here. On /properties both
+      // are empty/default and everything below behaves exactly as it always has.
+      var pathFilterQuery = <%- JSON.stringify(typeof filterQuery !== 'undefined' && filterQuery ? filterQuery : '') %>;
+      var basePath = <%- JSON.stringify(typeof pagePath !== 'undefined' && pagePath ? pagePath : '/properties') %>;
+      var query = window.location.href.split('?')[1];
+      query = query ? query : '';
+      if (query && query.startsWith("page=")) {
+          index = query.indexOf('&') + 1;
+          if (index == 0)
+              index = query.length;
+          query = query.substr(index);
+      }
+      // The full filter set (path filters + anything still in the query string):
+      // what the result count and the search sidebar work from. `query` alone
+      // stays the part that has to be carried in pagination links.
+      var activeFilterQuery = pathFilterQuery
+          ? (query ? pathFilterQuery + '&' + query : pathFilterQuery)
+          : query;
+      var card_view = new Vue({
+          el: '#card-view',
+          data: {
+              properties: _properties,
+              coverImgs: _coverImgs
+          }
+      });
+      var count = 0;
+      // Absolute: a relative "properties/count" resolves against the current
+      // path, which is not /properties on a /for-rent/... landing page.
+      var url = "/properties/count";
+      if (activeFilterQuery != '') {
+          var entries = activeFilterQuery.split('&');
+          $.each(entries, function(index, value) {
+              var entry = value.split('=')[0];
+              if (entry.toLowerCase() == 'searchbar')
+                  searchFilter.searchForm.searchBar = value.split('=')[1].replace(/%20/g, " ");
+              if (entry.toLowerCase() == 'city') {
+                  searchFilter.searchForm.city = value.split('=')[1].replace(/%20/g, " ").split(',');
+                  updateCity(searchFilter.searchForm.city);
+              }
+              if (entry.toLowerCase() == 'bedrooms') {
+                  searchFilter.searchForm.bedrooms = value.split('=')[1].replace(/%20/g, " ").split(',');
+                  updateBedroom(searchFilter.searchForm.bedrooms);
+              }
+              if (entry.toLowerCase() == 'status')
+                  searchFilter.searchForm.status = decodeURIComponent(value.split('=')[1]);
+              if (entry.toLowerCase() == 'allowpets')
+                  searchFilter.searchForm.allowPets = value.split('=')[1].replace(/%20/g, " ");
+              if (entry.toLowerCase() == 'furnished')
+                  searchFilter.searchForm.furnished = value.split('=')[1].replace(/%20/g, " ");
+              if (entry.toLowerCase() == 'rent%3e')
+                  searchFilter.searchForm.priceMin = value.split('=')[1].replace(/%20/g, " ");
+              if (entry.toLowerCase() == 'rent%3c')
+                  searchFilter.searchForm.priceMax = value.split('=')[1].replace(/%20/g, " ");
+          });
+          url = url + '?' + activeFilterQuery;
+      }
+      // Keeps pagination on whichever URL form the visitor is on: the clean
+      // landing path carries its filters already, /properties carries them in
+      // the query string.
+      function pageUrl(pageNumber) {
+          return basePath + '?page=' + pageNumber + (query != '' ? '&' + query : '');
+      }
+      $.get(url, function(data, status) {
+          count = data['count'];
+          var pageCount = Math.ceil(count / 12);
+          var html = "";
+          if (pageCount > 1) {
+              html += '<ul class="pagination">';
+              if (currentPage > 1) {
+                  html += '<li><a href="' + pageUrl(1) + '">&laquo;</a></li>';
+              }
+              var i = 1;
+              if (currentPage > 5) {
+                  i = +currentPage - 4;
+              }
+              if (i !== 1) {
+                  html += '<li class="disabled"><a href="#">...</a></li>';
+              }
+              for (i; i <= pageCount; i++) {
+                  if (currentPage == i) {
+                      html += '<li class= "active" style="font-weight: 900;"><span>' + i +
+                          '<span class="sr-only">(current)< /span></span></li>';
+                  } else {
+                      html += '<li><a href="' + pageUrl(i) + '">' + i + '</a></li>';
+                  }
+                  if (i == (+currentPage + 4)) {
+                      html += '<li class="disabled"><a href="#">...</a></li>';
+                      break;
+                  }
+              }
+              if (currentPage != pageCount) {
+                  html += '<li> <a href="' + pageUrl(pageCount) + '">&raquo;</a></li>';
+              }
+              html += '</ul>';
+          }
+          document.getElementById('paging').innerHTML = html;
+      });
+
+
+      $('figure').click(function(event) {
+          // id = $(this).find('.propertyId').text().trim();
+          // address = $(this).find('.propertyAddress').text().trim();
+      });
+
+      $('#card-view').show();
+
+      // Show recommendations if no search results
+      try {
+        if (typeof _properties !== 'undefined' && _properties && _properties.length === 0) {
+          // reveal recommendation section
+          $('#recommendation-section').show();
+          $.ajax({
+            type: "GET",
+            url: "/properties/recentlyRented",
+            success: function (response) {
+              var recently_rented_view = new Vue({
+                el: "#recently-rented-view",
+                data: {
+                  properties: response.data || [],
+                  coverImgs: response.coverImgs || [],
+                  propertyFavorites: response.propertyFavorites || [],
+                  userId: userId || null,
+                },
+              });
+            },
+            error: function(err) {
+              console.error('Failed to load recommendations', err);
+            }
+          });
+        }
+      } catch (e) {
+        console.error(e);
+      }
+
+  });
+</script>
+
+<%
+  // A /for-rent/... landing page names the place it is about; /properties keeps
+  // the generic banner and label it has always had.
+  var landingHeading = (typeof pageHeading !== 'undefined' && pageHeading) ? pageHeading : '';
+%>
+<%- include('banner', { heroTitle: landingHeading }) %>
+<div class="container">
+  <div class="label-center">
+    <span class="recent-label" id="properties_page_title"><%= landingHeading || 'All Properties' %></span>
+    <script>
+      //use js to update the title
+      var url = window.location.href;
+      if (url.indexOf("Rented") != -1) {
+        $("#properties_page_title").html("All Rented Properties");
+      }
+    </script>
+    <br />
+  </div>
+  <div class="col-md-12">
+    <div class="properties-wrapper">
+      <div id="card-view" class="row" style="display: none;">
+        <div
+          v-for="(property, index) in properties"
+          v-bind:class="'col-sm-12 col-sm-4 property_' + property.propertyId"
+        >
+          <figure>
+            <img
+              src="/new-img/heart_icon.png"
+              alt="add to favorite icon"
+              class="addFavouriteIconImg"
+              v-on:click="setFavorite(property)"
+              class="favorite_icon"
+            />
+            <a v-bind:href="property.url">
+              <img :src="coverImgs[index]" alt="img" />
+
+              <figcaption>
+                <span class="propertyId hidden">
+                  {{ property.propertyId }}</span
+                >
+                <p class="h6">
+                  {{ property.typeOfProperty }} in {{ property.city }},
+                  {{ property.province }}
+                </p>
+                <h2 class="propertyAddress">{{ property.address }}</h2>
+                <p>
+                  {{ property.bedrooms }} Bed | {{ property.bathrooms }} Bath |
+                  {{ property.squareFeet }} SqFt | ${{ property.rent }}/Month
+                </p>
+
+                <!-- <p class="recent-rented-price">save</p> -->
+              </figcaption>
+            </a>
+          </figure>
+        </div>
+
+      </div>
+
+      <noscript>
+        <!-- The cards above are rendered by Vue, so their hrefs do not exist
+             until JavaScript runs. Crawlers that do not execute JavaScript
+             (Bing in particular) would otherwise see a search results page
+             carrying no internal links at all. These are the same canonical
+             URLs, built server-side. -->
+        <ul class="listing-index">
+          <% for (var i = 0; i < data.length; i++) { %>
+          <li><a href="<%= data[i].url %>"><%= data[i].address %></a></li>
+          <% } %>
+        </ul>
+      </noscript>
+
+      <!-- Recommendation Section (hidden by default; shown only when no search results) -->
+      <div class="properties-wrapper" id="recommendation-section" style="display:none; margin-top:40px;">
+        <h3 style="text-align: center;">No properties found, but we still have some recommended Properties</h3>
+        <div id="recently-rented-view" class="row">
+          <div
+          v-for="(property, index) in properties"
+          v-bind:class="'col-sm-12 col-sm-4 property_' + property.propertyId"
+        >
+          <figure>
+            <img
+              src="/new-img/heart_icon.png"
+              alt="add to favorite icon"
+              class="addFavouriteIconImg"
+              v-on:click="setFavorite(property)"
+              class="favorite_icon"
+            />
+            <a v-bind:href="property.url">
+              <img :src="coverImgs[index]" alt="img" />
+
+              <figcaption>
+                <span class="propertyId hidden">
+                  {{ property.propertyId }}</span
+                >
+                <p class="h6">
+                  {{ property.typeOfProperty }} in {{ property.city }},
+                  {{ property.province }}
+                </p>
+                <h2 class="propertyAddress">{{ property.address }}</h2>
+                <p>
+                  {{ property.bedrooms }} Bed | {{ property.bathrooms }} Bath |
+                  {{ property.squareFeet }} SqFt | ${{ property.rent }}/Month
+                </p>
+
+                <!-- <p class="recent-rented-price">save</p> -->
+              </figcaption>
+            </a>
+          </figure>
+        </div>
+        </div>
+      </div>
+
+      <div id="paging"></div>
+    </div>
+  </div>
+</div>
+
+<%- include('footer') %>

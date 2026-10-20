@@ -1,0 +1,159 @@
+<%- include('header') %>
+<script>
+// update title and meta tag
+document.title = "Best Property Manager in Vancouver | Vancouver Luxury Rentals";
+// $("meta[name='description'").attr("content", 'VancouverLuxuryRentals: Search Luxury Furnished and Unfurnished Rental Listings in Vancouver.');
+</script>
+    <link href="/libs/css/content.css" rel="stylesheet">
+    <link href="/libs/css/vendor/elementUi.css" rel="stylesheet">
+    <script type="text/javascript" src="/libs/js/elementUi.js"></script>
+    <script type="text/javascript" src="/libs/js/en.js"></script>
+    <script type="text/javascript" src="/libs/js/axios.min.js"></script>
+    <script type="text/javascript" src="/libs/js/pages/listProperty.js"></script>
+    <div class="container" id="list-properties-page">
+        <div class="col-md-12">
+            <div class="owner-header-img">
+                <div class="layer">
+                    <h1>List A Property</h1>
+                </div>
+            </div>
+            <div class="title">
+                <h2 class="feature-title">Overview</h2>
+                <h3 class="panel-title">
+                    What Is The Process Of Renting A Property Through Vancouver Luxury Realty?
+                </h3>
+                <p>Discover Vancouver's premier destination for luxurious and upscale properties with Vancouver Luxury Rentals, offering top-notch Leasing and Property Management services for exceptional properties. With our team of experts, we provide personalized services tailored to your property location, size, updates, and marketability. On average, our properties are rented for $4,000 per month, making them an excellent investment opportunity. Submit your property today for a free rental income assessment and a chance to be added to our exclusive collection. Our Consulting Services are complimentary, and we offer in-person property visits to discuss your needs. Contact us now to take the first step towards maximizing your rental income with VLR.
+
+                </p>
+                <br>
+                <p>Our Consulting Services are free of charge. If you're unsure about any aspect of renting your property with
+                    VLR, please call us to discuss your needs. We will even visit your property in person - without any obligation!
+                </p>
+                <p class="emphasis mobile-call-today">Call Today:
+                    <a href="tel:6048990220">604.899.0220</a>
+                </p>
+            </div>
+            <hr class="margin-top-100">
+        </div>
+
+
+        <div id="list-property-form">
+            <div class="col-md-12">
+                <div class="title-form">
+                    <h3 class="panel-title bold-h3">
+                        Contact Information
+                    </h3>
+                </div>
+                <template>
+                    <el-form ref="listForm" :model="listForm" :rules="rules" label-width="130px">
+                        <el-form-item label="Full Name: " prop="fullName">
+                            <el-input v-model="listForm.fullName"></el-input>
+                        </el-form-item>
+                        <el-form-item label="Email: " prop="email">
+                            <el-input v-model="listForm.email"></el-input>
+                        </el-form-item>
+                        <el-form-item label="Phone: ">
+                            <el-input onkeypress="return event.charCode >= 48 && event.charCode <= 57" v-model="listForm.phone"></el-input>
+                        </el-form-item>
+                        <div class="title-form">
+                            <h3 class="panel-title bold-h3">
+                                Property Information
+                            </h3>
+                        </div>
+                        <el-form-item label="Location" prop="city">
+                            <el-select v-model="listForm.city" placeholder="Choose City">
+                                <el-option label="Downtown Vancouver" value="Downtown Vancouver"></el-option>
+                                <el-option label="Vancouver West Side" value="Vancouver West Side"></el-option>
+                                <el-option label="Vancouver East Side" value="Vancouver East Side"></el-option>
+                                <el-option label="North Vancouver" value="North Vancouver"></el-option>
+                                <el-option label="West Vancouver" value="West Vancouver"></el-option>
+                                <el-option label="Burnaby" value="Burnaby"></el-option>
+                                <el-option label="Richmond" value="richmond"></el-option>
+                                <el-option label="White Rock" value="White Rock"></el-option>
+                                <el-option label="Delta" value="Delta"></el-option>
+                                <el-option label="Coquitlam" value="Coquitlam"></el-option>
+                            </el-select>
+                        </el-form-item>
+
+                        <el-form-item label="Type" prop="type">
+                            <el-select v-model="listForm.type" placeholder="Choose Type">
+                                <el-option label="Condo" value="Condo"></el-option>
+                                <el-option label="Penthouse" value="Penthouse"></el-option>
+                                <el-option label="Loft" value="Loft"></el-option>
+                                <el-option label="Townhouse" value="Townhouse"></el-option>
+                                <el-option label="House" value="House"></el-option>
+                                <el-option label="Basement Legal Suite" value="Basement Legal Suite"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="Bedrooms" prop="bedroom">
+                            <el-select v-model="listForm.bedroom" placeholder="Choose Bedroom">
+                                <el-option label="Studio" value="0"></el-option>
+                                <el-option label="1" value="1"></el-option>
+                                <el-option label="2" value="2"></el-option>
+                                <el-option label="3" value="3"></el-option>
+                                <el-option label="4" value="4"></el-option>
+                                <el-option label="5" value="5"></el-option>
+                                <el-option label="6" value="6"></el-option>
+                                <el-option label="7" value="7"></el-option>
+                                <el-option label="8" value="8"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="Bathroom">
+                            <el-select v-model="listForm.bathroom">
+                                <el-option label="1" value="1"></el-option>
+                                <el-option label="2" value="2"></el-option>
+                                <el-option label="3" value="3"></el-option>
+                                <el-option label="4" value="4"></el-option>
+                                <el-option label="5" value="5"></el-option>
+                                <el-option label="6" value="6"></el-option>
+                                <el-option label="7" value="7"></el-option>
+                                <el-option label="8" value="8"></el-option>
+                                <el-option label="9" value="9"></el-option>
+                                <el-option label="10" value="10"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="Furnished/Unfurnished" class="choose-condition-input">
+                            <el-select v-model="listForm.propertyCondition" placeholder="Choose Condition">
+                                <el-option label="Furnished" value="Furnished"></el-option>
+                                <el-option label="Unfurnished" value="Unfurnished"></el-option>
+                                <el-option label="Both Possible" value="Both Possible"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="Lease Term">
+                            <el-select v-model="listForm.leaseTerm" placeholder="Choose Term">
+                                <el-option label="Less than 6 months" value="Less than 6 months"></el-option>
+                                <el-option label="6 months" value="6 months"></el-option>
+                                <el-option label="1 year" value="1 year"></el-option>
+                                <el-option label="2 years above" value="2 years above"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="Available Date"  class="post-date-input">
+                            <el-col :span="23">
+                                <el-date-picker type="date" placeholder="Please select a date" v-model="listForm.date"></el-date-picker>
+                            </el-col>
+                        </el-form-item>
+                        <hr class="margin-top-100 mobile-only">
+                        <el-form-item label="Comments" class="list-property-form-comment">
+                            <el-input type="textarea" v-model="listForm.comment"></el-input>
+                        </el-form-item>
+                        <el-form-item class="list-property-form-submit">
+                            <el-button type="primary" @click="submit('listForm')">Submit</el-button>
+                        </el-form-item>
+                        <div class="message-holder"></div>
+                    </el-form>
+                </template>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <hr class="margin-top-100 margin-bottom-100">
+    </div>
+
+    <script>
+        $(document).ready(function(){
+        //for SEO and meta keywords
+            $("meta[name=description]").attr("content", "If you are ready to list your luxury property with VLR, or just looking for more information, please call us to discuss our property management services, process and fees.");
+            $("title").html("Vancouver Luxury Rentals: List A Property");
+        });
+    </script>
+    <%- include('footer') %>

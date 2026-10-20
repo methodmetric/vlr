@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en" class="gr__vancouverluxuryrentals_com">
+
+<head><link rel="icon" href="/new-img/favicon.ico">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>VLR - Property Management Services in Burnaby, BC</title>
+  <meta name="description"
+    content="Property Management Services in Burnaby, BC. We find the right tenants, protect your real estate investment and manage your property effectively." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Vancouver Luxury Rentals is the premier specialist in property management services in Vancouver, BC. VLR delivers the very best in premium rental property management services." />
+  <meta name="author" content="Vancouver Luxury Rentals (VLR)" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+  <link href="/libs/css/main.css" rel="stylesheet" />
+  <link href="/libs/css/vendor/bootstrap-datepicker.css" rel="stylesheet" />
+  <link href="/libs/css/mobile.css" rel="stylesheet" />
+  <script type="text/javascript" async="" src="https://www.google-analytics.com/analytics.js"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag("js", new Date());
+    gtag("config", "UA-92410951-6");
+  </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-65247077-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag("js", new Date());
+    gtag("config", "UA-65247077-1");
+  </script>
+
+  <!-- Global site tag (gtag.js) - Google Ads: 947376741 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-947376741"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'AW-947376741');
+  </script>
+
+  <script type="application/ld+json">{
+    "@context": "http://schema.org",
+    "@graph": [
+        {
+            "sameAs": [
+                "https://www.facebook.com/VancouverLuxuryRealty",
+                "https://twitter.com/VanLuxuryRealty",
+                "https://www.instagram.com/vancouverluxuryrealty/",
+                "https://www.linkedin.com/company/vancouver-luxury-realty/",
+                "https://www.youtube.com/channel/UCXT1KUCR9JHMuIj8TS-uesQ/videos"
+            ],
+            "@type": "LocalBusiness",
+            "@id": "https://www.vancouverluxuryrentals.com/",
+            "name": "Vancouver Luxury Rentals",
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Address: 2590 Granville St Unit 204",
+                "addressLocality": "Vancouver",
+                "addressRegion": "BC",
+                "postalCode": "V6H 3H1",
+                "addressCountry": "CA"
+            },
+            "geo": {
+                "@type": "GeoCoordinates",
+                "latitude": "49.262740",
+                "longitude": "-123.138190"
+            },
+            "telephone": "+18990220",
+            "acceptsReservations": "False",
+            "url": "https://www.vancouverluxuryrentals.com",
+            "openingHoursSpecification": {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": [
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday"
+                ],
+                "opens": "09:00:00",
+                "closes": "17:00:00"
+            },
+            "image": {
+                "@type": "ImageObject",
+                "representativeOfPage": "True",
+                "url": "https://www.vancouverluxuryrentals.com/files/schema/VLR.jpg",
+                "width": "900",
+                "height": "900"
+            },
+            "logo": {
+                "@type": "ImageObject",
+                "representativeOfPage": "True",
+                "url": "https://www.vancouverluxuryrentals.com/files/schema/g-logo.jpg",
+                "width": "300",
+                "height": "300"
+            }
+        }
+    ]
+}</script>
+
+  <style>
+    #tenant-placement .detail {
+      text-align: left !important;
+    }
+
+    #tenant-placement .detail .center {
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body data-gr-c-s-loaded="true" id="landing_page">
+  <script type="text/javascript" src="/libs/jquery/jquery.min.js"></script>
+  <script type="text/javascript" src="/libs/jquery/jquery.redirect.js"></script>
+  <script type="text/javascript" src="/libs/js/vue.min.js"></script>
+  <script type="text/javascript" src="/libs/bootstrap/bootstrap.min.js"></script>
+  <script type="text/javascript" src="/libs/js/main.js"></script>
+  <script type="text/javascript" src="/libs/js/jquery.redirect.js"></script>
+  <link href="https://fonts.googleapis.com/css?family=Libre+Baskerville" rel="stylesheet" />
+  <script type="text/javascript">
+    function myFavorites() {
+      var user = localStorage.getItem("User");
+      if (user) {
+        window.location.replace("/user/myfavorites", {
+          email: user
+        });
+      } else {
+        $("#myFavoritesModal").modal();
+      }
+    }
+
+    function logOut() {
+      localStorage.removeItem("User");
+      window.location.href = "/user/signout";
+      return false;
+    }
+
+    function saveUser(form) {
+      if (form.children[0].value) {
+        $.ajax({
+          type: "POST",
+          url: "/user/new/",
+          data: {
+            email: form.children[0].value
+          },
+          success: function (response) {
+            if (response) {
+              localStorage.setItem("User", response.user);
+              localStorage.setItem("UserId", response.userId);
+              location.reload();
+            }
+          }
+        });
+      }
+      event.preventDefault();
+    }
+
+    $("#logout").ready(function () {
+      var user = localStorage.User;
+      if (user) {
+        $("#logout").css("display", "block");
+      }
+    });
+  </script>
+  <div class="container" style="width: inherit; padding: 0px;">
+    <div class="col-md-12" style="padding: 0px;">
+      <nav class="navbar navbar-default navbar-custom ">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+            aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a href="https://www.vancouverluxuryrentals.com/">
+            <img src="/new-img/logo.png" alt="vancouverluxuryrentals" class="logo" style="margin-left: 25px;" />
+          </a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav" style="margin-left: 50px;">
+            <li class="dropdown">
+              <a class="dropdown-toggle" data-toggle="dropdown">For Rent</a>
+              <ul class="dropdown-menu">
+                <li>
+                  <a href="/for-rent/all">All Available
+                    Properties</a>
+                </li>
+                <li>
+                  <a
+                    href="/for-rent/downtown-vancouver">Downtown
+                    Vancouver</a>
+                </li>
+                <li>
+                  <a
+                    href="/for-rent/west-vancouver">West
+                    Vancouver</a>
+                </li>
+                <li>
+                  <a
+                    href="/for-rent/north-vancouver">North
+                    Vancouver</a>
+                </li>
+                <li>
+                  <a
+                    href="/for-rent/richmond">Richmond</a>
+                </li>
+                <li>
+                  <a
+                    href="/for-rent/burnaby">Burnaby</a>
+                </li>
+                <li>
+                  <a
+                    href="/for-rent/coquitlam">Coquitlam</a>
+                </li>
+                <li>
+                  <a href="/for-rent/delta">Delta</a>
+                </li>
+                <li>
+                  <a
+                    href="/for-rent/surrey">Surrey</a>
+                </li>
+                <li>
+                  <a
+                    href="/for-rent/langley">Langley</a>
+                </li>
+                <li>
+                  <a
+                    href="/for-rent/tsawwassen">Tsawwassen</a>
+                </li>
+                <li>
+                    <a
+                        href="/for-rent/port-moody">Port Moody</a>
+                </li>
+              </ul>
+            </li>
+            <li class="dropdown">
+              <a class="dropdown-toggle" data-toggle="dropdown">Rented Listings</a>
+              <ul class="dropdown-menu">
+                <li>
+                  <a href="https://www.vancouverluxuryrentals.com/properties?status=Rented">All Rented Properties</a>
+                </li>
+                <li>
+                  <a href="https://www.vancouverluxuryrentals.com/properties?typeOfProperty=Condo&amp;status=Rented">Rented
+                    Condo</a>
+                </li>
+                <li>
+                  <a href="https://www.vancouverluxuryrentals.com/properties?typeOfProperty=House&amp;status=Rented">Rented
+                    House</a>
+                </li>
+                <li>
+                  <a
+                    href="https://www.vancouverluxuryrentals.com/properties?typeOfProperty=Townhouse&amp;status=Rented">Rented
+                    Townhouse</a>
+                </li>
+                <li>
+                  <a
+                    href="https://www.vancouverluxuryrentals.com/properties?typeOfProperty=Penthouse&amp;status=Rented">Rented
+                    Penthouse</a>
+                </li>
+              </ul>
+            </li>
+            <li class="dropdown">
+              <a class="dropdown-toggle" data-toggle="dropdown">For Tenants</a>
+              <ul class="dropdown-menu">
+                <li>
+                  <a href="https://www.vancouverluxuryrentals.com/tenants/services">For Tenants</a>
+                </li>
+                <li>
+                  <a href="https://www.vancouverluxuryrentals.com/tenants/forms">Forms Download</a>
+                </li>
+                <li>
+                  <a href="https://www.vancouverluxuryrentals.com/tenants/FAQ">FAQ</a>
+                </li>
+              </ul>
+            </li>
+            <li class="dropdown">
+              <a class="dropdown-toggle" data-toggle="dropdown">For Owners</a>
+              <ul class="dropdown-menu">
+                <li>
+                  <a href="https://www.vancouverluxuryrentals.com/owners">Overview</a>
+                </li>
+                <li>
+                  <a href="https://www.vancouverluxuryrentals.com/owners/list-properties">List a Property</a>
+                </li>
+                <li>
+                  <a href="https://www.vancouverluxuryrentals.com/owners/tenant-placement">Tenant Placement</a>
+                </li>
+                <li>
+                  <a href="https://www.vancouverluxuryrentals.com/owners/property-management">Property Management
+                    Services</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="https://www.filerwelch.com/">Sell</a>
+            </li>
+            <li class="dropdown">
+              <a class="dropdown-toggle" data-toggle="dropdown">About Us</a>
+              <ul class="dropdown-menu">
+                <li>
+                  <a href="https://www.vancouverluxuryrentals.com/about">Overview</a>
+                </li>
+                <li>
+                  <a href="https://www.vancouverluxuryrentals.com/about/profile">Company Profile</a>
+                </li>
+                <li>
+                  <a href="https://www.vancouverluxuryrentals.com/about/team">Meet VLR Team</a>
+                </li>
+                <li>
+                  <a href="https://www.vancouverluxuryrentals.com/about/career">Career</a>
+                </li>
+              </ul>
+            </li>
+            <li class="nav-star" style="padding-left: 23px;margin-left: 25px;">
+              <a class="clickable" onclick="javascript:myFavorites()">
+                <span class="star">★</span>My Favourite</a>
+            </li>
+            <li class="nav-logout">
+              <a id="logout" class="clickable logout" onclick="javascript:logOut()">Log out</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+      <div class="container-fluid">
+        <div class="row">
+          <div class="modal fade" id="myFavoritesModal" role="dialog">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-body">
+                  <span class="modal-title">ADD TO MY FAVOURITE</span>
+                  <p class="modal-p">
+                    Get a list of your personal favourite properties and be
+                    the first to know about similar options, new properties
+                    and our special offers.
+                  </p>
+                  <form class="email" onsubmit="saveUser(this)">
+                    <input type="email" name="email" placeholder="Your Email" class="email-box" />
+                    <input type="submit" class="email-button" value="GO" />
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <link href="/libs/css/content.css" rel="stylesheet" />
+  <div class="container" id="tenant-placement">
+    <div class="col-md-12">
+      <div class="" style="height: 450px;overflow:hidden;    width: 100%;">
+        <div class="layer">
+          <img src="/new-img/property-management-burnaby.jpg" alt="Apartment for rent in Burnaby" />
+        </div>
+      </div>
+      <div class="title margin-bottom-100">
+        <h1 class="feature-title h2">Sorry, we couldn't find the page you are looking for</h1>
+      </div>
+      <div class="row">
+        <div class="panel-group detail">
+          <p class="col-12 col-md-12">
+
+            Vancouver Luxury Rentals is a leading
+            <a href="https://www.vancouverluxuryrentals.com/">professional property management firms</a>
+            that has expertise serving the many communities that make up the
+            Metro Vancouver region. Ultimately, VLR strives to take on all the
+            responsibilities of investment property ownership so that you can
+            enjoy a stress-free return on your investment. We are a
+            detail-oriented Burnaby property management firm that offers the
+            skills and experience to manage every aspect of your investment
+            property.
+
+            <br /><br />
+            Newcomers to real estate investment are sometimes overwhelmed when
+            they learn of the many challenges that come with managing their
+            real estate investment. Indeed, seasoned investors already know
+            that accessing professional property management can mean a much
+            greater return on their investment because it is ultimately best
+            to trust people who know what it takes to provide effective
+            property management. Optimizing the return on investment of a
+            rental property requires a wide range of services from marketing
+            the property, leasing the property, and collecting and managing
+            rental income to inspecting and maintaining the property. In all
+            likelihood, you would not trust a novice to replace the roof on
+            your investment, so why would you trust a novice to manage its
+            day-to-day operations?
+
+            <br /><br />
+            <a href="https://www.vancouverluxuryrentals.com/">Vancouver Luxury Rentals</a>
+            provides
+            <a href="https://www.vancouverluxuryrentals.com/property-management-burnaby/">Burnaby property
+              management</a>
+            with a keen focus on client satisfaction, integrity, and industry
+            leading services. What does this mean? First, we collaborate with
+            each of our clients to address their concerns and needs
+            specifically. This begins with open and honest communication about
+            their expectations and the skills and expertise we bring to the
+            table. Once we identify the exact services our clients require, we
+            develop a plan that addresses each of these needs. Our industry
+            leading services include
+          </p>
+
+         
+        </div>
+      </div>
+      <div class="tenant-forms-button margin-top-100">
+        <a href="/properties?city=Burnaby" class="button btn btn-default mobile-center-btn">View View Available Listings
+          in Burnaby</a>
+        <a href="/owners/list-properties" class="button btn btn-default">List Your Properties</a>
+        <p class="bottom-phone">
+          Or Call:
+          <a href="tel:6048990220" class="mobile_call_me">604.899.0220</a>
+        </p>
+      </div>
+      <div class="container">
+        <hr class="margin-top-100 margin-bottom-100" />
+      </div>
+    </div>
+  </div>
+  <%- include('footer') %>
+  <%- include('cookie-disclaimer') %>
+</body>
+
+</html>

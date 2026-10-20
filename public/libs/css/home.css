@@ -1,0 +1,697 @@
+/* ==========================================================================
+   Homepage — property-management focused layout.
+   Loaded only by views/homepage.ejs. Colours/fonts follow the site palette:
+   brand red #fe1111, headings 'Libre Baskerville', body copy #444 / #3d4b56.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Hero banner
+   The .textInsideImages block is shared with /properties and /myFavorites,
+   so every rule here is scoped under .home-banner.
+   -------------------------------------------------------------------------- */
+/* The shared banner reserves 400px (200px on mobile) of empty space above the
+   title. The homepage hero now carries a subtitle, a CTA and an intro line, so
+   pull that back to keep the banner close to the height in the design. */
+.home-banner .backGroundImages {
+  position: relative;
+}
+.home-banner .backGroundImages::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+  pointer-events: none;
+}
+.home-banner .backGroundImageEffect {
+  position: relative;
+  z-index: 2;
+}
+.home-banner .textInsideImages {
+  margin-top: 170px;
+  margin-bottom: 30px;
+}
+.home-banner .textInsideImages h1 {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 40px;
+  line-height: 1.3;
+  max-width: 900px;
+  margin: 0 auto 18px;
+}
+.home-banner .textInsideImages .hero-subtitle {
+  color: #fff;
+  font-size: 17px;
+  line-height: 1.6;
+  max-width: 560px;
+  margin: 0 auto 26px;
+  text-shadow: 1px 1px rgba(0, 0, 0, 0.35);
+}
+.home-banner .textInsideImages .hero-cta-btn {
+  display: inline-block;
+  background: #fe1111;
+  color: #fff !important;
+  font-size: 16px;
+  padding: 12px 30px;
+  border-radius: 3px;
+  text-decoration: none !important;
+  margin-bottom: 70px;
+}
+.home-banner .textInsideImages .hero-cta-btn:hover {
+  background: #d80d0d;
+}
+.home-banner .textInsideImages .hero-search-intro {
+  color: #fff;
+  font-size: 15px;
+  margin: 0 0 15px;
+  text-shadow: 1px 1px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 991px) {
+  /* banner.css pulls .backGroundImages up by 120px, and the phone navbar is
+     ~90px tall, so the banner's top edge sits above the navbar's bottom. This
+     margin has to clear both before the headline is visible: 160px still left
+     the first line tucked under the bar, so it needs the full 200px. */
+  .home-banner .textInsideImages {
+    margin-top: 200px;
+    margin-bottom: 20px;
+  }
+  .home-banner .textInsideImages h1 {
+    font-size: 26px;
+    padding: 0 20px;
+  }
+  .home-banner .textInsideImages .hero-subtitle {
+    font-size: 15px;
+    padding: 0 25px;
+    margin-bottom: 22px;
+  }
+  .home-banner .textInsideImages .hero-cta-btn {
+    font-size: 14px;
+    padding: 11px 22px;
+    margin-bottom: 30px;
+  }
+  .home-banner .textInsideImages .hero-search-intro {
+    font-size: 14px;
+    padding: 0 25px;
+    margin-bottom: 12px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   1b. Hero search form on narrow viewports
+   mobile.css already styles this form, but it is gated on `max-device-width`,
+   which keys off the physical screen — it never fires when a desktop browser
+   is resized, and misses phones wider than 480px. banner.css also pins the
+   selects to `min-width: 220px !important` and the form item to a 100px
+   bottom margin, both of which overflow a phone. These viewport-based rules
+   are scoped to .home-banner so /properties and /myFavorites are untouched.
+   -------------------------------------------------------------------------- */
+@media (max-width: 991px) {
+  .home-banner #search-filter {
+    padding: 0 15px;
+  }
+  .home-banner #search-filter .el-form .el-form-item {
+    margin-bottom: 8px;
+  }
+  .home-banner #search-filter .el-form-item__content .el-input {
+    width: 100%;
+  }
+  /* Release only the fixed widths banner.css sets with !important. Setting a
+     width here too would outrank the 50% rule below on .multi-select-city and
+     .multi-select, which carry an extra class — that is what made the City
+     select render full width while the rest sat at 50%. */
+  .home-banner #search-filter .multi-select,
+  .home-banner #search-filter .multi-select .el-input,
+  .home-banner #search-filter .multi-select .el-select__tags,
+  .home-banner #search-filter .multi-select-city,
+  .home-banner #search-filter .multi-select-city .el-input,
+  .home-banner #search-filter .long-select,
+  .home-banner #search-filter .long-select .el-input {
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+  /* two columns of filters, matching the mobile design */
+  .home-banner #search-filter .el-select {
+    width: 50% !important;
+    float: left;
+    padding: 4px 5px;
+  }
+  .home-banner #search-filter .el-select .el-input {
+    width: 100% !important;
+  }
+  .home-banner #search-filter .el-select .el-input__inner {
+    height: 34px;
+    line-height: 34px;
+  }
+  .home-banner #search-filter #searchSubmit {
+    clear: both;
+    display: block;
+    width: 120px;
+    margin: 12px auto 0 !important;
+  }
+  .home-banner #search-filter .reset {
+    display: block;
+    width: 120px;
+    margin: 8px auto 0 !important;
+    padding: 10px 20px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   1c. For rent / rented counters on narrow viewports
+   main.css hides the city selects and Search buttons below 786px, but the
+   mobile design keeps them. Restore and compact them. The #home_container
+   prefix outranks the main.css rule regardless of load order.
+   -------------------------------------------------------------------------- */
+@media (max-width: 786px) {
+  #home_container .citySearch {
+    padding: 15px 0 5px;
+    margin: 15px 0 20px;
+  }
+  #home_container .citySearch select,
+  #home_container .citySearch button {
+    display: inline-block;
+  }
+  /* the fixed 50px height clips once the controls wrap onto their own line */
+  #home_container .citySearch .citySearch-rent,
+  #home_container .citySearch .citySearch-rented {
+    height: auto;
+    line-height: 1.5;
+    text-align: center;
+    border: none;
+    margin-bottom: 14px;
+  }
+  #home_container .citySearch .citySearch-no {
+    font-size: 24px;
+    margin: 0 4px 0 0;
+  }
+  #home_container .citySearch select {
+    width: auto;
+    max-width: 38%;
+    height: 30px;
+    margin-top: 6px;
+    font-size: 13px;
+  }
+  #home_container .citySearch button {
+    height: 30px;
+    line-height: 28px;
+    padding: 0 12px;
+    margin-top: 6px;
+    font-size: 13px;
+  }
+  /* the magnifier is 30px tall and blows out the compact button */
+  #home_container .citySearch button img {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. Shared section heading (red bar + serif title, centred)
+   Mirrors .title h2.feature-title in content.css, which the homepage
+   does not load.
+   -------------------------------------------------------------------------- */
+.home-section-title {
+  border-left: #fe1111 10px solid;
+  overflow: hidden;
+  font-family: 'Libre Baskerville', serif;
+  font-size: 25px;
+  line-height: 40px;
+  font-weight: bold;
+  color: #000;
+  width: -moz-fit-content;
+  width: fit-content;
+  max-width: 100%;
+  padding-left: 20px;
+  padding-right: 10px;
+  margin: 60px auto 25px;
+  text-align: left;
+}
+
+@media (max-width: 991px) {
+  .home-section-title {
+    font-size: 20px;
+    line-height: 32px;
+    border-left-width: 7px;
+    padding-left: 14px;
+    margin: 45px auto 20px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. Why VLR is Right for Your Property
+   -------------------------------------------------------------------------- */
+.home-why-section {
+  padding: 10px 0 20px;
+  text-align: center;
+}
+.home-why-intro {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #3d4b56;
+  max-width: 620px;
+  margin: 0 auto 45px;
+}
+.home-why-item {
+  text-align: left;
+  padding: 0 15px 30px;
+}
+.home-why-item h3 {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: bold;
+  color: #fe1111;
+  margin: 0 0 14px;
+}
+.home-why-item p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #3d4b56;
+  margin: 0;
+}
+
+@media (max-width: 991px) {
+  .home-why-intro {
+    padding: 0 20px;
+    margin-bottom: 30px;
+  }
+  .home-why-item {
+    padding: 0 15px 28px;
+  }
+  .home-why-item h3 {
+    font-size: 18px;
+  }
+  /* two-up grid on mobile; clear the float every second item so uneven
+     copy lengths can't cause the third card to hang off the second */
+  .home-why-row .home-why-col:nth-child(odd) {
+    clear: left;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4. Stats — What Property Owners and Tenants Love About Us
+   -------------------------------------------------------------------------- */
+.home-stats-section {
+  padding: 10px 0 20px;
+}
+.home-stat-item {
+  text-align: center;
+  padding: 15px 10px 25px;
+}
+.home-stat-number {
+  display: block;
+  font-size: 40px;
+  font-weight: bold;
+  color: #fe1111;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+.home-stat-label {
+  display: block;
+  font-size: 15px;
+  color: #3d4b56;
+  line-height: 1.4;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+@media (max-width: 991px) {
+  .home-stat-item {
+    padding: 0 10px 22px;
+  }
+  .home-stat-number {
+    font-size: 34px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   5. Google reviews slider
+   -------------------------------------------------------------------------- */
+.home-reviews-section {
+  padding: 10px 0 40px;
+}
+.home-reviews-slider {
+  display: flex;
+  align-items: center;
+}
+.home-reviews-viewport {
+  flex: 1;
+  overflow: hidden;
+  transition: height 0.4s ease;
+}
+.home-reviews-track {
+  display: flex;
+  align-items: flex-start;
+  transition: transform 0.4s ease;
+}
+.home-review-slide {
+  flex: 0 0 auto;
+  width: 33.3333%;
+  padding: 0 12px;
+}
+.review-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  padding: 20px 22px;
+  height: 100%;
+  text-align: left;
+}
+.review-head {
+  margin-bottom: 14px;
+}
+.review-avatar {
+  display: inline-block;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 34px;
+  text-align: center;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+.review-author {
+  font-size: 15px;
+  font-weight: 700;
+  color: #222;
+  vertical-align: middle;
+}
+.review-stars {
+  color: #fbbc04;
+  font-size: 15px;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+.review-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #444;
+  margin: 0 0 10px;
+}
+.review-source {
+  font-size: 12px;
+  color: #4285f4;
+  text-decoration: none;
+}
+.review-source:hover {
+  text-decoration: underline;
+}
+
+/* --------------------------------------------------------------------------
+   6. Slider chrome shared by the reviews and listing sliders
+   -------------------------------------------------------------------------- */
+.home-slider-btn {
+  background: none;
+  border: none;
+  font-size: 26px;
+  color: #333;
+  cursor: pointer;
+  padding: 0 10px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.home-slider-btn:disabled {
+  opacity: 0.15;
+  cursor: default;
+}
+.home-slider-dots {
+  display: none;
+  list-style: none;
+  text-align: center;
+  padding: 0;
+  margin: 20px 0 0;
+}
+.home-slider-dots li {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #c9c9c9;
+  margin: 0 5px;
+  cursor: pointer;
+}
+.home-slider-dots li.active {
+  background-color: #fe1111;
+}
+
+@media (max-width: 991px) {
+  .home-review-slide {
+    width: 100%;
+    padding: 0;
+  }
+  .home-slider-arrow {
+    display: none;
+  }
+  .home-slider-dots {
+    display: block;
+  }
+  .home-slider-btn {
+    font-size: 22px;
+    padding: 0 5px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   7. Listing sliders (New Listings / Recently Rented)
+   -------------------------------------------------------------------------- */
+.home-slider-outer {
+  display: flex;
+  align-items: center;
+}
+/* min-width lets the track shrink below the fixed width of the figcaption inside it */
+.home-slider-track {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Selectors match the specificity of the .listing-wrapper rules in main.css and
+   win on source order, so cards crop consistently instead of overflowing. */
+.home-listing-slider > div figure {
+  position: relative;
+  width: 100%;
+  height: 230px;
+  overflow: hidden;
+  margin-bottom: 30px;
+  cursor: pointer;
+}
+.home-listing-slider > div figure img {
+  width: 100%;
+  min-width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.home-listing-slider > div figure figcaption {
+  width: 100%;
+}
+.home-listing-slider > div figure figcaption .home-listing-price {
+  font-size: 20px;
+  font-weight: bold;
+  margin-top: 8px;
+}
+
+.home-rented-badge {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  width: 100px;
+  margin: 0 auto;
+  background: #fe1111;
+  color: #fff;
+  text-align: center;
+  padding: 7px 0;
+  font-weight: bold;
+  font-size: 14px;
+  letter-spacing: 2px;
+  z-index: 5;
+}
+
+.home-listing-cta {
+  text-align: center;
+  margin: 5px 0 20px;
+}
+.home-listing-cta a {
+  display: inline-block;
+  background: #000;
+  color: #fff !important;
+  padding: 11px 26px;
+  font-size: 15px;
+  text-decoration: none !important;
+}
+.home-listing-cta a:hover {
+  background: #222;
+}
+
+@media (max-width: 991px) {
+  /* body > .container has no padding on mobile, so drop the row gutters
+     to stay inside the viewport */
+  .home-slider-track {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .home-listing-slider > div figure figcaption h2 {
+    width: auto;
+    max-width: 90%;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   8. Ready to get started CTA
+   -------------------------------------------------------------------------- */
+.home-cta-section {
+  padding: 60px 20px 80px;
+  text-align: center;
+}
+.home-cta-heading {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 32px;
+  font-weight: bold;
+  color: #fe1111;
+  margin: 0 0 28px;
+}
+.home-cta-btn {
+  display: inline-block;
+  background: #000;
+  color: #fff !important;
+  padding: 13px 38px;
+  font-size: 16px;
+  text-decoration: none !important;
+  border-radius: 2px;
+}
+.home-cta-btn:hover {
+  background: #222;
+}
+
+@media (max-width: 991px) {
+  .home-cta-section {
+    padding: 40px 20px 55px;
+  }
+  .home-cta-heading {
+    font-size: 24px;
+  }
+}
+
+/* ==========================================================================
+   9. Phone refinements (<= 767px)
+   Uses max-width, not the max-device-width that mobile.css relies on, so the
+   layout also holds up in a resized desktop window and on phones over 480px.
+   ========================================================================== */
+@media (max-width: 767px) {
+  /* Nothing on the page may push past the viewport */
+  #home_container .row {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  /* Section headings */
+  .home-section-title {
+    font-size: 17px;
+    line-height: 28px;
+    border-left-width: 6px;
+    padding-left: 12px;
+    padding-right: 0;
+    margin: 38px auto 18px;
+  }
+
+  /* Why VLR — two-up grid. Drop the inner gutters so the narrow columns
+     keep as much room for the copy as the design gives them. */
+  .home-why-section {
+    padding: 0 0 10px;
+  }
+  .home-why-intro {
+    font-size: 14px;
+    line-height: 1.65;
+    padding: 0 15px;
+    margin-bottom: 26px;
+  }
+  .home-why-col {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .home-why-item {
+    padding: 0 7px 26px;
+  }
+  .home-why-item h3 {
+    font-size: 17px;
+    line-height: 1.25;
+    margin-bottom: 10px;
+  }
+  .home-why-item p {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  /* Stats stack one per row */
+  .home-stats-section {
+    padding: 0 0 10px;
+  }
+  .home-stat-item {
+    padding: 0 10px 20px;
+  }
+  .home-stat-number {
+    font-size: 30px;
+  }
+  .home-stat-label {
+    font-size: 13px;
+  }
+
+  /* Reviews */
+  .home-reviews-section {
+    padding: 0 0 25px;
+  }
+  .review-card {
+    padding: 16px 16px 18px;
+  }
+  .review-text {
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  /* Listing cards: tighten the caption so the address, specs and price all
+     clear the 230px figure instead of being cut off by its overflow. */
+  .home-listing-slider > div figure {
+    margin-bottom: 12px;
+  }
+  .home-listing-slider > div figure figcaption {
+    padding-top: 22px;
+  }
+  .home-listing-slider > div figure figcaption .h6 {
+    font-size: 12px;
+  }
+  .home-listing-slider > div figure figcaption h2 {
+    font-size: 17px;
+    padding-bottom: 10px;
+  }
+  .home-listing-slider > div figure figcaption p {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  .home-listing-slider > div figure figcaption .home-listing-price {
+    font-size: 17px;
+    margin-top: 4px;
+  }
+  .home-listing-cta {
+    margin: 0 0 10px;
+  }
+  .home-listing-cta a {
+    font-size: 14px;
+    padding: 10px 22px;
+  }
+
+  /* Ready to get started */
+  .home-cta-section {
+    padding: 35px 20px 45px;
+  }
+  .home-cta-heading {
+    font-size: 22px;
+    margin-bottom: 22px;
+  }
+  .home-cta-btn {
+    font-size: 14px;
+    padding: 12px 30px;
+  }
+}

@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html>
+  <head><link rel="icon" href="/new-img/favicon.ico">
+    <meta charset="UTF-8" />
+    <title>VLR Admin Database</title>
+    <link rel="stylesheet" href="/libs/css/admin-style.css" />
+
+    <script type="text/javascript" src="/libs/jquery/jquery.js"></script>
+    <script type="text/javascript" src="/libs/js/vue.min.js"></script>
+
+    <script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+    <link href="/libs/css/vendor/bootstrap.min.css" rel="stylesheet" />
+    <link
+      href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css"
+      rel="stylesheet"
+    />
+    <style type="text/css">
+      /*a  upload */
+
+      .a-upload {
+        padding: 4px 10px;
+        left: 10px;
+        height: 26px;
+        line-height: 20px;
+        position: relative;
+        cursor: pointer;
+        color: #888;
+        background: #fafafa;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        overflow: hidden;
+        display: inline-block;
+        *display: inline;
+        *zoom: 1;
+      }
+
+      .a-upload input {
+        position: absolute;
+        font-size: 100px;
+        right: 0;
+        top: 0;
+        opacity: 0;
+        filter: alpha(opacity=0);
+        cursor: pointer;
+      }
+
+      .a-upload:hover {
+        color: #444;
+        background: #eee;
+        border-color: #ccc;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+
+  <body class="admin_body">
+    <div class="topnav" id="myTopnav">
+      <a href="/VLR-admin/">Home</a>
+      <a href="/VLR-admin/csv">Import CSV</a>
+      <a href="/VLR-admin/property/new">New Property</a>
+      <a href="/VLR-admin/owner">Owner Leads</a>
+      <a href="/VLR-admin/viewRequest">Tenant Enquiries</a>
+      <a href="/VLR-admin/available90">Available in 90 days</a>
+      <a href="/VLR-admin/database" class="current">Database</a>
+      <a href="/VLR-admin/redirects">Redirects</a>
+      <a href="/VLR-admin/logout">Log out</a>
+      <a href="javascript:void(0);" class="icon" onclick="show()">&#9776;</a>
+    </div>
+
+    <h1 class="center">Please select from the following</h1>
+    <div class="container" id="">
+      <div class="col-sm-4 col-md-4" id="featuredProperty">
+        <p class="databaseBtn">Featured Property</p>
+      </div>
+      <div class="col-sm-4 col-md-4" id="recentlyRented">
+        <p class="databaseBtn">Recently Rented</p>
+      </div>
+      <div class="col-sm-4 col-md-4" id="uploadForms">
+        <p class="databaseBtn">Upload Forms</p>
+      </div>
+      <div class="col-sm-4 col-md-4" id="meetTeam">
+        <p class="databaseBtn">Manage Meet VLR Team</p>
+      </div>
+      <div class="col-sm-4 col-md-4" id="bannerProperty">
+        <p class="databaseBtn">Banner Property</p>
+      </div>
+      <div class="col-sm-4 col-md-4" id="announcement">
+        <p class="databaseBtn">Announcement</p>
+      </div>
+
+      <div class="col-sm-4 col-md-4" id="faq">
+        <p class="databaseBtn">FAQ</p>
+      </div>
+    </div>
+    <div id="admin_database_result" class="container">
+      <h2 class="center"></h2>
+      <div id="admin_database_forms"></div>
+    </div>
+  </body>
+
+  <script type="text/javascript">
+    var forName = "";
+    var name = "";
+    var inputId = "";
+    var num = 0;
+
+    function show() {
+      var x = document.getElementById("myTopnav");
+      if (x.className === "topnav") {
+        x.className += " responsive";
+      } else {
+        x.className = "topnav";
+      }
+    }
+
+    function announcement() {
+      var title = "Home Page Announcement Popup";
+      var htmlContent = `<form action="/VLR-admin/showRoom/announcement" method="POST">
+        <div class="form-group row">
+          <label class="col-xs-6 col-md-2" for="announcementShowHide">Show Popup</label>
+          <input class="col-xs-6 col-md-9" type="checkbox" name="announcementShowHide" id="announcementShowHide" value="1">
+        </div>
+        <div class="form-group row">
+          <label class="col-xs-6 col-md-2" for="announcementTitle">Title</label>
+          <input class="col-xs-6 col-md-9" type="text" name="announcementTitle" id="announcementTitle">
+        </div>
+        <div class="form-group row">
+          <label class="col-xs-6 col-md-2" for="announcementBody">Announcement Body</label>
+          <textarea class="col-xs-6 col-md-9" style="height:300px;" name="announcementBody" id="announcementBody"></textarea>
+        </div>
+        <button type="submit" class="newbtn">Save</button>
+        </form>`;
+      name = "announcement";
+      forName = "banner_img";
+      inputId = "banner_property";
+      num = 0;
+      $("#admin_database_result h2").html(title);
+      $("#admin_database_result #admin_database_forms").html(htmlContent);
+      $.ajax({
+        type: "GET",
+        url: "/VLR-admin/showRoom/announcement",
+        success: function (response) {
+          // note: use value (arr) to store title(value[0]) and body (value[1])
+          if (response.data != null) {
+            // fill the content
+            // check box value is 0 or 1
+            if (response.data.value[0] === "1") {
+              $(document).find("#announcementShowHide").prop("checked", true);
+            }
+            $(document).find("#announcementTitle").val(response.data.value[1]);
+            $(document).find("#announcementBody").html(response.data.value[2]);
+          }
+        },
+      });
+      $("#admin_database_result h2").html(title);
+      $("#admin_database_result #admin_database_forms").html(htmlContent);
+    }
+
+    function faq() {
+      var title = "Edit FAQ Content";
+      var htmlContent = "";
+
+      var title = "Please Edit Tenant FAQ content";
+      var htmlContent =
+        '<form action="/VLR-admin/showRoom/faq" method="POST">' +
+        '<button type="submit" class="newbtn">Save</button>' +
+        '<input type="button" id="myBtn" class="newbtn" onclick="addNewFAQ()" value="Add new">' +
+        "</form>";
+      name = "faq";
+      forName = "faq";
+      inputId = "faq";
+      num = 0;
+      $("#admin_database_result h2").html(title);
+      $("#admin_database_result #admin_database_forms").html(htmlContent);
+      $.ajax({
+        type: "GET",
+        url: "/VLR-admin/showRoom/faq",
+        success: function (response) {
+          if (response.data != null) {
+            var length = response.data.value.length;
+            for (var i = 1; i <= length / 2; i++) {
+              addNewFAQ();
+              $(`#${name}title_${i}`).val(response.data.value[(i - 1) * 2]);
+              $(`#${name}content_${i}`).val(
+                response.data.value[(i - 1) * 2 + 1]
+              );
+            }
+          }
+        },
+      });
+      $("#admin_database_result h2").html(title);
+      $("#admin_database_result #admin_database_forms").html(htmlContent);
+    }
+
+    function meetTeam() {
+      var title = "Please fill in every row";
+      var htmlContent =
+        '<form action="/VLR-admin/showRoom/meetTeam" method="POST">' +
+        '<button type="submit" class="newbtn">Save</button>' +
+        '<input type="button" id="myBtn" class="newbtn" onclick="addNewMember()" value="Add new">' +
+        "</form>";
+      $("#admin_database_result h2").html(title);
+      $("#admin_database_result #admin_database_forms").html(htmlContent);
+      name = "meetTeam";
+      forName = "meet_Team";
+      inputId = "meet_Team";
+      num = 0;
+      $.ajax({
+        type: "GET",
+        url: "/VLR-admin/showRoom/meetTeam",
+        success: function (response) {
+          var length = response.data.length;
+          for (let i = 0; i < length; i++) {
+            addNewMember();
+            $("#name_" + (i + 1)).val(response.data[i].name);
+            $("#email_" + (i + 1)).val(response.data[i].email);
+            $("#role_" + (i + 1)).val(response.data[i].role);
+            $("#detail_" + (i + 1)).val(response.data[i].detail);
+            $("#phone_" + (i + 1)).val(response.data[i].phone);
+            if (response.data[i].photoUrl) {
+              // The photo is a real file in S3 now, so just point at it.
+              $("#photo_" + (i + 1) + "_img").attr("src", response.data[i].photoUrl);
+              $("#photo_" + (i + 1) + "_img").css("display", "block");
+              // Marker value: the save handler only replaces the photo when this
+              // field holds a data: URI, so an unchanged member keeps its photo.
+              $("#photo_" + (i + 1) + "_value").val("[existing]");
+            }
+            var detailNode = document.getElementById("detail_" + (i + 1));
+            var deleteButton = document.createElement("input");
+            deleteButton.type = "button";
+            deleteButton.setAttribute("class", "newbtn");
+            deleteButton.onclick = function () {
+              deletePopup(i+1);
+            };
+            deleteButton.value = "Remove";
+            document
+              .getElementById("member_" + (i + 1))
+              .insertBefore(deleteButton, detailNode.nextSibling);
+          }
+        },
+      });
+    }
+
+    function addNewMember() {
+      num = num + 1;
+      var form = document.getElementsByTagName("form")[0];
+      var saveButton = form.querySelectorAll("button.newbtn")[0];
+      var newDiv = document.createElement("div");
+      //newDiv.setAttribute('class','form-group row');
+      newDiv.id = "member_" + num;
+
+      var newLabel = document.createElement("label");
+      //newLabel.setAttribute('class','col-xs-6 col-md-3');
+      newLabel.style.display = "block";
+      newLabel.style.clear = "both";
+      newLabel.textContent = num + ": ";
+      newDiv.appendChild(newLabel);
+
+      var newInput = document.createElement("input");
+      //newInput.setAttribute('class','col-xs-6 col-md-2');
+      newInput.type = "text";
+
+      //Name
+      var nameLabel = newLabel.cloneNode();
+      nameLabel.textContent = "Name: ";
+      newDiv.appendChild(nameLabel);
+      var nameInput = newInput.cloneNode();
+      nameInput.name = "name";
+      nameInput.id = "name_" + num;
+      newDiv.appendChild(nameInput);
+
+      //Role
+      var roleLabel = newLabel.cloneNode();
+      roleLabel.textContent = "Role: ";
+      newDiv.appendChild(roleLabel);
+      var roleInput = newInput.cloneNode();
+      roleInput.name = "role";
+      roleInput.id = "role_" + num;
+      newDiv.appendChild(roleInput);
+
+      //Email
+      var emailLabel = newLabel.cloneNode();
+      emailLabel.textContent = "Email (Cannot change after create): ";
+      newDiv.appendChild(emailLabel);
+      var emailInput = newInput.cloneNode();
+      emailInput.name = "email";
+      emailInput.type = "email";
+      emailInput.id = "email_" + num;
+      emailInput.setAttribute("class", "identifier");
+      newDiv.appendChild(emailInput);
+
+      //Phone
+      var phoneLabel = newLabel.cloneNode();
+      phoneLabel.textContent = "Phone: ";
+      newDiv.appendChild(phoneLabel);
+      var phoneInput = newInput.cloneNode();
+      phoneInput.name = "phone";
+      phoneInput.id = "phone_" + num;
+      newDiv.appendChild(phoneInput);
+
+      //Photo
+      var photoLabel = newLabel.cloneNode();
+      photoLabel.textContent = "Photo: ";
+      newDiv.appendChild(photoLabel);
+      var photoInput = newInput.cloneNode();
+      photoInput.type = "file";
+      photoInput.name = "photo";
+      photoInput.id = "photo_" + num;
+      photoInput.onchange = readURL;
+      newDiv.appendChild(photoInput);
+      var img = document.createElement("img");
+      img.id = photoInput.id + "_img";
+      img.style.display = "none";
+      newDiv.appendChild(img);
+      var photoValue = document.createElement("input");
+      photoValue.type = "hidden";
+      photoValue.name = "photoValue";
+      photoValue.value = "";
+      photoValue.id = photoInput.id + "_value";
+      newDiv.appendChild(photoValue);
+
+      //Detail
+      var detailLabel = newLabel.cloneNode();
+      detailLabel.textContent = "Detail: ";
+      newDiv.appendChild(detailLabel);
+      var detailInput = document.createElement("textarea");
+      detailInput.style.width = "300px";
+      detailInput.style.height = "300px";
+      detailInput.name = "detail";
+      detailInput.id = "detail_" + num;
+      newDiv.appendChild(detailInput);
+
+      form.insertBefore(newDiv, document.getElementById("member_" + num));
+    }
+
+    function readURL() {
+      var input = this;
+      if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          $("#" + input.id + "_img").attr("src", e.target.result);
+          $("#" + input.id + "_img").css("display", "block");
+          $("#" + input.id + "_value").val(e.target.result);
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function deletePopup(index) {
+      var email = document.getElementById("email_" + index).value;
+      if (confirm("Are you sure you want to delete this?") == true) {
+        $.ajax({
+          type: "DELETE",
+          url: "showRoom/meetTeam/" + email,
+          success: function (response) {
+            alert(email + " is deleted.");
+            document.getElementById("member_" + index).remove();
+          },
+          error: function (result) {
+            alert(email + " deletion failed.");
+          },
+        });
+      }
+    }
+
+    function recentlyRented() {
+      var title = "Please enter the id for recent upload property";
+      var htmlContent =
+        '<form action="/VLR-admin/showRoom/recentlyRented" method="POST">' +
+        '<button type="submit" class="newbtn">Save</button>' +
+        '<input type="button" id="myBtn" class="newbtn" onclick="addNew()" value="Add new">' +
+        "</form>";
+      name = "recentlyRentedProperty";
+      forName = "recently_Rented";
+      inputId = "recently_Rented";
+      num = 0;
+      $("#admin_database_result h2").html(title);
+      $("#admin_database_result #admin_database_forms").html(htmlContent);
+      $.ajax({
+        type: "GET",
+        url: "/VLR-admin/showRoom/recentlyRented",
+        success: function (response) {
+          var length = response.data.value.length;
+          for (var i = 1; i <= length; i++) {
+            addNew();
+            $("#recently_Rented_" + i).val(response.data.value[i - 1]);
+          }
+        },
+      });
+    }
+
+    function uploadForms() {
+      var title = "Please enter the url for each forms need to be uploaded";
+      var htmlContent =
+        '<form action="/VLR-admin/showRoom/uploadForms" method="POST" enctype="multipart/form-data">' +
+        '<button type="submit" class="newbtn">Save</button>' +
+        '<input type="button" id="myBtn" class="newbtn" onclick="addNew()" value="Add new">' +
+        "</form>";
+
+      name = "uploadForms";
+      forName = "upload_form";
+      inputId = "upload_form";
+      num = 0;
+      $("#admin_database_result h2").html(title);
+      $("#admin_database_result #admin_database_forms").html(htmlContent);
+      $.ajax({
+        type: "GET",
+        url: "/VLR-admin/showRoom/uploadForms",
+        success: function (response) {
+          if (response.data != null) {
+            var forms = JSON.parse(response.data.value);
+            var length = forms.length;
+            for (var i = 1; i <= length; i++) {
+              addNew();
+              $("#upload_form_" + i).val(forms[i - 1].file);
+            }
+          }
+        },
+      });
+    }
+
+    function featuredProperty() {
+      var title = "Please enter featured property Id";
+      var htmlContent =
+        '<form action="/VLR-admin/showRoom/featured" method="POST">' +
+        '<button type="submit" class="newbtn">Save</button>' +
+        '<input type="button" id="myBtn" class="newbtn" onclick="addNew()" value="Add new">' +
+        "</form>";
+      name = "featuredProperty";
+      forName = "feature_img";
+      inputId = "feature_property";
+      num = 0;
+      $("#admin_database_result h2").html(title);
+      $("#admin_database_result #admin_database_forms").html(htmlContent);
+      $.ajax({
+        type: "GET",
+        url: "/VLR-admin/showRoom/featured",
+        success: function (response) {
+          if (response.data != null) {
+            var length = response.data.value.length;
+            for (var i = 1; i <= length; i++) {
+              addNew();
+              $("#feature_property_" + i).val(response.data.value[i - 1]);
+            }
+          }
+        },
+      });
+    }
+
+    function bannerProperty() {
+      // var title = "Edit Email Template"
+      // var htmlContent = '<form action="/VLR-admin/....." method="POST">' + // need to update this action
+      //     '<textarea id="admin_email_teamplate" name="admin_email_teamplate" placeholder="Enter html/css/js content"></textarea>' +
+      //     '<button type="submit" class="newbtn">Save</button>' + //we can change this to ajax later on
+      //     '</form>';
+      var title = "Please enter banner property Id";
+      var htmlContent =
+        '<form action="/VLR-admin/showRoom/banner" method="POST">' +
+        '<button type="submit" class="newbtn">Save</button>' +
+        '<input type="button" id="myBtn" class="newbtn" onclick="addNew()" value="Add new">' +
+        "</form>";
+      name = "bannerProperty";
+      forName = "banner_img";
+      inputId = "banner_property";
+      num = 0;
+      $("#admin_database_result h2").html(title);
+      $("#admin_database_result #admin_database_forms").html(htmlContent);
+      $.ajax({
+        type: "GET",
+        url: "/VLR-admin/showRoom/banner",
+        success: function (response) {
+          if (response.data != null) {
+            var length = response.data.value.length;
+            for (var i = 1; i <= length; i++) {
+              addNew();
+              $("#banner_property_" + i).val(response.data.value[i - 1]);
+            }
+          }
+        },
+      });
+      $("#admin_database_result h2").html(title);
+      $("#admin_database_result #admin_database_forms").html(htmlContent);
+    }
+
+    function insertTitle(elementId, path) {
+      var case1 = path.lastIndexOf("/");
+      var case2 = path.lastIndexOf("\\");
+      var index = Math.max(case1, case2);
+      if (index < 0) {
+        document.getElementById(elementId).value = path;
+      } else {
+        document.getElementById(elementId).value = path.substring(index + 1); //赋值文件名
+      }
+    }
+
+    function addNewFAQ() {
+      num = num + 1;
+
+      // build the title
+      var form = document.getElementsByTagName("form")[0];
+      var saveButton = form.querySelectorAll("button.newbtn")[0];
+      var newDiv = document.createElement("div");
+      newDiv.setAttribute("class", "form-group row");
+
+      var newLabel = document.createElement("label");
+      newLabel.setAttribute("class", "col-xs-6 col-md-2");
+      newLabel.setAttribute("for", forName + "title_" + num);
+      newLabel.textContent = `FAQ #${num} Title`;
+      newDiv.appendChild(newLabel);
+
+      var newInput = document.createElement("input");
+      newInput.setAttribute("class", "col-xs-6 col-md-9");
+      newInput.type = "text";
+      newInput.name = name;
+      newInput.id = inputId + "title_" + num;
+      newDiv.appendChild(newInput);
+
+      // built the content
+      var newLabel = document.createElement("label");
+      newLabel.setAttribute("class", "col-xs-6 col-md-2");
+      newLabel.setAttribute("for", forName + "content_" + num);
+      newLabel.textContent = `FAQ #${num} Content`;
+      newDiv.appendChild(newLabel);
+
+      var newInput = document.createElement("input");
+      newInput.setAttribute("class", "col-xs-6 col-md-9");
+      newInput.type = "text";
+      newInput.name = name;
+      newInput.id = inputId + "content_" + num;
+      newDiv.appendChild(newInput);
+
+      newDiv.appendChild(document.createElement("hr"));
+
+      form.insertBefore(newDiv, saveButton);
+    }
+
+    function addNew() {
+      num = num + 1;
+      var form = document.getElementsByTagName("form")[0];
+      var saveButton = form.querySelectorAll("button.newbtn")[0];
+      var newDiv = document.createElement("div");
+      newDiv.setAttribute("class", "form-group row");
+
+      var newLabel = document.createElement("label");
+      newLabel.setAttribute("class", "col-xs-6 col-md-2");
+      newLabel.setAttribute("for", forName + "_" + num);
+      newLabel.textContent = num + ": ";
+      newDiv.appendChild(newLabel);
+
+      var newInput = document.createElement("input");
+      newInput.setAttribute("class", "col-xs-6 col-md-9");
+      newInput.type = "text";
+      newInput.name = name;
+      newInput.id = inputId + "_" + num;
+      newDiv.appendChild(newInput);
+
+      if (name == "uploadForms") {
+        var newA = document.createElement("a");
+        newA.href = "javascript:;";
+        newA.setAttribute("class", "a-upload");
+        newA.textContent = "select a file";
+        var uploadInput = document.createElement("input");
+        uploadInput.type = "file";
+        uploadInput.name = "uploadFiles";
+        uploadInput.setAttribute(
+          "onchange",
+          "insertTitle(" + "'upload_form_" + num + "',this.value)"
+        );
+        newA.appendChild(uploadInput);
+        newDiv.appendChild(newA);
+      }
+
+      form.insertBefore(newDiv, saveButton);
+    }
+
+    $(document).ready(function () {
+      $(".databaseBtn").click(function () {
+        $(".databaseBtn").removeClass("current");
+        $(this).addClass("current");
+        var selected = $(this).parent().attr("id");
+        if (selected == "featuredProperty") {
+          featuredProperty();
+        } else if (selected == "recentlyRented") {
+          recentlyRented();
+        } else if (selected == "uploadForms") {
+          uploadForms();
+        } else if (selected == "meetTeam") {
+          meetTeam();
+        } else if (selected == "bannerProperty") {
+          bannerProperty();
+        } else if (selected == "announcement") {
+          announcement();
+        } else if (selected == "faq") {
+          faq();
+        }
+      });
+    });
+  </script>
+</html>

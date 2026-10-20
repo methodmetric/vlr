@@ -1,0 +1,274 @@
+<link href="/libs/css/banner.css" rel="stylesheet">
+<!-- <link href="/libs/css/vendor/elementUi.css" rel="stylesheet"> -->
+<!-- <script type="text/javascript" src="/libs/js/elementUi.js"></script> -->
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script type="text/javascript" src="/libs/js/en.js"></script>
+<script type="text/javascript" src="/libs/js/axios.min.js"></script>
+
+<div class="container" style="width: inherit; padding: 0px;">
+    <div class="col-md-12 home-banner" style="padding: 0px;">
+        <!-- <div class="layer"> -->
+        <div class="backGroundImages">
+            <div class="backGroundImageEffect">
+                <div class="textInsideImages">
+                    <%
+                      // Optional locals so a page can override the hero copy. Defaults keep the
+                      // existing banner unchanged for /properties and /myFavorites.
+                      var bannerTitle = (typeof heroTitle !== 'undefined' && heroTitle) ? heroTitle : 'Residential Property Management Services For Outstanding Properties';
+                      var bannerSubtitle = (typeof heroSubtitle !== 'undefined' && heroSubtitle) ? heroSubtitle : '';
+                      var bannerCtaText = (typeof heroCtaText !== 'undefined' && heroCtaText) ? heroCtaText : '';
+                      var bannerCtaHref = (typeof heroCtaHref !== 'undefined' && heroCtaHref) ? heroCtaHref : '';
+                      var bannerSearchIntro = (typeof searchIntro !== 'undefined' && searchIntro) ? searchIntro : '';
+                    %>
+                    <h1><%= bannerTitle %></h1>
+                    <% if (bannerSubtitle) { %>
+                    <p class="hero-subtitle"><%= bannerSubtitle %></p>
+                    <% } %>
+                    <% if (bannerCtaText && bannerCtaHref) { %>
+                    <a href="<%= bannerCtaHref %>" class="hero-cta-btn"><%= bannerCtaText %></a>
+                    <% } %>
+                    <% if (bannerSearchIntro) { %>
+                    <p class="hero-search-intro"><%= bannerSearchIntro %></p>
+                    <% } %>
+                    <div id="search-filter">
+                        <template>
+                            <el-form ref="searchForm" :model="searchForm">
+                                <el-form-item>
+                                    <el-input id="searchBar" v-model="searchForm.searchBar"
+                                        placeholder="Try type in Keyword/Location/Building Name/Neighbourhood"
+                                        id="banner-input">
+                                        <i slot="suffix" class="el-input__icon el-icon-search"></i>
+                                    </el-input>
+                                </el-form-item>
+                                <el-select multiple collapse-tags class="multi-select-city" v-model="searchForm.city"
+                                    placeholder="City" @change="updateCity">
+                                    <el-option v-for="item in cities" :key="item.value" :label="item.value"
+                                        :value="item.value">
+                                        <span style="float: left">{{ item.value }}</span>
+                                        <el-checkbox style="float: right;" @change="checkCity(item.checked,item.value)"
+                                            v-model="item.checked"></el-checkbox>
+                                    </el-option>
+                                </el-select>
+
+                                <el-select multiple collapse-tags class="multi-select" v-model="searchForm.bedrooms"
+                                    placeholder="Bedroom" @change="updateBedroom">
+                                    <el-option v-for="item in bedrooms" :key="item.label" :label="item.label"
+                                        :value="item.label">
+                                        <span style="float: left">{{ item.label }}</span>
+                                        <el-checkbox style="float: right;"
+                                            @change="checkBedroom(item.checked,item.value)" v-model="item.checked">
+                                        </el-checkbox>
+                                    </el-option>
+                                </el-select>
+
+                                <el-select clearable v-model="searchForm.priceMin" placeholder="Price Min">
+                                    <el-option label="$1000" value="1000"></el-option>
+                                    <el-option label="$2000" value="2000"></el-option>
+                                    <el-option label="$3000" value="3000"></el-option>
+                                    <el-option label="$4000" value="4000"></el-option>
+                                    <el-option label="$5000" value="5000"></el-option>
+                                    <el-option label="$6000" value="6000"></el-option>
+                                    <el-option label="$7000" value="7000"></el-option>
+                                    <el-option label="$8000" value="8000"></el-option>
+                                    <el-option label="$9000" value="9000"></el-option>
+                                    <el-option label="$10000" value="10000"></el-option>
+                                </el-select>
+
+                                <el-select clearable v-model="searchForm.priceMax" placeholder="Price Max">
+                                    <el-option label="$1000" value="1000"></el-option>
+                                    <el-option label="$2000" value="2000"></el-option>
+                                    <el-option label="$3000" value="3000"></el-option>
+                                    <el-option label="$4000" value="4000"></el-option>
+                                    <el-option label="$5000" value="5000"></el-option>
+                                    <el-option label="$6000" value="6000"></el-option>
+                                    <el-option label="$7000" value="7000"></el-option>
+                                    <el-option label="$8000" value="8000"></el-option>
+                                    <el-option label="$9000" value="9000"></el-option>
+                                    <el-option label="$10000" value="10000"></el-option>
+                                    <el-option label="$10000+" value="10000000"></el-option>
+                                </el-select>
+
+                                <el-select clearable v-model="searchForm.status" placeholder="Availability">
+                                    <el-option label="Available" value="Available"></el-option>
+                                    <el-option label="Rented" value="Rented"></el-option>
+                                </el-select>
+
+                                <el-select clearable v-model="searchForm.allowPets" placeholder="Pet">
+                                    <el-option label="Allowed" value="Yes"></el-option>
+                                    <el-option label="Not Allowed" value="No"></el-option>
+                                </el-select>
+
+                                <el-select clearable class="long-select" v-model="searchForm.furnished"
+                                    placeholder="Furnished/Unfurnished">
+                                    <el-option label="Furnished" value="Yes"></el-option>
+                                    <el-option label="Unfurnished" value="No"></el-option>
+                                </el-select>
+
+                                <el-button type="primary" @click="submit" id="searchSubmit">Submit</el-button>
+                                <input class="reset" type="reset" value="Reset"></el-button>
+
+                            </el-form>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- </div> -->
+    </div>
+</div>
+
+<script type="text/javascript">
+    // ELEMENT.locale(ELEMENT.lang.en);
+    var searchFilter = new Vue({
+        el: '#search-filter',
+        data: {
+            searchForm: {
+                searchBar: '',
+                city: [],
+                bedrooms: [],
+                priceMin: '',
+                priceMax: '',
+                status: '',
+                allowPets: '',
+                furnished: ''
+            },
+            cities: [
+                { value: 'Downtown Vancouver', checked: false },
+                { value: 'Vancouver West Side', checked: false },
+                { value: 'UBC', checked: false },
+                { value: 'Vancouver East Side', checked: false },
+                { value: 'West Vancouver', checked: false },
+                { value: 'North Vancouver', checked: false },
+                { value: 'Richmond', checked: false },
+                { value: 'Burnaby', checked: false },
+                { value: 'New Westminster', checked: false },
+                { value: 'Langley', checked: false },
+                { value: 'Surrey', checked: false },
+                { value: 'Coquitlam', checked: false },
+                { value: 'White Rock', checked: false },
+                { value: 'Port Moody', checked: false },
+                { value: 'Tsawwassen', checked: false },
+                { value: 'Delta', checked: false },
+            ],
+            bedrooms: [
+                { value: '0', checked: false, label: '0/Studio' },
+                { value: '1', checked: false, label: '1' },
+                { value: '2', checked: false, label: '2' },
+                { value: '3', checked: false, label: '3' },
+                { value: '4', checked: false, label: '4' },
+                { value: '5', checked: false, label: '5' },
+                { value: '6', checked: false, label: '6' },
+                { value: '7', checked: false, label: '7' },
+                { value: '8+', checked: false, label: '8+' },
+            ]
+        },
+        computed: {
+            formString: function () {
+                return JSON.stringify(this.searchForm);
+            }
+        },
+        methods: {
+            submit() {
+                // check price range
+                if ((this.searchForm.priceMin != '') && (this.searchForm.priceMax != '')) {
+                    if (parseInt(this.searchForm.priceMin) > parseInt(this.searchForm.priceMax)) {
+                        temp = this.searchForm.priceMin;
+                        this.searchForm.priceMin = this.searchForm.priceMax;
+                        this.searchForm.priceMax = temp;
+                    }
+                }
+
+                let query = '';
+                if (this.searchForm.searchBar != '')
+                    // query += 'searchBar=' + this.searchForm.searchBar + "&" + 'keywordSearch=1&';
+                    query += 'searchBar=' + this.searchForm.searchBar + "&";
+                if (this.searchForm.city != '')
+                    query += 'city=' + this.searchForm.city + "&";
+                if (this.searchForm.bedrooms != '')
+                    query += 'bedrooms=' + this.searchForm.bedrooms + "&";
+                if (this.searchForm.priceMin != '')
+                    query += 'rent>=' + this.searchForm.priceMin + "&";
+                if (this.searchForm.priceMax != '')
+                    query += 'rent<=' + this.searchForm.priceMax + "&";
+                if (this.searchForm.status != '')
+                    query += 'status=' + this.searchForm.status + "&";
+                if (this.searchForm.allowPets != '')
+                    query += 'allowPets=' + this.searchForm.allowPets + "&";
+                if (this.searchForm.furnished != '')
+                    query += 'furnished=' + this.searchForm.furnished + "&";
+                if (query != '')
+                    query = '?' + query.slice(0, -1);
+                
+                window.location.href = "/properties" + query;
+            }
+        }
+    });
+
+    $('.reset').click(function () {
+        searchFilter.searchForm.searchBar = '';
+        searchFilter.searchForm.city = [];
+        searchFilter.searchForm.bedrooms = [];
+        searchFilter.searchForm.priceMin = '';
+        searchFilter.searchForm.priceMax = '';
+        searchFilter.searchForm.status = '';
+        searchFilter.searchForm.allowPets = '';
+        searchFilter.searchForm.furnished = '';
+        updateCity([]);
+        updateBedroom([]);
+    });
+
+    $("#searchBar").keyup(function (event) {
+        if (event.keyCode === 13) {
+            $("#searchSubmit").click();
+        }
+    });
+
+    $('.el-icon-search').click(function () {
+        $("#searchSubmit").click();
+    });
+
+    function updateCity(selected) {
+        searchFilter.cities.forEach(city => {
+            if (selected.findIndex(x => { return x === city.value }) !== -1) {
+                city.checked = true;
+            } else {
+                city.checked = false;
+            }
+        });
+    }
+
+    function checkCity(checked, selected) {
+        if (!checked)
+            searchFilter.searchForm.city.push(selected);
+        else {
+            foundIndex = searchFilter.searchForm.city.findIndex(x => { return x === selected })
+            searchFilter.searchForm.city.splice(foundIndex, 1);
+        }
+        searchFilter.cities.find(x => {
+            return x.value === selected
+        }).checked = !checked;
+    }
+
+    function updateBedroom(selected) {
+        searchFilter.bedrooms.forEach(bedroom => {
+            if (selected.findIndex(x => { return x === bedroom.value }) !== -1) {
+                bedroom.checked = true;
+            } else {
+                bedroom.checked = false;
+            }
+        });
+    }
+
+    function checkBedroom(checked, selected) {
+        if (!checked)
+            searchFilter.searchForm.bedrooms.push(selected);
+        else {
+            foundIndex = searchFilter.searchForm.bedrooms.findIndex(x => { return x === selected })
+            searchFilter.searchForm.bedrooms.splice(foundIndex, 1);
+        }
+        searchFilter.bedrooms.find(x => {
+            return x.value === selected
+        }).checked = !checked;
+    }
+</script>

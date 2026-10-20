@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head><link rel="icon" href="/new-img/favicon.ico">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VLR-Admin</title>
+    <!-- Bootstrap core CSS -->
+    <link href="/libs/css/vendor/bootstrap.min.css" rel="stylesheet">
+    <link href="/libs/css/adminEditProperties.css" rel="stylesheet">
+    <link href="/libs/css/semantic.min.css" rel="stylesheet">
+    <link href="/libs/css/vendor/elementUi.css" rel="stylesheet">
+    <link href="/libs/jquery/jquery-ui.min.css" rel="stylesheet">
+    <link href="/libs/jquery/jquery-ui.theme.min.css" rel="stylesheet">
+    <link href="/libs/jquery/jquery-ui.structure.min.css" rel="stylesheet">
+    <link href="/libs/css/admin-style.css" rel="stylesheet">
+    <script type="text/javascript" src="/libs/js/vue.min.js"></script>
+    <script type="text/javascript" src="/libs/js/elementUi.js"></script>
+    <script type="text/javascript" src="/libs/js/en.js"></script>
+    <script type="text/javascript" src="/libs/js/axios.min.js"></script>
+    <script type="text/javascript" src="/libs/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="/libs/jquery/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/e9d941381475b5df8b7d7691013401e171014e89/FileSaver.min.js"></script>
+    <script type="text/javascript" src="/libs/js/jszip.min.js"></script>
+    <script src="/libs/js/semantic.min.js"></script>
+    <!--fine uploader -->
+    <link href="/libs/fineUploader/fine-uploader-gallery.css" rel="stylesheet">
+    <script src="/libs/fineUploader/fine-uploader.min.js"></script>
+    <script type="text/template" id="qq-template">
+
+        <div class="qq-uploader-selector qq-uploader qq-gallery" qq-drop-area-text="Drop files here">
+            <div class="qq-total-progress-bar-container-selector qq-total-progress-bar-container">
+                <div role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" class="qq-total-progress-bar-selector qq-progress-bar qq-total-progress-bar"></div>
+            </div>
+            <div class="qq-upload-drop-area-selector qq-upload-drop-area" qq-hide-dropzone>
+                <span class="qq-upload-drop-area-text-selector"></span>
+            </div>
+            <div class="buttons" style="padding-bottom: 40px;">
+                <div class="qq-upload-button-selector qq-upload-button">
+                    <div>Select files</div>
+                </div>
+                <button type="button" id="trigger-upload" class="qq-upload-button">
+                    <i class="icon-upload icon-white"></i> Upload
+                </button>
+                <button type="button" id="trigger-download" style="display: none;">
+                    <i class="icon-upload icon-white"></i> Download
+                    <span class="tooltiptext">You can only download images you uploaded last time</span>
+                </button>
+            </div>
+            <span class="qq-drop-processing-selector qq-drop-processing">
+                <span>Processing dropped files...</span>
+            <span class="qq-drop-processing-spinner-selector qq-drop-processing-spinner"></span>
+            </span>
+            <ul id="upload-list" class="qq-upload-list-selector qq-upload-list" aria-live="polite" aria-relevant="additions removals">
+                <li>
+                    <span role="status" class="qq-upload-status-text-selector qq-upload-status-text"></span>
+                    <div class="qq-progress-bar-container-selector qq-progress-bar-container">
+                        <div role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" class="qq-progress-bar-selector qq-progress-bar"></div>
+                    </div>
+                    <span class="qq-upload-spinner-selector qq-upload-spinner"></span>
+                    <div class="qq-thumbnail-wrapper">
+                        <img class="qq-thumbnail-selector" qq-max-size="300" qq-server-scale>
+                    </div>
+                    <button type="button" class="qq-upload-cancel-selector qq-upload-cancel">X</button>
+                    <button type="button" class="qq-upload-retry-selector qq-upload-retry">
+                        <span class="qq-btn qq-retry-icon" aria-label="Retry"></span>
+                        Retry
+                    </button>
+    
+                    <div class="qq-file-info">
+                        <div class="qq-file-name">
+                            <span class="qq-upload-file-selector qq-upload-file"></span>
+                            <span class="qq-edit-filename-icon-selector qq-btn qq-edit-filename-icon" aria-label="Edit filename"></span>
+                        </div>
+                        <input class="qq-edit-filename-selector qq-edit-filename" tabindex="0" type="text">
+                        <span class="qq-upload-size-selector qq-upload-size"></span>
+                        <button type="button" class="qq-btn qq-upload-delete-selector qq-upload-delete">
+                            <span class="qq-btn qq-delete-icon" aria-label="Delete"></span>
+                        </button>
+                        <button type="button" class="qq-btn qq-upload-pause-selector qq-upload-pause">
+                            <span class="qq-btn qq-pause-icon" aria-label="Pause"></span>
+                        </button>
+                        <button type="button" class="qq-btn qq-upload-continue-selector qq-upload-continue">
+                            <span class="qq-btn qq-continue-icon" aria-label="Continue"></span>
+                        </button>
+                    </div>
+                </li>
+            </ul>
+
+            <dialog class="qq-alert-dialog-selector">
+                <div class="qq-dialog-message-selector"></div>
+                <div class="qq-dialog-buttons">
+                    <button type="button" class="qq-cancel-button-selector">Close</button>
+                </div>
+            </dialog>
+
+            <dialog class="qq-confirm-dialog-selector">
+                <div class="qq-dialog-message-selector"></div>
+                <div class="qq-dialog-buttons">
+                    <button type="button" class="qq-cancel-button-selector">No</button>
+                    <button type="button" class="qq-ok-button-selector">Yes</button>
+                </div>
+            </dialog>
+
+            <dialog class="qq-prompt-dialog-selector">
+                <div class="qq-dialog-message-selector"></div>
+                <input type="text">
+                <div class="qq-dialog-buttons">
+                    <button type="button" class="qq-cancel-button-selector">Cancel</button>
+                    <button type="button" class="qq-ok-button-selector">Ok</button>
+                </div>
+            </dialog>
+        </div>
+    </script>
+</head>
+
+<body class="admin_body">
+    <div class="topnav" id="myTopnav">
+        <a href="/VLR-admin/">Home</a>
+        <a href="/VLR-admin/csv">Import CSV</a>
+        <a href="/VLR-admin/property/new">New Property</a>
+        <a href="/VLR-admin/owner">Owner Leads</a>
+        <a href="/VLR-admin/viewRequest">Tenant Enquiries</a>
+        <a href="/VLR-admin/available90">Available in 90 days</a>
+        <a href="/VLR-admin/database">Database</a>
+        <a href="/VLR-admin/redirects">Redirects</a>
+        <a href="/VLR-admin/logout">Log out</a>
+        <a href="javascript:void(0);" class="icon" onclick="show()">&#9776;</a>
+    </div>
+    <div id="vlr-app" class="uploader-container">
+        <el-form ref="form" :model="form" label-width="150px">
+            <h1 class="center">VLR Admin Image Upload Page</h1>
+            <h1> PropertyId: <%= data.propertyId %></h1>
+            <h1> Select or drag files to upload: (The first image will be seen as the cover image)</h1>
+            <div id="fine-uploader">
+            </div>
+        </el-form>
+    </div>
+</body>
+
+<script src="//unpkg.com/element-ui/lib/umd/locale/en.js"></script>
+<script>
+    ELEMENT.locale(ELEMENT.lang.en);
+    var uploadedImageMap = new Map();
+    var readURL;
+    var downloading = 0;
+    $(document).ready(function() {
+        var property = <%-JSON.stringify(data)%>;
+        var formContainer = new Vue({
+            el: '#vlr-app',
+            data: {
+                form: {
+                    propertyId: property.propertyId,
+                    imgs: property.imgs,
+                    coverImg: property.coverImg,
+                },
+                selected: [],
+                uploadPaths: []
+            }
+        });
+
+        function uploadedImages(uuid, fileName) {
+            uploadedImageMap.set(uuid, fileName);
+        }
+
+        function removeImages(uuid) {
+            uploadedImageMap.delete(uuid);
+        }
+
+        var uploader = new qq.FineUploader({
+            debug: false,
+            element: document.getElementById('fine-uploader'),
+            request: {
+                endpoint: '/vlr-admin/images/uploads/'
+            },
+            validation: {
+                allowedExtensions: ["gif", "jpeg", "jpg", "png"],
+                acceptFiles: "image/gif, image/jpeg, image/png",
+                sizeLimit: 6000000,
+                itemLimit: 40
+            },
+            retry: {
+                enableAuto: true,
+                showButton: true
+            },
+            chunking: {
+                enabled: true
+            },
+            deleteFile: {
+                enabled: true,
+                forceConfirm: true,
+                endpoint: "/vlr-admin/images/uploads"
+            },
+            callbacks: {
+                onComplete: function(id, fileName, responseJSON) {
+                    if (responseJSON.success != true) alert("There is an error when uploading the image.");
+                    else {
+                        uploadedImages(this.getUuid(id), fileName);
+                    }
+                },
+                onDeleteComplete: function(id, xhr, isError) {
+                    if (isError) alert("There is an error when deleting the image.");
+                    else {
+                        removeImages(this.getUuid(id));
+                    }
+                },
+                onAllComplete: function(succeededIds, failedIds) {
+                    formContainer.form.imgs = [];
+                    var lis = document.getElementById("upload-list").getElementsByTagName("li");
+                    for (var li of lis){
+                        formContainer.form.imgs.push(li.getElementsByClassName('qq-upload-file-selector qq-upload-file qq-editable')[0].innerText);
+                    }
+                    if (formContainer.form.imgs.length > 0) formContainer.form.coverImg = formContainer.form.imgs[0];
+                    formContainer.uploadPaths = Array.from(uploadedImageMap);
+                    $.ajax({
+                        type: 'PUT',
+                        url: '/properties/id/' + formContainer.form.propertyId + '/images',
+                        data: {
+                            form: formContainer.form,
+                            uploadPaths: formContainer.uploadPaths
+                        },
+                        success: function(response) {
+                            alert(succeededIds.length + " images has successfully uploaded");
+                            uploader.clearStoredFiles();
+                        },
+                        error: function(result) {
+                            alert("Update failed.");
+                        }
+                    });
+                },
+                onValidate: function(object, HTMLElement) {
+                    var uploads = uploader.getUploads()
+                    var index = uploads.map(a=>a.name).indexOf(object.name);
+                    if (index !== -1) {
+                        if (uploads[index].status === "submitting") {
+                            return true;
+                        }
+                    }
+                    alert("The file [" + object.name + "] already exists.");
+                    return false;
+                }
+            },
+            autoUpload: false,
+            maxConnections: 1
+        });
+        var downloadedFiles = [];
+        var downloadedBlobs = [];
+
+        window.setTimeout(
+            function(){
+                var promises = [];
+                for (var i = 0; i < formContainer.form.imgs.length; ++i) {
+                    var path = formContainer.form.propertyId + '/' + formContainer.form.imgs[i];
+                    var fileName = formContainer.form.imgs[i];
+                    if (fileName.toLowerCase().endsWith('.jpg')||fileName.toLowerCase().endsWith('.jpeg')||fileName.toLowerCase().endsWith('.gif')||fileName.toLowerCase().endsWith('.png')){
+                        var request = $.ajax ({
+                            type: 'GET',
+                            url: '/properties/image/' + path,
+                            success: function(data) {
+                                var file = data.fileData.data;
+                                var byteArray = new Uint8Array(file);
+                                var MIMETYPE;
+                                var fileExtension = data.fileName.split('.');
+                                fileExtension = fileExtension[fileExtension.length - 1];
+                                switch (fileExtension) {
+                                    case "jpeg":
+                                    case "jpg":
+                                        MIMETYPE = "image/jpeg";
+                                        break;
+                                    case "gif":
+                                        MIMETYPE = "image/gif";
+                                        break;
+                                    case "png":
+                                        MIMETYPE = "image/png";
+                                        break;
+                                    default:
+                                        MIMETYPE = "image/jpeg";
+                                }
+                                //console.log(byteArray);
+                                var blob = new Blob([byteArray], {
+                                    type: MIMETYPE
+                                });
+                                var fileOfBlob = new File([blob], data.fileName, {
+                                    type: MIMETYPE
+                                });
+                                //console.log(fileOfBlob);
+                                downloadedBlobs.push(data);
+                                downloadedFiles.push(fileOfBlob);
+                                //uploader.addFiles(fileOfBlob);
+                                //uploader.uploadStoredFiles();
+                            }
+                        });
+                        promises.push( request);
+                    }                        
+                }
+                $.when.apply(null, promises).done(function(){
+                    $('#trigger-download').css('display', 'block');
+                    var sortMap = new Map();
+                    var sortedFiles = [];
+                    for (var i = 0; i < formContainer.form.imgs.length; i ++){
+                        sortMap.set(formContainer.form.imgs[i], i);
+                    }
+                    for (var u = 0; u < downloadedFiles.length; u++){
+                        var index = sortMap.get(downloadedFiles[u].name);
+                        sortedFiles[index] = downloadedFiles[u];
+                    }
+                    if (sortedFiles.length != 0){
+                        downloading = sortedFiles.length;
+                        uploader.addFiles(sortedFiles);
+                    }
+                })
+            //     }
+            // })
+        }, 1000);
+
+        qq(document.getElementById("trigger-upload")).attach("click", function() {
+            uploader.uploadStoredFiles();
+        });
+
+        qq(document.getElementById("trigger-download")).attach("click", function() {
+            var zip = new JSZip();
+            for (var i = 0; i < downloadedBlobs.length; ++i) {
+                zip.file(downloadedBlobs[i].fileName, downloadedBlobs[i].fileData.data, {base64: true});
+            }
+            zip.generateAsync({type:"blob"})
+            .then(function(content) {
+                // see FileSaver.js
+                saveAs(content, formContainer.form.propertyId + "_images.zip");
+            }); 
+        });
+
+        $(function(){
+            $( "ul" ).sortable();
+            $( "ul" ).disableSelection();
+        });
+    });
+</script>

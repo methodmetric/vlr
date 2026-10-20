@@ -1,0 +1,12 @@
+node_modules/*
+uploads/*
+log/*
+semantic/
+# Working files from Scripts/optimize_s3_images.js (per-machine, not shared)
+Scripts/.optimize_s3_progress.log
+Scripts/.optimize_s3_failures.json
+
+# Added at handover (Seta Workshop): secrets and local files, never commit
+config/aws.json
+docs/VLR website handover - final.md
+.DS_Store

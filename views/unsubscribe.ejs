@@ -1,0 +1,98 @@
+<%- include('header') %>
+<link href="/libs/css/content.css" rel="stylesheet">
+<div class="container" id="unsub-page">
+    <div class="col-md-12">
+        <div class="aboutus-header-img">
+            <div class="layer">
+            </div>
+        </div>
+        <br>
+        <div class="title">
+            <div class="panel-heading">
+                <h1 class="feature-title h2">
+                    Unsubscribe from VLR mail list
+                </h1>
+                
+            </div>
+        </div>
+        <div class="unsub-div">
+            <p class="removeSingle">please choose one of the following options:</p>
+            <ul>
+              <li class="removeSingle"><input type="radio" name="option" id="propertyIdInput" checked value=""/> &nbsp;Stop receiving email notifications for <b id="propertyId">current property</b>
+              <li><input type="radio" id="propertyAllInput" name="option" value="all"/> &nbsp;Unsubscribe email notifications from all my favourite properities. (You account will be deleted and all your favourite properities will be removed)
+            </ul>
+            
+            <div class="button-wrapper"> 
+              <button class="el-button el-button--secondary" id="confirm">Confirm</button>
+              <button class="el-button el-button--primary" id="cancel">Cancel, keep email notifications</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+      const params = (new URL(document.location)).searchParams;
+      const userEmail = params.get("email");
+      const propertyAddress = decodeURIComponent(params.get("propertyAddress"));
+      const propertyId = params.get("propertyId");
+      const _id = params.get("_id");
+
+      // update page
+      if (propertyAddress) {
+        $('#propertyId').html(propertyAddress);
+        $('#propertyIdInput').val(propertyAddress);
+      } else {
+        $('.removeSingle').remove();
+        $('#propertyAllInput').prop( "checked", true );
+      }
+      
+
+      // cancel remove
+      $('#cancel').click(()=>{
+        $('.feature-title.h2').html("Nothing has been changed!");
+        $('.unsub-div').html("<p>We will keep all your email notifications, you can close this page now</p>");
+      });
+
+      // submit unsub request
+      $('#confirm').click(()=>{
+        const option = $('input[name="option"]:checked').val();
+
+        if (option === 'all') {
+          $.ajax({
+                type: 'DELETE',
+                url: `/User/id/${userEmail}`,
+                success: function(response) {
+                    $('.feature-title.h2').html("Sorry to see your unscribe");
+                    $('.unsub-div').html(`<p>Your account ${response.id} has been deleted. You can close this page now.</p>`);
+                    // clear cache
+                    localStorage.removeItem("User");
+                    localStorage.removeItem("UserId");
+                },
+                error:function(result){
+                    alert( "Account deletion failed, contact VRL admin for more details");
+                }
+            });
+        } else {
+          $.ajax({
+              type: 'DELETE',
+              url: '/user/favorite',
+              data: {
+                  user: userEmail,
+                  _id: _id,
+                  propertyId: propertyId
+              },
+              success: function (response) {
+                   $('.feature-title.h2').html("Sorry to see your unscribe");
+                   $('.unsub-div').html("<p>Your subscrition preference has been updated, you can close this page now.</p>");
+                   
+              },
+              error: function (result) {
+                  alert( "Unsubscribe failed, contact VRL admin for more details");
+              }
+          });
+        }
+      });
+
+    })
+</script>
+<%- include('footer') %>

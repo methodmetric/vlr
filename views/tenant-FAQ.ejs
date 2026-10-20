@@ -1,0 +1,58 @@
+<%- include('header') %>
+<link href="/libs/css/content.css" rel="stylesheet" />
+<div class="container">
+  <div class="col-md-12">
+    <div class="tenant-header-img">
+      <div class="layer">
+        <h1>Tenant FAQ</h1>
+      </div>
+    </div>
+    <div class="title">
+      <h2 class="feature-title">Tenant FAQ</h2>
+    </div>
+
+    <div id="faq-panel-group">
+      <!-- Mobile (collapsible) -->
+      <div class="visible-xs" id="faq-mobile-wrapper">
+        <% faqItems.forEach(function (item, i) { %>
+        <hr />
+        <div class="panel-group">
+          <a
+            data-toggle="collapse"
+            data-parent="#accordion"
+            href="#collapseMobile<%= i %>"
+            class=""
+          >
+            <div class="faq-panel">
+              <div class="panel-heading">
+                <h3 class="panel-title"><%= item.question %></h3>
+                <div id="collapseMobile<%= i %>" class="panel-collapse collapse">
+                  <p><%= item.answer %></p>
+                </div>
+              </div>
+            </div>
+          </a>
+        </div>
+        <% }); %>
+      </div>
+
+      <!-- Web (always expanded) -->
+      <div class="hidden-xs" id="faq-web-wrapper">
+        <% faqItems.forEach(function (item, i) { %>
+        <hr />
+        <div class="panel-group">
+          <div class="faq-panel">
+            <div class="panel-heading">
+              <h3 class="panel-title"><%= item.question %></h3>
+              <div id="collapseWeb<%= i %>" class="panel-collapse">
+                <p><%= item.answer %></p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <% }); %>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('footer') %>

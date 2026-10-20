@@ -1,0 +1,1133 @@
+.owner-header-img {
+    height: 450px;
+    width: 100%;
+    background-image: url("../../new-img/4362-Stearman-Ave-WV-360hometours-17.jpg");
+    background-size: cover;
+    background-position: 50% 50%;
+    position: relative;
+    margin-top: 20px;
+}
+
+.landing-header-img{
+    background-image: url("../../new-img/property-management-vancouver.jpg");
+}
+
+.tenant-header-img {
+    margin-top:20px;
+    height: 450px;
+    width: 100%;
+    background-image: url("../../new-img/4362-Stearman-Ave-WV-360hometours-17.jpg");
+    background-size: cover;
+    background-position: 50% 50%;
+    position: relative;
+}
+.aboutus-header-img .layer, .owner-header-img .layer, .tenant-header-img .layer {
+    background-color: rgba(0, 0, 0, 0.4);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+.aboutus-header-img h1,
+.owner-header-img h1,
+.tenant-header-img h1{
+    text-align:center;
+    color: white;
+    line-height:400px;
+    font-size: 40px;
+    letter-spacing: 2px;
+}
+.aboutus-header-img {
+    height: 400px;
+    width: 100%;
+    background-image: url("../../new-img/the-westin-bayshore-vancouver-2017.jpg");
+    background-size: cover;
+    background-position: 50% 50%;
+    margin-top: 20px;
+    position:relative;
+}
+.title{
+    width:70%;
+    margin: 0 auto;
+    text-align:center;
+}
+@media only screen and (min-width:1000px){
+    .title{min-width: 900px; }
+}
+.title h1 {
+    margin-bottom: 0;
+    margin-top: 30px;
+    font-size: 38px;
+    text-align:center;
+}
+
+.title-form  h1 {
+    margin-bottom: 15px;
+    margin-top: 20px;
+    font-size: 30px;
+}
+
+.title .h2,
+.title h2 {
+    margin-bottom: 20px;
+    margin-top: 5px;
+    color: #707070;
+    font-size: 28px;
+}
+
+.title h4{
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.title p {
+    font-size: 17px;
+    color: #707070;
+}
+
+.title a {
+    color: red;
+    font-size: 17px;
+    text-decoration: none;
+    /* font-weight: 600; */
+}
+.title .feature-title{
+    border-left:red 10px solid;
+    overflow:hidden;
+}
+.title .h2.feature-title,
+.title h2.feature-title{
+    padding-right:10px;
+    font-size: 25px;
+    padding-left:20px;
+    width: fit-content;
+    margin: 40px auto 25px;
+    font-weight: bold;
+    color: black;
+    line-height: 40px;
+}
+
+
+/*new panel style for tenants services*/
+.new-panel-group .new-panel{
+    position:relative;
+    width: 70%;
+    margin: 0 auto;
+    text-align:center;
+}
+@media only screen and (min-width:1000px){
+    .new-panel-group .new-panel{min-width: 900px; }
+}
+.new-panel-group .new-panel-heading:before{
+    content: "";
+    border-left: solid red 1px;
+    width: 10px;
+    left:50%;
+    opacity: 0.4;
+    padding: 5px;
+}
+.new-panel-group .new-panel-heading{
+    text-align:center;
+    font-size:17px;
+    padding:0;
+}
+.new-panel-group .new-panel-heading .new-panel-title{
+    margin:15px 0 0;
+    color:black;
+}
+.description {
+    background-color: #efefef;
+    padding: 20px;
+}
+
+.description p {
+    font-size: 17px;
+    color: #707070;
+}
+
+.emphasis,
+.emphasis a {
+    color: #cfa568;
+    font-size: 17px;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.detail h3 {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.detail p {
+    font-size: 17px;
+    color: #707070;
+}
+
+.panel-group a {
+    text-decoration: none;
+}
+
+#collapseOne {
+    padding: 15px;
+}
+
+#collapseOne a,
+#collapseTwo a,
+#collapseThree a, 
+#collapseFour a,
+#collapseFive a{
+    color: red;
+    font-size: 17px;
+    text-decoration: none;
+    font-weight: normal;
+    cursor:pointer;
+}
+
+#collapseOne span,
+#collapseTwo span,
+#collapseThree span,
+#collapseFour span,
+#collapseFive span{
+    color: #cfa568;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+#collapseOne ul, 
+#collapseTwo ul{
+    list-style-type: none;
+    padding: 0;
+}
+
+#collapseSpecial ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#collapseSpecial li {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    font-size: 17px;
+    display: -webkit-box;
+}
+
+#collapseOne li,
+#collapseTwo li {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    font-size: 17px;
+}
+#faq-panel-group .panel-collapse p,
+#collapseOne p,
+#collapseTwo p,
+#collapseThree p,
+#collapseFour p,
+#collapseFive p,
+#collapseSix p,
+#collapseSeven p,
+#collapseEight p,
+#collapseNine p,
+#collapseTen p,
+#collapseSpecial p {
+    font-size: 17px;
+    color: #707070;
+}
+
+#faq-panel-group .panel-collapse,
+#collapseOne, 
+#collapseTwo, 
+#collapseThree, 
+#collapseFour,
+#collapseFive,
+#collapseSix,
+#collapseSeven,
+#collapseEight,
+#collapseNine,
+#collapseTen,
+#collapseSpecial {
+    padding: 15px;
+}
+
+.panel-title {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+
+.panel-heading{
+    color: black;
+    /* background-color: #efefef; */
+}
+
+.gold-bar {
+    width: 60px;
+    height: 5px;
+    margin-top: 20px;
+    margin-bottom: 8px;
+}
+
+.diamond-icon {
+    width: 15px;
+    margin-right: 10px;
+}
+
+.download-icon{
+    width: 25px;
+    display:block;
+    margin:auto;
+}
+.lyp-button {
+    margin-right: 10px;
+    height: 35px;
+    width: 220px;
+    border: 3px solid #bb9765;
+    font-size: 18px;
+    font-weight: bold;
+    color: #bb9765;
+    background-color: transparent;
+}
+
+.owner-buttom-div {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+/*.custom-box-1{
+    border: 1px solid;
+    padding: 30px;
+    text-align: center;
+    border-radius: 10px;
+}*/
+
+.link-css{
+    text-decoration: underline;
+}
+.custom-box{
+    border: 1px solid grey;
+    padding: 5px;
+    text-align: center;
+    border-radius: 4px;
+    color:black;
+    font-weight:normal;
+    cursor: pointer;
+}
+.margin-top-100{
+    margin-top:100px;
+}.margin-bottom-100{
+    margin-bottom:100px;
+}
+.bottom-phone{
+    margin-top:1em;
+    font-size:1.5em;
+}
+hr.margin-top-100{
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid #aaa;
+    padding: 0; 
+}
+.tenant-forms-button{
+    text-align:center;
+}
+
+.tenant-forms-button p{
+    color:red;
+    font-size: 1.2em;
+    margin-bottom: 40px;
+}
+.tenant-forms-button a{
+    background:red;
+    color:white;
+    border-radius: 2px;
+    font-size: 1.5em;
+    padding: 15px;
+}
+.el-form-item__content{
+    width: 30%;
+    /*margin-left: 130px !important;*/
+}
+
+.el-input__inner{
+    border: none !important;
+    border-bottom: 1px solid black  !important;
+    border-radius: 0 !important;
+}
+
+.el-form-item__label{
+    padding-top: 15px !important;
+    text-align: center !important;
+    padding-right: 0 !important;
+}
+
+.el-form-item{
+    margin-bottom: 10px !important;
+}
+
+
+.el-form-item__error {
+    padding-top: 0px !important;
+}
+/*team page style*/
+.profile-picture-wrapper{
+    text-align:center;
+    /* height: auto; */
+    /* display: block; */
+}
+.profile-picture{
+    height: 400px;
+    width: auto;
+}
+.profile-contact-box{
+    border:solid black;
+    width: 78%;
+    margin: 0 auto;
+}
+.profile-name, 
+.profile-contact{
+    float:left;
+    padding: 15px 50px;
+    font-size: 1.5em;
+}
+.profile-name{
+    width: 48%;
+    color:white;
+    background:black;
+}
+.profile-contact{
+    width:52%;
+}
+
+.profile-name .profile-name-bold{
+    font-weight:bold;
+}
+a.profile-contact-email{
+    color:black;
+}
+a.profile-contact-phone, 
+a.profile-contact-phone:hover
+{
+    color:red;
+    font-weight:bold;
+}
+.profile-description{
+    margin-top:20px;
+}
+/*team page style end*/
+.name-odd{
+    font-size: 20px;
+    font-weight: bold; 
+}
+
+.intro-odd{
+    font-size: 17px;
+    color: #707070;
+}
+
+.name-even{
+    color: white;
+    font-size: 20px;
+    font-weight: bold; 
+}
+
+.intro-even{
+    font-size: 17px;
+    color: white;
+}
+
+.position{
+    font-size: 17px;
+    color: #bb9765;
+}
+
+.team-bg-1 a,
+.team-bg-2 a{
+    color: #cfa568;
+    font-size: 17px;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.team-bg-1{
+    /* background-color: #efefef; */
+}
+
+.team-bg-2{
+    background-color: black;
+}
+
+.Shahram-Rafati{
+    margin: 90px auto;
+}
+
+.Maryam{
+    margin: 65px auto;
+}
+
+.Baxter{
+    margin: 40px auto;
+}
+.Hayley-Crofts{
+    margin: 30px auto;
+}
+
+.Sonia{
+    margin: 65px auto;
+}
+
+.Renae{
+    margin: 50px auto;
+}
+
+.Annie{
+    margin: 100px auto;
+}
+
+.Shizuka{
+    margin: 65px auto;
+}
+
+.Eddie{
+    margin: 30px auto;
+}
+
+/*Mobiel Profile Picture*/
+.Shahram-pic{
+    background-image: url("../../img/Shahram Rafati.png");
+}
+
+.Hayley-pic{
+    background-image: url("../../img/Hayley Crofts.png");
+}
+
+.Maryam-pic{
+    background-image: url("../../img/Maryam Davood-Abady.png");
+}
+
+.Baxter-pic{
+    background-image: url("../../img/Baxter Welch.png");
+}
+
+.Sonia-pic{
+    background-image: url("../../img/Sonia Khurana.png");
+}
+
+.Renae-pic{
+    background-image: url("../../img/Renae.png");
+}
+
+.Annie-pic{
+    background-image: url("../../img/Annie Ang.png");
+}
+
+.Shizuka-pic{
+    background-image: url("../../img/Shizuka Sato.png");
+}
+
+.Eddie-pic{
+    background-image: url("../../img/Eddie Chen.png");
+}
+
+/*Mobiel Profile Picture*/
+.mobile-picture-odd{
+    height: 170px;
+    width: 190px;
+    background-size: cover;
+    background-position: 0% 5%;
+}
+
+.mobile-picture-even{
+    margin-left: 180px;
+    height: 170px;
+    width: 190px;
+    background-size: cover;
+    background-position: 0% 10%;
+}
+
+.mobile-title-odd{
+    position: absolute;
+    right: 40px;
+    margin-top: 50px;
+}
+
+.mobile-title-even{
+    position: absolute;
+    left: 50px;
+    margin-top: 50px;
+}
+.mobile-desc{
+    font-size: 17px;
+    text-align: left;
+    padding-left: 15px;
+    padding-right: 15px;
+    color: #707070;
+}
+
+.mobile-profile a{
+    text-align: left;
+    padding-left: 15px;
+    padding-right: 15px;
+    color: #cfa568;
+    font-size: 17px;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+
+
+/*faq style*/
+.faq-panel{
+    text-align:center;
+    width:70%;
+    min-width: 900px;
+    margin:0 auto;
+}
+.faq-panel .panel-heading{
+    background:none;
+}
+.faq-panel #collapseOne{
+    padding: 20px 10%;
+}
+
+
+/*For Owners page style*/
+#owner-page .panel-group h3{
+    text-align:center;
+}
+#owner-page .detail{
+    text-align:center;
+}
+#owner-page .detail a{
+    color:#707070;
+}
+
+/*list properties page*/
+#list-properties-page .panel-title{
+    margin-bottom:20px;
+}
+#list-properties-page a{
+    color:red;
+}
+.bold-h3{
+    font-family:sans-serif!important;
+    text-align:center;
+    margin: 10px;
+}
+
+/*manually adjust list-properties page form input spacing*/
+#list-properties-page .el-form-item {
+    width: 33%;
+    float: left;
+}
+#list-properties-page .el-form-item .el-form-item__content{
+    width: 60%;
+    z-index: 0;
+}
+#list-properties-page .title-form{
+    clear: both;
+    padding:20px 0;
+}
+#list-properties-page .el-form-item textarea{
+    width:100%;
+}
+#list-properties-page .choose-condition-input,
+#list-properties-page .post-date-input{
+    width:45%;
+}
+#list-properties-page .el-form-item.choose-condition-input .el-form-item__content,
+#list-properties-page .el-form-item.post-date-input .el-form-item__content{
+    width:80%;
+}
+#list-properties-page .el-form-item.choose-condition-input .el-select{
+    width:95%;
+}
+#list-properties-page .el-form-item.post-date-input  .el-input{
+    width:100%;
+}
+#list-properties-page .list-property-form-comment{
+    display:block;
+    width:100%;
+}
+#list-properties-page .el-form-item__label{
+    text-align:left!important;
+}
+#list-properties-page .list-property-form-comment .el-form-item__content{
+    display:block;
+    width:100%;
+    margin-left:0!important;
+    
+}
+#list-properties-page .list-property-form-comment .el-form-item__content textarea{
+    border: solid black thin;
+    border-radius: 1px;
+    height: 7em;
+
+}
+#list-properties-page .list-property-form-submit >div{
+    /* margin-top: 320px; */
+    margin: 320px auto 0!important;
+    width: 100%!important;
+}
+#list-properties-page .list-property-form-submit{
+    width: 100%;
+    float: none;
+    text-align: center;
+}
+#list-properties-page form .message-holder{
+    color:red;
+    text-align:center;
+}
+
+/*tenant-placement page - list style*/
+#career .detail,
+#property-management .detail,
+#tenant-placement .detail {
+    text-align: center;
+}
+#career .feature-list li,
+#property-management .feature-list li,
+#tenant-placement .feature-list li{
+    padding-left:10px;
+}
+#career .feature-list li::before ,
+#property-management .feature-list li::before ,
+#tenant-placement .feature-list li::before {
+    content: "•"; color: red;
+    padding-right: 15px;
+}
+#property-management .panel-group,
+#tenant-placement .panel-group {
+    margin-bottom: 0;
+}
+#property-management .panel-group .panel,
+#tenant-placement .panel-group .panel{
+    border-radius: 0;
+    border:none;
+}
+.tenant-placement-database-hr{
+    border-top:#b2a5a5 solid;
+    padding: 0 10px 20px;
+    margin:0;
+    background: whitesmoke;
+}
+
+/*aboutUs page style*/
+#aboutUs-page .panel-heading{
+    background:none;
+}
+
+
+/*team page*/
+#team #team-arrow-down{
+    margin: 35px auto 30px;
+    display: block;
+}
+
+/*fancy style for hr*/
+hr {
+    border: 0;
+    height: 1px;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+}
+
+
+hr.hr-with-dot {
+    overflow: visible; /* For IE */
+}
+hr.hr-with-dot:after {
+    content: "• • •"; color: red;
+    display: inline-block;
+    position: relative;
+    top: -0.7em;
+    font-size: 1.5em;
+    padding: 0 0.25em;
+    background: white;
+}
+
+@media only screen and (min-width:1000px){
+
+}
+
+
+
+@media (min-width: 300px) and (max-width: 425px) {
+    .panel-heading {
+        padding-left: 5px;
+    }
+
+    .title h4{
+        font-size: 18px;
+    }
+
+    .el-form-item__label{
+        width: 100px !important;
+    }
+    .el-form-item__content{
+        width: 60%;
+        margin-left: 100px !important;
+        
+    }
+
+    .el-form-item__label{
+        text-align: left !important;
+    }
+
+    .lyp-button{
+        width: 180px;
+        font-size: 15px;
+    }
+
+    .emphasis,
+    .emphasis a {
+        font-size: 15px;
+    }
+
+    .Shahram-Rafati{
+        margin: 0;
+    }
+    
+    .Maryam{
+        margin: 0;
+    }
+    
+    .Baxter{
+        margin: 0;
+    }
+    .Hayley-Crofts{
+        margin: 0;
+    }
+    
+    .Sonia{
+        margin: 0;
+    }
+    
+    .Renae{
+        margin: 0;
+    }
+    
+    .Annie{
+        margin: 0;
+    }
+    
+    .Shizuka{
+        margin: 0;
+    }
+
+}
+
+@media (min-width: 300px) and (max-width: 768px) {
+    .panel-title {
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    .owner-buttom-div {
+        margin: 0px;
+    }
+
+    #collapseOne, 
+    #collapseTwo, 
+    #collapseThree, 
+    #collapseFour,
+    #collapseFive,
+    #collapseSix,
+    #collapseSeven,
+    #collapseEight,
+    #collapseNine,
+    #collapseTen,
+    #collapseSpecial {
+        background-color: #efefef;
+    }
+  }
+
+@media (min-width:768px) and (max-width: 991px) {
+    .profile-picture{
+        height: 280px;
+    }
+
+    .name{
+        font-size: 18px;
+    }
+    
+    .position{
+        font-size: 15px;
+    }
+    
+    .intro{
+        font-size: 15px;
+    }
+    
+    .Shahram-Rafati{
+        margin: 35px auto;
+    }
+
+    .team-bg-1 a,
+    .team-bg-2 a{
+        color: #cfa568;
+        font-size: 15px;
+
+    }
+
+    .Hayley-Crofts{
+        margin: 20px auto;
+    }
+
+    .Maryam{
+        margin: 10px auto;
+    }
+    
+    .Baxter{
+        margin: 5px auto;
+    }
+    .Sonia{
+        margin: 5px auto;
+    }
+
+    .Renae{
+        margin: 5px auto;
+    }
+
+    .Annie{
+        margin: 60px auto;
+    }
+
+    .Shizuka{
+        margin: 5px auto;    
+    }
+}
+@media (min-width:991px) and (max-width: 1199px) {
+    .Hayley-Crofts{
+        margin: 5px auto;
+    }
+
+    .Maryam{
+        margin: 50px auto;
+    }
+    
+    .Baxter{
+        margin: 7px auto;
+    }
+
+    .Sonia{
+        margin: 40px auto;
+    }
+
+    .Renae{
+        margin: 5px auto;
+    }
+
+    .Shizuka{
+        margin: 55px auto;    
+    } 
+}
+
+@media (min-width:320px) and (max-width:375px) {
+    .name-odd{
+        font-size: 15px;
+    }
+    .position{
+        font-size: 15px;
+    }
+    .mobile-picture-even{
+        margin-left: 32%;
+    } 
+    .mobile-title-even{
+        left: 20px;
+    }
+    .mobile-picture-odd{
+        width: 150px;
+    }
+    .mobile-title-odd{
+        right: 18px;
+    }
+}
+
+
+/*added in 2018-10-20 new styles for mobile page*/
+.mobile-title{
+    display:none;
+}
+.mobile-only{
+    display:none!important;    
+}
+
+@media only screen and (max-device-width: 480px){
+    .mobile-only{
+        display:block;    
+    }   
+    .margin-bottom-100{
+        margin-bottom:50px;
+    }
+    .margin-top-100{
+        margin-top:50px;
+    }
+    .feature-list{
+        text-align:left;
+    }
+    body > .container{
+        padding-left:0;
+        padding-right:0;
+    }
+    .title .h2.feature-title,
+    .title h2.feature-title{
+        font-size:20px;
+    }
+
+    .panel-default>.panel-heading{
+        background:none;
+    }
+
+
+    /*tenants/services page*/
+    #collapseOne, #collapseTwo, #collapseThree, #collapseFour, #collapseFive, #collapseSix, #collapseSeven, #collapseEight, #collapseNine, #collapseTen, #collapseSpecial{
+        background:none;
+    }
+    .tenant-placement-database-hr{
+        display:none;
+    }
+    .new-panel-group .new-panel{
+        text-align:left;
+        width:100%;
+        padding-left:15px;
+    }
+    .new-panel-group .new-panel-heading h3{
+        font-size:17px;
+    }
+    .container .title {
+        width:90%;
+        text-align: left;
+    }
+    .container .title .h2.feature-title,
+    .container .title h2.feature-title{
+        width: inherit;
+        margin: 30px 0 15px;
+    }
+    .new-panel-group .new-panel-heading:before{
+        display:none;
+    }
+    .new-panel-group .new-panel-heading{
+        text-align:left;
+    }
+
+    /*tenant-forms css*/
+    #tenant-forms-page .container .title {
+        text-align: center;
+    }
+
+    #tenant-forms-page.container .download-button {
+        width:100%;
+        padding-left:0;
+        padding-right:0;
+    }
+    .mobile-title{
+        margin-top:50px;
+        display:block;
+        text-align:center;
+        
+    }
+    .tenant-header-img{
+        display:none;
+    }
+    #tenant-forms-page.container .title{
+        text-align:center;
+        min-width:inherit;
+    }
+    #tenant-forms-page.container .feature-title{
+            width: 80%;
+            margin: 0 auto;
+            display: block;
+    }
+    .container .title .custom-box{
+        margin:20px auto;
+        width:90%;
+    }
+    /* stop line break from <br> */
+    .container .title .custom-box br{
+        content: " ";
+        display: none;
+    }
+
+    /*owners page*/
+    .title h2.feature-title, 
+    .container .title{
+        text-align:left;
+    }
+    /*tenant-placement page*/
+    #tenant-placement .panel-default >.panel-heading .panel-titlecd .bold-h3{
+        text-align:left;
+    }
+    #tenant-placement .panel-default >.panel-heading{
+        background:white;
+        text-align:left;
+    }
+
+    /*list a property page*/
+    .mobile-call-today{
+        margin:80px auto 0px;
+        width:300px;
+        text-align:center;
+    }
+    #list-properties-page .el-form-item{
+        width:100%;
+    }
+    #list-properties-page .el-form-item .el-select{
+        width:100%;
+    }
+    #list-properties-page .el-form-item.choose-condition-input .el-select{
+        width:100%!important;
+    }
+    #list-properties-page .el-form-item.post-date-input .el-form-item__content{
+        width:84%;
+    }
+    #list-properties-page .el-form-item .el-form-item__content {
+        width: 80%;
+    }
+    #list-properties-page .list-property-form-comment .el-form-item__content{
+        margin-left:130px;
+        width:100%;
+    }
+    #list-property-form .el-input, #list-property-form .el-input__inner{
+        width:90%;
+    }
+
+    /*team page*/
+    #team .profile-name,
+    #team .profile-contact{
+        width:100%;
+    } 
+    #team .profile-name,
+    #team .profile-contact{
+        font-size:1em;
+        padding:5px 10px;
+    }
+
+    /*faq page*/
+    .faq-panel{
+        min-width:0;
+        width: 100%;
+    
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

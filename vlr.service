@@ -1,0 +1,32 @@
+# systemd unit for the VLR site. deploy.sh installs it to /etc/systemd/system/vlr.service.
+# Runs as the vlr user; AmbientCapabilities lets it bind port 80 without root
+# (the cluster workers are forked from the master and inherit it).
+[Unit]
+Description=VLR site (Node/Express)
+After=network.target mongod.service
+Wants=mongod.service
+# Without a start limit, a master that keeps exiting is restarted forever and
+# `systemctl is-active` still answers "active" — the blind spot that hid the
+# 2026-09-10 outage for 7.5 hours. Five failed starts in ten minutes latches
+# the unit into `failed` instead, which is visible and alertable. The ~50s
+# master give-up cycle leaves roughly four minutes for a slow transient (a
+# stray process still releasing port 80) to clear on its own first.
+# NOTE: systemd 230+ spelling (the server runs 255) — these belong in [Unit].
+StartLimitIntervalSec=600
+StartLimitBurst=5
+
+[Service]
+User=vlr
+Group=vlr
+WorkingDirectory=/opt/vlr/app
+Environment=NODE_ENV=production
+# Sets NODE_ENV and MONGO_URL (the database URL); overrides the line above.
+EnvironmentFile=/etc/vlr/env
+ExecStart=/usr/bin/node server.js
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+Restart=always
+RestartSec=5
+SyslogIdentifier=vlr
+
+[Install]
+WantedBy=multi-user.target

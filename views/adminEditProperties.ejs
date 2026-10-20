@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head><link rel="icon" href="/new-img/favicon.ico">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VLR-Admin</title>
+    <!-- Bootstrap core CSS -->
+    <link href="/libs/css/vendor/bootstrap.min.css" rel="stylesheet">
+    <link href="/libs/css/adminEditProperties.css" rel="stylesheet">
+    <link href="/libs/css/semantic.min.css" rel="stylesheet">
+    <link href="/libs/css/vendor/elementUi.css" rel="stylesheet">
+    <link href="/libs/jquery/jquery-ui.min.css" rel="stylesheet">
+    <link href="/libs/jquery/jquery-ui.theme.min.css" rel="stylesheet">
+    <link href="/libs/jquery/jquery-ui.structure.min.css" rel="stylesheet">
+    <link href="/libs/css/admin-style.css" rel="stylesheet">
+    <!-- Quill rich text editor (for the property Details field) -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <script type="text/javascript" src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <script type="text/javascript" src="/libs/js/vue.min.js"></script>
+    <script type="text/javascript" src="/libs/js/elementUi.js"></script>
+    <script type="text/javascript" src="/libs/js/en.js"></script>
+    <script type="text/javascript" src="/libs/js/axios.min.js"></script>
+    <script type="text/javascript" src="/libs/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="/libs/jquery/jquery-ui.min.js"></script>
+    <script src="/libs/js/semantic.min.js"></script>
+</head>
+
+<body class="admin_body">
+    <div class="topnav" id="myTopnav">
+        <a href="/VLR-admin/">Home</a>
+        <a href="/VLR-admin/csv">Import CSV</a>
+        <a href="/VLR-admin/property/new">New Property</a>
+        <a href="/VLR-admin/owner">Owner Leads</a>
+        <a href="/VLR-admin/viewRequest">Tenant Enquiries</a>
+        <a href="/VLR-admin/available90">Available in 90 days</a>
+        <a href="/VLR-admin/database">Database</a>
+        <a href="/VLR-admin/redirects">Redirects</a>
+        <a href="/VLR-admin/logout">Log out</a>
+        <a href="javascript:void(0);" class="icon" onclick="show()">&#9776;</a>
+    </div>
+
+    <div id="vlr-app">
+
+    <!-- Sticky action buttons -->
+    <div class="edit-property-action-bar">
+        <el-button type="primary" @click="update">Update</el-button>
+        <el-button type="primary" @click="uploadImages">Upload Images</el-button>
+        <el-button type="success" @click="openProperty">View Property</el-button>
+    </div>
+        <div class="container">
+            <h1 class="center">VLR Admin Edit Property Page</h1>
+            <div class="col-md-6">
+                <template>
+                    <el-form ref="form" :model="form" label-width="150px">
+                        <el-form-item label="ID:">
+                            <el-input v-model="form.propertyId" disabled></el-input>
+                        </el-form-item>
+                        <el-form-item label="Agent">
+                            <el-select v-model="form.agent" placeholder="Choose an agent">
+                                <el-option v-for="pp in agentList" :key="pp.value" :label="pp.label" :value="pp.value">
+                                </el-option>
+                        </el-form-item>
+                        <el-form-item label="Name">
+                            <el-input v-model="form.name"></el-input>
+                        </el-form-item>
+                        <el-form-item label="Address">
+                            <el-input v-model="form.address"></el-input>
+                        </el-form-item>
+                        <el-form-item label="City">
+                            <el-select v-model="form.city" placeholder="Select location">
+                                <el-option label="Downtown Vancouver" value='Downtown Vancouver'></el-option>
+                                <el-option label="Vancouver West Side" value='Vancouver West Side'></el-option>
+                                <el-option label="UBC" value='UBC'></el-option>
+                                <el-option label="Vancouver East Side" value='Vancouver East Side'></el-option>
+                                <el-option label="West Vancouver" value='West Vancouver'></el-option>
+                                <el-option label="North Vancouver" value='North Vancouver'></el-option>
+                                <el-option label="Richmond" value='Richmond'></el-option>
+                                <el-option label="Burnaby" value='Burnaby'></el-option>
+                                <el-option label="Surrey" value='Surrey'></el-option>
+                                <el-option label="White Rock" value='White Rock'></el-option>
+                                <el-option label="Coquitlam" value='Coquitlam'></el-option>
+                                <el-option label="Delta" value='Delta'></el-option>
+                                <el-option label="New Westminster" value="New Westminster"></el-option>
+                                <el-option label="Langley" value="Langley"></el-option>
+                                <el-option label="Tsawwassen" value="Tsawwassen"></el-option>
+                                <el-option label="Port Moody" value="Port Moody"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="Province">
+                            <el-input v-model="form.province"></el-input>
+                        </el-form-item>
+                        <el-form-item label="Country">
+                            <el-input v-model="form.country"></el-input>
+                        </el-form-item>
+                        <el-form-item label="Postal Code">
+                            <el-input v-model="form.postalCode"></el-input>
+                        </el-form-item>
+                        <el-form-item label="Neighbourhood">
+                            <el-input v-model="form.neighborhoodName"></el-input>
+                        </el-form-item>
+                        <el-form-item label="Type of property">
+                            <el-select v-model="form.typeOfProperty" placeholder="Select a type">
+                                <el-option label="Condo" value="Condo"></el-option>
+                                <el-option label="House" value="House"></el-option>
+                                <el-option label="Penthouse" value="Penthouse"></el-option>
+                                <el-option label="Townhouse" value="Townhouse"></el-option>
+                                <el-option label="Duplex" value="Duplex"></el-option>
+                                <el-option label="Laneway House" value="Laneway House"></el-option>
+                                <el-option label="Garden Suite Level" value="Garden Suite Level"></el-option>
+                                <el-option label="Basement Suite" value="Basement Suite"></el-option>
+                                <el-option label="Upper Level Only" value="Upper Level Only"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="Additional notes" class="property_textarea">
+                            <el-input type="textarea" v-model="form.additionalNote" :rows=5></el-input>
+                        </el-form-item>
+                        <el-form-item label="Created At">
+                            <el-date-picker v-model="form.createdAt" type="datetime" placeholder=""></el-date-picker>
+                        </el-form-item>
+                    </el-form>
+                </template>
+            </div>
+
+            <div class="col-md-6">
+                <template>
+                    <el-form ref="form" :model="form" label-width="150px">
+                        <el-form-item label="Min Lease Period">
+                            <el-input v-model="form.minLeaseTerm"></el-input>
+                        </el-form-item>
+                        <el-form-item label="Max Lease Period">
+                            <el-input v-model="form.maxLeaseTerm"></el-input>
+                        </el-form-item>
+                        <el-form-item label="Availability">
+                            <el-select v-model="form.status">
+                                <el-option label="Available" value="Available"></el-option>
+                                <el-option label="Rented" value="Rented"></el-option>
+                                <el-option label="Month-to-Month" value="Month-to-Month"></el-option>
+                                <el-option label="Coming Soon" value="Coming Soon"></el-option>
+                                <el-option label="Not list property" value="Not list property"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="Available Date">
+                            <el-col :span="11">
+                                <el-date-picker type="date" placeholder="Select date" v-model="form.availableDate"
+                                    style="width: 100%;"></el-date-picker>
+                            </el-col>
+                        </el-form-item>
+                        <el-form-item label="Furnished">
+                            <el-select v-model="form.furnished">
+                                <el-option label="Furnished" value="Yes"></el-option>
+                                <el-option label="Unfurnished" value="No"></el-option>
+                                <el-option label="Both possible" value="Both Possible"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="Allow pets">
+                            <el-select v-model="form.allowPets">
+                                <el-option label="Yes" value="Yes"></el-option>
+                                <el-option label="No" value="No"></el-option>
+                                <el-option label="With Restriction" value="Restriction"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="# of bedrooms">
+                            <el-select v-model="form.bedrooms">
+                                <el-option label="0" value="0"></el-option>
+                                <el-option label="1" value="1"></el-option>
+                                <el-option label="2" value="2"></el-option>
+                                <el-option label="3" value="3"></el-option>
+                                <el-option label="4" value="4"></el-option>
+                                <el-option label="5" value="5"></el-option>
+                                <el-option label="6" value="6"></el-option>
+                                <el-option label="7" value="7"></el-option>
+                                <el-option label="8" value="8"></el-option>
+                                <el-option label="9" value="9"></el-option>
+                                <el-option label="10" value="10"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="# of bathrooms">
+                            <el-select v-model="form.bathrooms">
+                                <el-option label="1" value="1"></el-option>
+                                <el-option label="1.5" value="1.5"></el-option>
+                                <el-option label="2" value="2"></el-option>
+                                <el-option label="2.5" value="2.5"></el-option>
+                                <el-option label="3" value="3"></el-option>
+                                <el-option label="3.5" value="3.5"></el-option>
+                                <el-option label="4" value="4"></el-option>
+                                <el-option label="4.5" value="4.5"></el-option>
+                                <el-option label="5" value="5"></el-option>
+                                <el-option label="5.5" value="5.5"></el-option>
+                                <el-option label="6" value="6"></el-option>
+                                <el-option label="6.5" value="6.5"></el-option>
+                                <el-option label="7" value="7"></el-option>
+                                <el-option label="7.5" value="7.5"></el-option>
+                                <el-option label="8" value="8"></el-option>
+                                <el-option label="8.5" value="8.5"></el-option>
+                                <el-option label="9" value="9"></el-option>
+                                <el-option label="9.5" value="9.5"></el-option>
+                                <el-option label="10" value="10"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="# of parkings">
+                            <el-select v-model="form.numberOfParking">
+                                <el-option label="0" value="0"></el-option>
+                                <el-option label="1" value="1"></el-option>
+                                <el-option label="2" value="2"></el-option>
+                                <el-option label="3" value="3"></el-option>
+                                <el-option label="4" value="4"></el-option>
+                                <el-option label="5" value="5"></el-option>
+                                <el-option label="6" value="6"></el-option>
+                                <el-option label="7" value="7"></el-option>
+                                <el-option label="8" value="8"></el-option>
+                                <el-option label="9" value="9"></el-option>
+                                <el-option label="10" value="10"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="Size (ft&#178;)">
+                            <el-input type="number" v-model="form.squareFeet"></el-input>
+                        </el-form-item>
+                        <el-form-item label="Details" class="property_textarea">
+                            <!-- Rich text editor (Quill). form.details is kept in sync via the text-change handler below. -->
+                            <div class="details-editor-wrapper">
+                                <div id="details-editor"></div>
+                            </div>
+                        </el-form-item>
+                        <el-form-item label="Rent">
+                            <el-input type="number" v-model="form.rent"></el-input>
+                        </el-form-item>
+                        <el-form-item label="VR URL">
+                            <el-input v-model="form.vrurl"></el-input>
+                        </el-form-item>
+                        <el-form-item label="Property Status">
+                            <el-select v-model="form.propertyStatus">
+                                <el-option label="Tenant Occupied" value="Tenant Occupied"></el-option>
+                                <el-option label="Owner Occupied" value="Owner Occupied"></el-option>
+                                <el-option label="Empty" value="Empty"></el-option>
+                            </el-select>
+                        </el-form-item>
+                    </el-form>
+                </template>
+            </div>
+        </div>
+
+        <div class="container">
+            <h1>Building</h1>
+            <div class="col-md-4 property_building_details">
+                <template>
+                    <el-form>
+                        <el-form-item label="Flex Or Storage">
+                            <input type="checkbox" v-model="form.flexOrStorage">
+                        </el-form-item>
+
+                        <el-form-item label="Mountain View">
+                            <input type="checkbox" v-model="form.mountainView">
+                        </el-form-item>
+
+                        <el-form-item label="Water View">
+                            <input type="checkbox" v-model="form.waterView">
+                        </el-form-item>
+
+                        <el-form-item label="City View">
+                            <input type="checkbox" v-model="form.cityView">
+                        </el-form-item>
+
+                        <el-form-item label="Smoking">
+                            <input type="checkbox" v-model="form.smoking">
+                        </el-form-item>
+
+                        <el-form-item label="Storage Or Locker">
+                            <input type="checkbox" v-model="form.storageOrLocker">
+                        </el-form-item>
+
+                        <el-form-item label="Garage">
+                            <input type="checkbox" v-model="form.garage">
+                        </el-form-item>
+
+                        <el-form-item label="Carport">
+                            <input type="checkbox" v-model="form.carport">
+                        </el-form-item>
+
+                        <el-form-item label="Street Parking">
+                            <input type="checkbox" v-model="form.streetParking">
+                        </el-form-item>
+
+                        <el-form-item label="Driveway Parking">
+                            <input type="checkbox" v-model="form.drivewayParking">
+                        </el-form-item>
+
+                        <el-form-item label="Visitor Parking">
+                            <input type="checkbox" v-model="form.visitorParking">
+                        </el-form-item>
+
+                        <el-form-item label="Bike Storage">
+                            <input type="checkbox" v-model="form.bikeStorage">
+                        </el-form-item>
+
+                        <el-form-item label="Heat">
+                            <input type="checkbox" v-model="form.Heat">
+                        </el-form-item>
+
+                        <el-form-item label="Water">
+                            <input type="checkbox" v-model="form.water">
+                        </el-form-item>
+
+                        <el-form-item label="Garbage Collection">
+                            <input type="checkbox" v-model="form.garbageCollection">
+                        </el-form-item>
+
+                        <el-form-item label="Gas Fireplace">
+                            <input type="checkbox" v-model="form.gasFireplace">
+                        </el-form-item>
+
+                        <el-form-item label="Electric Fireplace">
+                            <input type="checkbox" v-model="form.electricFireplace">
+                        </el-form-item>
+
+                        <el-form-item label="Basic Cable Package">
+                            <input type="checkbox" v-model="form.basicCablePackage">
+                        </el-form-item>
+
+                        <el-form-item label="Den">
+                            <input type="checkbox" v-model="form.den">
+                        </el-form-item>
+                    </el-form>
+                </template>
+            </div>
+
+            <div class="col-md-4 property_building_details">
+                <template>
+                    <el-form>
+                        <el-form-item label="Woodburn Fireplace">
+                            <input type="checkbox" v-model="form.woodburnFireplace">
+                        </el-form-item>
+
+                        <el-form-item label="AC">
+                            <input type="checkbox" v-model="form.ac">
+                        </el-form-item>
+
+                        <el-form-item label="Insuite WasherDryer">
+                            <input type="checkbox" v-model="form.inSuiteWasherDryer">
+                        </el-form-item>
+
+                        <el-form-item label="Shared Laundry">
+                            <input type="checkbox" v-model="form.sharedLaundry">
+                        </el-form-item>
+
+                        <el-form-item label="Refrigerator">
+                            <input type="checkbox" v-model="form.refrigerator">
+                        </el-form-item>
+
+                        <el-form-item label="Window Coverings">
+                            <input type="checkbox" v-model="form.windowCoverings">
+                        </el-form-item>
+
+                        <el-form-item label="Gas Stove">
+                            <input type="checkbox" v-model="form.gasStove">
+                        </el-form-item>
+
+                        <el-form-item label="Electric Stove">
+                            <input type="checkbox" v-model="form.electricStove">
+                        </el-form-item>
+
+                        <el-form-item label="Dishwasher">
+                            <input type="checkbox" v-model="form.dishwasher">
+                        </el-form-item>
+
+                        <el-form-item label="Microwave">
+                            <input type="checkbox" v-model="form.microwave">
+                        </el-form-item>
+
+                        <el-form-item label="Oven">
+                            <input type="checkbox" v-model="form.oven">
+                        </el-form-item>
+
+                        <el-form-item label="Wine Cooler">
+                            <input type="checkbox" v-model="form.wineCooler">
+                        </el-form-item>
+
+                        <el-form-item label="Builtin CoffeeMachine">
+                            <input type="checkbox" v-model="form.builtinCoffeeMachine">
+                        </el-form-item>
+
+                        <el-form-item label="Pantry">
+                            <input type="checkbox" v-model="form.pantry">
+                        </el-form-item>
+
+                        <el-form-item label="Kitchen Island">
+                            <input type="checkbox" v-model="form.kitchenIsland">
+                        </el-form-item>
+
+                        <el-form-item label="Carpets">
+                            <input type="checkbox" v-model="form.carpets">
+                        </el-form-item>
+
+                        <el-form-item label="Wood Floor">
+                            <input type="checkbox" v-model="form.woodFloor">
+                        </el-form-item>
+
+                        <el-form-item label="Tile Floor">
+                            <input type="checkbox" v-model="form.tileFloor">
+                        </el-form-item>
+
+                        <el-form-item label="In Suite Storage">
+                            <input type="checkbox" v-model="form.ensuiteStorage">
+                        </el-form-item>
+
+                        <el-form-item label="Walk in Storage">
+                            <input type="checkbox" v-model="form.walkinStorage">
+                        </el-form-item>
+                    </el-form>
+                </template>
+            </div>
+
+            <div class="col-md-4 property_building_details">
+                <template>
+                    <el-form>
+                        <el-form-item label="Balcony">
+                            <input type="checkbox" v-model="form.balcony">
+                        </el-form-item>
+
+                        <el-form-item label="Rooftop Deck">
+                            <input type="checkbox" v-model="form.rooftopDeck">
+                        </el-form-item>
+
+                        <el-form-item label="Patio">
+                            <input type="checkbox" v-model="form.patio">
+                        </el-form-item>
+
+                        <el-form-item label="Private Yard">
+                            <input type="checkbox" v-model="form.privateYard">
+                        </el-form-item>
+
+                        <el-form-item label="Concierge">
+                            <input type="checkbox" v-model="form.allDayConcierge">
+                        </el-form-item>
+
+                        <el-form-item label="Onsite Manager">
+                            <input type="checkbox" v-model="form.onSiteManager">
+                        </el-form-item>
+
+                        <el-form-item label="Swimming Pool">
+                            <input type="checkbox" v-model="form.swimmingPool">
+                        </el-form-item>
+
+                        <el-form-item label="Gym">
+                            <input type="checkbox" v-model="form.gym">
+                        </el-form-item>
+
+                        <el-form-item label="Yoga Studio">
+                            <input type="checkbox" v-model="form.yogaStudio">
+                        </el-form-item>
+
+                        <el-form-item label="Sauna">
+                            <input type="checkbox" v-model="form.sauna">
+                        </el-form-item>
+
+                        <el-form-item label="Steam Room">
+                            <input type="checkbox" v-model="form.steamRoom">
+                        </el-form-item>
+
+                        <el-form-item label="Hot Tub">
+                            <input type="checkbox" v-model="form.hotTub">
+                        </el-form-item>
+
+                        <el-form-item label="Amenity Room">
+                            <input type="checkbox" v-model="form.amenityRoom">
+                        </el-form-item>
+
+                        <el-form-item label="Meeting Room">
+                            <input type="checkbox" v-model="form.meetingRoom">
+                        </el-form-item>
+
+                        <el-form-item label="Hot Water">
+                            <input type="checkbox" v-model="form.hotWater">
+                        </el-form-item>
+
+                        <el-form-item label="Electricity">
+                            <input type="checkbox" v-model="form.electricity">
+                        </el-form-item>
+
+                        <el-form-item label="Gas">
+                            <input type="checkbox" v-model="form.gas">
+                        </el-form-item>
+
+                        <el-form-item label="Basic Internet Package">
+                            <input type="checkbox" v-model="form.basicInternetPackage">
+                        </el-form-item>
+
+                        <el-form-item label="Radiant Floor Heat">
+                            <input type="checkbox" v-model="form.radiantFloorHeat">
+                        </el-form-item>
+                    </el-form>
+                </template>
+            </div>
+        </div>
+        <!-- end of Building container -->
+
+        <!-- SEO Section -->
+        <div class="container seo-section-container">
+            <h1>SEO</h1>
+            <div class="col-md-12">
+                <template>
+                    <el-form label-width="200px" class="seo-form">
+
+                        <!-- Meta Title -->
+                        <el-form-item label="Page Title">
+                            <el-input v-model="form.seoTitle" placeholder="e.g. 909 Mainland St Unit 1907 – 2 Bed Luxury Condo in Vancouver | VLR"></el-input>
+                            <div class="seo-hint">
+                                Overrides the default <code>&lt;title&gt;page title&lt;/title&gt;</code> for this property page.
+                                Leave blank to use the auto-generated title.
+                            </div>
+                        </el-form-item>
+
+                        <!-- Meta Description -->
+                        <el-form-item label="Meta Description">
+                            <el-input type="textarea" :rows="3" v-model="form.seoDescription"
+                                placeholder="e.g. Spacious 2-bedroom condo at 909 Mainland St, Vancouver. Stunning city views, in-suite laundry. Available now. Contact VLR today."></el-input>
+                            <div class="seo-hint">
+                                Overrides <code>&lt;meta name="description" content="description..."&gt;</code>.
+                                Aim for 120–158 characters. Leave blank to use the auto-generated description.
+                            </div>
+                        </el-form-item>
+
+                        <!-- Index / Noindex -->
+                        <el-form-item label="Search Engine Indexing">
+                            <el-radio-group v-model="form.seoRobots">
+                                <el-radio label="index">Index (default — allow search engines to index this page)</el-radio>
+                                <el-radio label="noindex">Noindex — adds <code>&lt;meta name="robots" content="noindex"&gt;</code></el-radio>
+                            </el-radio-group>
+                        </el-form-item>
+
+                        <!-- Canonical URL -->
+                        <el-form-item label="Canonical URL">
+                            <el-input v-model="form.seoCanonical" placeholder="e.g. https://www.vancouverluxuryrentals.com/listing/909-Mainland-Street-Unit--1907-property-id-5250"></el-input>
+                            <div class="seo-hint">
+                                Overrides <code>&lt;link rel="canonical" href="https://www.example.com"&gt;</code>.
+                                Leave blank to use the auto-generated canonical URL.
+                            </div>
+                        </el-form-item>
+
+                    </el-form>
+                </template>
+            </div>
+        </div>
+        <!-- end of SEO Section -->
+
+    </div>
+    <!-- end of #vlr-app -->
+
+</body>
+
+<script src="//unpkg.com/element-ui/lib/umd/locale/en.js"></script>
+<script>
+    ELEMENT.locale(ELEMENT.lang.en);
+    $(document).ready(function () {
+        var property = <%-JSON.stringify(data)%>;
+        var agentList = <%-JSON.stringify(agentList)%>;
+        var list = [];
+        for (var i = 0; i < agentList.length; i++) {
+            list.push({ value: agentList[i].name, label: agentList[i].name })
+        }
+        //console.log(property);
+        //console.log(agentList);
+        var formContainer = new Vue({
+            el: '#vlr-app',
+            data: {
+                agentList: list,
+                form: {
+                    propertyId: property.propertyId,
+                    TT_Id: property.TT_Id,
+                    VLR_Id: property.VLR_Id,
+                    agent: property.agent,
+                    address: property.address,
+                    city: property.city,
+                    province: property.province,
+                    postalCode: property.postalCode,
+                    country: property.country,
+                    name: (property.name && property.name.length > 1) ? property.name.slice(1, property.name.length - 1) : property.name,
+                    createdAt: property.createdAt,
+                    minLeaseTerm: property.minLeaseTerm,
+                    maxLeaseTerm: property.maxLeaseTerm,
+                    furnished: property.furnished,
+                    allowPets: property.allowPets,
+                    bedrooms: property.bedrooms,
+                    bathrooms: property.bathrooms,
+                    squareFeet: property.squareFeet,
+                    rent: property.rent,
+                    vrurl: property.vrurl,
+                    status: property.status,
+                    details: (property.details && property.details.length > 1) ? property.details.slice(1, property.details.length - 1) : property.name,
+                    availableDate: property.availableDate,
+                    attributes: property.attributes,
+
+                    //Building
+                    flexOrStorage: property.flexOrStorage,
+                    mountainView: property.mountainView,
+                    waterView: property.waterView,
+                    cityView: property.cityView,
+                    allowPets: property.allowPets,
+                    smoking: property.smoking,
+                    storageOrLocker: property.storageOrLocker,
+                    garage: property.garage,
+                    carport: property.carport,
+                    streetParking: property.streetParking,
+                    drivewayParking: property.drivewayParking,
+                    visitorParking: property.visitorParking,
+                    bikeStorage: property.bikeStorage,
+                    Heat: property.Heat,
+                    water: property.water,
+                    garbageCollection: property.garbageCollection,
+                    gasFireplace: property.gasFireplace,
+                    electricFireplace: property.electricFireplace,
+                    woodburnFireplace: property.woodburnFireplace,
+                    ac: property.ac,
+                    inSuiteWasherDryer: property.inSuiteWasherDryer,
+                    sharedLaundry: property.sharedLaundry,
+                    refrigerator: property.refrigerator,
+                    windowCoverings: property.windowCoverings,
+                    gasStove: property.gasStove,
+                    electricStove: property.electricStove,
+                    dishwasher: property.dishwasher,
+                    microwave: property.microwave,
+                    oven: property.oven,
+                    wineCooler: property.wineCooler,
+                    builtinCoffeeMachine: property.builtinCoffeeMachine,
+                    pantry: property.pantry,
+                    kitchenIsland: property.kitchenIsland,
+                    carpets: property.carpets,
+                    woodFloor: property.woodFloor,
+                    tileFloor: property.tileFloor,
+                    balcony: property.balcony,
+                    rooftopDeck: property.rooftopDeck,
+                    patio: property.patio,
+                    privateYard: property.privateYard,
+                    allDayConcierge: property.allDayConcierge,
+                    onSiteManager: property.onSiteManager,
+                    swimmingPool: property.swimmingPool,
+                    gym: property.gym,
+                    yogaStudio: property.yogaStudio,
+                    sauna: property.sauna,
+                    steamRoom: property.steamRoom,
+                    hotTub: property.hotTub,
+                    amenityRoom: property.amenityRoom,
+                    meetingRoom: property.meetingRoom,
+                    hotWater: property.hotWater,
+                    electricity: property.electricity,
+                    gas: property.gas,
+                    basicInternetPackage: property.basicInternetPackage,
+                    basicCablePackage: property.basicCablePackage,
+                    typeOfProperty: property.typeOfProperty,
+                    additionalNote: property.additionalNote,
+                    numberOfParking: property.numberOfParking,
+                    neighborhoodName: property.neighborhoodName,
+                    den: property.den,
+                    ensuiteStorage: property.ensuiteStorage,
+                    walkinStorage: property.walkinStorage,
+                    radiantFloorHeat: property.radiantFloorHeat,
+                    propertyStatus: property.propertyStatus,
+                    // SEO fields
+                    seoTitle: property.seoTitle || '',
+                    seoDescription: property.seoDescription || '',
+                    seoRobots: property.seoRobots || 'index',
+                    seoCanonical: property.seoCanonical || '',
+                    
+                },
+                selected: [],
+                uploadPaths: []
+            },
+            computed: {
+                formString: function () {
+                    localStorage.setItem('formData', JSON.stringify(this.form));
+                    //console.log(localStorage.getItem('formData'));
+                    return JSON.stringify(this.form);
+                }
+            },
+            methods: {
+                update() {
+                    $.ajax({
+                        type: 'PUT',
+                        url: '/properties/id/' + this.form.propertyId,
+                        data: {
+                            form: this.form
+                        },
+                        success: function (response) {
+                            alert("Successfully updated");
+                        },
+                        error: function (result) {
+                            alert("Update failed.");
+                        }
+                    });
+                },
+
+                uploadImages() {
+                    var win = window.open(this.form.propertyId + '/images');
+                    win.focus();
+                },
+
+                openProperty() {
+                    // Replicate server-side toSlug() to build the listing URL
+                    var address = (this.form.address || '')
+                        .toString()
+                        .trim()
+                        .replace(/,?\s|#/g, '-')
+                        .replace(/-+/g, '-');
+                    var url = '/listing/' + address + '-property-id-' + this.form.propertyId;
+                    var win = window.open(url, '_blank');
+                    win.focus();
+                }
+            }
+        });
+
+        // ----- Rich text editor for the Details field -----
+        // Backward compatible: existing properties store plain-text details (sometimes
+        // with line breaks). We detect HTML vs. plain text and load accordingly. The
+        // editor's HTML is synced back into form.details, which is saved exactly like
+        // before (the PUT route still wraps it in quotes), so nothing downstream breaks.
+        var detailsQuill = new Quill('#details-editor', {
+            theme: 'snow',
+            placeholder: 'Describe the property…',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    ['link', 'clean']
+                ]
+            }
+        });
+
+        function getDetailsHtml() {
+            var html = detailsQuill.root.innerHTML;
+            // Quill represents an empty editor as "<p><br></p>"; store that as empty.
+            return html === '<p><br></p>' ? '' : html;
+        }
+
+        (function loadExistingDetails() {
+            var initial = formContainer.form.details || '';
+            if (/<[a-z][\s\S]*>/i.test(initial)) {
+                // Already rich HTML (saved by this editor previously).
+                detailsQuill.clipboard.dangerouslyPasteHTML(initial);
+            } else if (initial.trim().length) {
+                // Legacy plain text — preserve line breaks.
+                detailsQuill.setText(initial);
+            }
+            // Normalise the model to the editor's HTML form.
+            formContainer.form.details = getDetailsHtml();
+        })();
+
+        detailsQuill.on('text-change', function () {
+            formContainer.form.details = getDetailsHtml();
+        });
+
+        $.ajax({
+            type: 'GET',
+            url: '/properties/attributes',
+            success: function (response) {
+                for (property of response.data) {
+                    formContainer.selected.push(property.name)
+                }
+            }
+        });
+
+        $('.ui.search.dropdown').change(function () {
+            var selectedValue = this.value;
+            var allOptions = $('.ui.search.dropdown').find('select');
+            var count = 0;
+            for (option of allOptions) {
+                if (selectedValue == option.value) {
+                    count++;
+                }
+            }
+
+            if (count > 1) {
+                alert("This is a duplicate key.");
+                this.parentNode.style.color = "red";
+            }
+        });
+        $('.ui.search.dropdown').dropdown();
+    });
+</script>

@@ -1,0 +1,102 @@
+<%- include('header') %>
+<link href="/libs/css/properties.css" rel="stylesheet" />
+<script type="text/javascript">
+  var user = <%-JSON.stringify(user) %>;
+  var userId = <%-JSON.stringify(userId) %>;
+  localStorage.setItem('User', user);
+  localStorage.setItem('UserId', userId);
+  var _properties = <%-JSON.stringify(data) %>;
+  var _coverImgs = <%-JSON.stringify(coverImgs) %>;\
+  // Update each image link to new host name
+  _coverImgs = _coverImgs.map(link =>
+    link.replace(
+        "http://vancouverluxuryrental.com.s3-website-us-west-2.amazonaws.com",
+        "http://s3.us-west-2.amazonaws.com/vancouverluxuryrental.com"
+    )
+  );
+  var ifRemove = false;
+  function removeFavorite(property) {
+      var user = localStorage.getItem("User");
+      if (!user) {
+          $('#myFavoritesModal').modal();
+      } else {
+          $.ajax({
+              type: 'DELETE',
+              url: '/user/favorite',
+              data: {
+                  user: user,
+                  _id: property._id,
+                  propertyId: property.propertyId
+              },
+              success: function (response) {
+                  ifRemove = true;
+              },
+              error: function (result) {
+                  console.log(result);
+              }
+          });
+      }
+  }
+
+  $(document).ready(function () {
+      var card_view = new Vue({
+          el: '#card-view',
+          data: {
+              properties: _properties,
+              coverImgs: _coverImgs
+          }
+      });
+
+      $('figure button.removeBtn').click(function (event) {
+          setTimeout(2000);
+          location.reload();
+          return false;
+      });
+
+      $('figure').click(function (event) {
+          id = $(this).find('.propertyId').text().trim();
+          address = $(this).find('.propertyAddress').text().trim();
+          window.location.href = "/listing/" + address.replace(/,?\s|#/g, '-') + '-property-id-' + id;
+      });
+
+      $('#card-view').show();
+  });
+</script>
+
+<%- include('banner') %>
+<div class="container">
+  <div class="label-center">
+    <span class="recent-label">My favourite properties</span>
+  </div>
+  <div class="col-md-12">
+    <div class="properties-wrapper">
+      <div id="card-view" class="row" style="display: none;">
+        <div v-for="(property, index) in properties" class="col-sm-12 col-sm-4">
+          <figure href="/#">
+            <img :src="coverImgs[index]" alt="img" />
+            <figcaption>
+              <span class="propertyId hidden"> {{ property.propertyId }}</span>
+              <p class="h6">
+                {{ property.typeOfProperty }} in {{ property.city }},
+                {{ property.province }}
+              </p>
+              <h2 class="propertyAddress">{{ property.address }}</h2>
+              <p>
+                {{ property.bedrooms }} Bed | {{ property.bathrooms }} Bath|
+                {{ property.squareFeet }} SqFt | ${{ property.rent }}/Month
+              </p>
+              <button
+                class="removeBtn"
+                type="button"
+                v-on:click="removeFavorite(property)"
+              >
+                Remove
+              </button>
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('footer') %>

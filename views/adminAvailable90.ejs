@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+
+<head><link rel="icon" href="/new-img/favicon.ico">
+    <meta charset="UTF-8">
+    <title>VLR Admin Database</title>
+    <link rel="stylesheet" href="/libs/css/admin-style.css">
+    <script type="text/javascript" src="/libs/jquery/jquery.js"></script>
+    <script type="text/javascript" src="/libs/js/vue.min.js"></script>
+
+    <script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+    <link href="/libs/css/vendor/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css" rel="stylesheet">
+    <style type="text/css">
+        .invisible {
+            display: none;
+        }
+    </style>
+</head>
+
+
+<body class="admin_body">
+    <div class="topnav" id="myTopnav">
+        <a href="/VLR-admin/">Home</a>
+        <a href="/VLR-admin/csv">Import CSV</a>
+        <a href="/VLR-admin/property/new">New Property</a>
+        <a href="/VLR-admin/owner">Owner Leads</a>
+        <a href="/VLR-admin/viewRequest">Tenant Enquiries</a>
+        <a href="/VLR-admin/available90" class="current">Available in 90 days</a>
+        <a href="/VLR-admin/database">Database</a>
+        <a href="/VLR-admin/redirects">Redirects</a>
+        <a href="/VLR-admin/logout">Log out</a>
+        <a href="javascript:void(0);" class="icon" onclick="show()">&#9776;</a>
+    </div>
+
+    <div class="container" id="admin_owner_leads">
+        <h1 class="center">Property Availabe in 90 Days</h1>
+        <table id="table-view" class="table">
+            <thead>
+                <tr>
+                    <th>Property Id</th>
+                    <th>Tenant Name</th>
+                    <th>Tenant Email</th>
+                    <th>Rent</th>
+                    <th>Lease End Date</th>
+                    <th>List Agent</th>
+                    <th>Actions</th>
+                    <th class='invisible'>Forwarded</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</body>
+
+<script type='text/javascript'>
+    function show() {
+        var x = document.getElementById("myTopnav");
+        if (x.className === "topnav") {
+            x.className += " responsive";
+        } else {
+            x.className = "topnav";
+        }
+    }
+
+    function sendEmail(row) {
+        var propertyId = row.parentNode.parentNode.children[0].innerText;
+        var tenantName = row.parentNode.parentNode.children[1].children[0].value;
+        var tenantEmail = row.parentNode.parentNode.children[2].children[0].value;
+        var leaseEndDate = row.parentNode.parentNode.children[4].innerText;
+        var agentName = row.parentNode.parentNode.children[5].children[0].selectedOptions[0].textContent;
+        var agentPhone = row.parentNode.parentNode.children[5].children[0].selectedOptions[0].value.split(',')[0];
+        var agentEmail = row.parentNode.parentNode.children[5].children[0].selectedOptions[0].value.split(',')[1];
+
+        // var message = "Please contact tenant " + tenantName +
+        //                 ", email: " + tenantEmail +
+        //                 ". The property Id is " + propertyId + ". " +
+        //                 "Lease end date is " + leaseEndDate;
+        // console.log(message);
+        // send ajax to email sender
+        $.ajax({
+            type: 'POST',
+            url: '/VLR-admin/mail/renewal/' + row.parentNode.parentNode.children[0].innerText,
+            data: {
+                tenantName: tenantName,
+                tenantEmail: tenantEmail,
+                leaseEndDate: leaseEndDate,
+                agentName: agentName,
+                agentPhone: agentPhone,
+                agentEmail: agentEmail
+            },
+            success: function(response) {
+                //todo: show an success message?
+                alert("Email Sent") //todo: the return message should get from response
+                row.innerText="Sent";
+            }
+        });
+    }
+
+    function editProperty(row) {
+        var id = row.parentNode.parentNode.querySelectorAll('td.identifier')[0].innerText;
+        var win = window.open('/vlr-admin/property/' + id);
+        win.focus();
+    }
+
+    function deletePopup(row) {
+        var id = row.parentNode.parentNode.querySelectorAll('td.identifier')[0].innerText;
+        var index = row.parentNode.parentNode.rowIndex;
+        if (confirm("Are you sure you want to delete this property?") == true) {
+            $.ajax({
+                type: 'DELETE',
+                url: '/properties/id/' + id,
+                success: function(response) {
+                    alert("Property " + response.id + " is deleted.");
+                    document.getElementById("table-view").deleteRow(index);
+                },
+                error: function(result) {
+                    alert("Property deletion failed.");
+                }
+            });
+        }
+    };
+
+    $(document).ready(function() {
+        $.ajax({
+            type: 'GET',
+            url: '/VLR-admin/api/all',
+            success: function(response) {
+                let allAgents = response.data;
+                $.ajax({
+                    type: 'GET',
+                    url: '/VLR-admin/property/available90',
+                    success: function(response) {
+                        var tableData = [];
+                        for (property of response.data) {
+                            var agentsList = "<select name='agents'>";
+                            var added = 0;
+                            for (agent of allAgents) {
+                                if (property.agent != undefined && property.agent != null && property.agent != '' && agent.name === property.agent){
+                                    agentsList += "<option selected value='" + agent.phone + ',' + agent.email +  "'>" + agent.name + "</option>";
+                                    added = 1;
+                                }
+                                else{
+                                    agentsList += "<option value='" + agent.phone + ',' + agent.email + "'>" + agent.name + "</option>";
+                                }
+                            }
+                            if (added == 0 && property.agent != undefined && property.agent != null && property.agent != ''){
+                                agentsList += "<option selected>" + property.agent + "</option>";
+                            }
+                            agentsList += "</select>";
+                            property.agent = agentsList;
+                            var availableDate = new Date(property.availableDate).toLocaleDateString();
+                            tableData.push([
+                                property.propertyId,
+                                '',
+                                '',
+                                property.rent,
+                                availableDate,
+                                property.agent,
+                                '',
+                                property.forwarded ? property.forwarded : false
+                            ]);
+                        }
+                        var table = $('#table-view').DataTable({
+                            "data": tableData,
+                            "fnCreatedRow": function(nRow, aData, iDataIndex) {
+                                $('td:eq(1)', nRow).append('<input type="text" name="tenantName">');
+                                $('td:eq(2)', nRow).append('<input type="email" name="tenantEmail">');
+                                $('td:eq(0)', nRow).addClass('identifier');
+                                $('td:eq(7)', nRow).addClass('invisible');
+                                if (aData[7] == false)
+                                    $('td:eq(6)', nRow).append('<a onClick="sendEmail(this)" class="sendButton">Send</a>');
+                                else{
+                                    $('td:eq(6)', nRow).append('<a onClick="sendEmail(this)" class="sentButton">Sent</a>');
+                                }
+                            },
+                        });
+                    },
+                    error: function(e) {
+                        console.log("ajax for getting available in 90 days failed, message = ", e)
+                    }
+                });
+
+            },
+            error: function(e) {
+                console.log("ajax for getting all owner details failed, message = ", e)
+            }
+        });
+    });
+</script>
+
+</html>

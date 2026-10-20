@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head><link rel="icon" href="/new-img/favicon.ico">
+  <meta charset="UTF-8">
+  <title>VLR Admin</title>
+  <link rel="stylesheet" href="/libs/css/style.css">
+</head>
+
+<body>
+  <hgroup>
+    <h1>VLR Admin Login</h1>
+  </hgroup>
+  <form action="/VLR-admin/login" method="post" enctype="multipart/form-data">
+    <div class="group">
+      <input type="email" name="email"><span class="highlight"></span><span class="bar"></span>
+      <label>Email</label>
+    </div>
+    <div class="group">
+      <input type="password" name="password"><span class="highlight"></span><span class="bar"></span>
+      <label>Password</label>
+    </div>
+    <button type="submit" class="button buttonBlue">Submit
+    <div class="ripples buttonRipples"><span class="ripplesCircle"></span></div>
+  </button>
+  </form>
+  <script src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+  <script src="/libs/js/login.js"></script>
+</body>
+
+</html>

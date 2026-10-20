@@ -1,0 +1,47 @@
+.long-select{min-width:200px!important}
+.long-select .el-input{min-width:200px!important}
+#search-filter .long-select .el-input--suffix{min-width:200px!important}
+.multi-select-city{min-width:220px!important}
+.multi-select-city .el-input{min-width:220px!important}
+#search-filter .multi-select-city .el-input--suffix{min-width:220px!important}
+.multi-select{max-width:300px!important}
+.multi-select .el-input{max-width:300px!important}
+#search-filter .multi-select .el-select__tags{max-width:300px!important}
+.bg-color{background-color:#efefef}
+.backGroundImages{background-size:cover;background-position:50% 50%;overflow:hidden;margin-top:-120px}
+/* Darker image overlay on the hero banner — same treatment as the homepage
+   (see home.css .home-banner .backGroundImages::before). The background image
+   is set inline by main.js bannerChangeImage(); the ::before darkens it and the
+   content layer is lifted above the overlay so the search form/title stay crisp. */
+.home-banner .backGroundImages{position:relative}
+.home-banner .backGroundImages::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1;pointer-events:none}
+.home-banner .backGroundImageEffect{position:relative;z-index:2}
+.backGroundImageEffect h1{text-shadow: 2px 2px rgb(0 0 0 / 30%);}
+.textInsideImages{text-align:center;float:none;margin-top:400px;margin-bottom:20px}
+.textInsideImages h1{text-align:center;color:#fff;font-size:25px}
+.textInsideImages p{margin-left:40px;color:#fff;font-size:30px}
+.search-input{width:50%;height:40px;background-color:transparent;border:1px solid #fff;color:#fff}
+.search input::placeholder{color:#fff}
+.search input{text-indent:15px}
+.groupMargin{margin:20px 0 0 40px;margin-bottom:50px!important}
+#dropdownSize{width:150px;height:50px;border-color:orange}
+#search-filter{margin-bottom:20px}
+@media (max-width: 425px) {
+#search-filter #banner-input{width:90%}
+#search-filter .el-input__icon+.el-input__inner{margin-bottom:10px}
+}
+#search-filter .el-form .el-form-item{margin-bottom:100px}
+#search-filter .el-select .el-input{width:160px}
+#search-filter .el-select .el-input .el-input__inner{border:none!important}
+.el-form-item__content .el-input{width:50%}
+.reset{display:inline-block;line-height:1;white-space:nowrap;cursor:pointer;background:#fff;border:1px solid #0a0c0a;color:#fff;margin:0;padding:12px 20px;border-radius:4px;margin-top:20px!important;background-color:#0a0c0a!important;border-style:none!important;color:#fff!important;.el-form-item__contentel-input__inner:focus{;background-color:#fff}
+.el-form-item{margin-bottom:0!important}
+@media (max-width: 991px) {
+.el-form-item{margin-bottom:15px!important}
+}
+@media (max-width: 425px) {
+.search-input{width:80%}
+#search-filter .el-select .el-input{width:185px}
+.el-button{width:185px}
+.textInsideImages{margin-bottom:50px;margin-top:150px}
+}

@@ -1,0 +1,152 @@
+.listing-wrapper {
+  margin-left: 50px;
+  margin-right: 50px;
+}
+.listing-img {
+  width: 100%;
+}
+
+.listing-bg {
+  text-align: left;
+  background-color: white;
+  padding: 20px;
+}
+.listing-rent {
+  color: #cfa568;
+  font-size: 30px;
+}
+
+.listing-ld {
+  font-size: 20px;
+  line-height: 25px;
+  font-weight: 500;
+}
+
+.listing-ld span {
+  display: inline-block;
+}
+
+.listing-info,
+.test {
+  display: inline;
+}
+
+.listing-info {
+  color: #7c7c7c;
+  font-size: 15px;
+  line-height: 35px;
+}
+.favoriteStar {
+  float: right;
+  width: 30px;
+  height: 28px;
+}
+
+#card-view {
+  text-align: center;
+}
+
+.card {
+  width: 31%;
+  display: inline-block;
+  transition: transform 0.5s;
+  margin: 10px;
+}
+.card:hover,
+.card:focus {
+  /* transform: scale3d(1.02, 1.02, 1); */
+  /* box-shadow: 0 10px 15px #7c7c7c; */
+}
+
+.separetor {
+  margin-left: 3px;
+  margin-right: 3px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #eabf91;
+}
+#paging {
+  text-align: center;
+}
+.pagination > .active > a,
+.pagination > .active > a:focus,
+.pagination > .active > a:hover,
+.pagination > .active > span,
+.pagination > .active > span:focus,
+.pagination > .active > span:hover {
+  color: black;
+  background: none;
+  border: 1px solid #ddd;
+}
+.pagination > li > a,
+.pagination > li > span {
+  color: black;
+}
+.pagination > li > a:focus,
+.pagination > li > a:hover,
+.pagination > li > span:focus,
+.pagination > li > span:hover {
+  color: red;
+}
+.propertyId {
+  display: none;
+}
+
+/*new style*/
+.properties-wrapper {
+}
+.properties-wrapper > div figure {
+  position: relative;
+}
+.properties-wrapper figure figcaption,
+.properties-wrapper figure figcaption a {
+  text-align: center;
+  text-decoration: none;
+  color: white;
+  top: 0;
+  padding-top: 30px;
+  width: 100%;
+  position: absolute;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+}
+.properties-wrapper > div figure figcaption h2 {
+  border-bottom: solid 1px white;
+  margin-left: auto;
+  margin-right: auto;
+  padding-bottom: 15px;
+  width: 300px;
+  font-size: 22px;
+}
+
+.recent-rented-title {
+  overflow: hidden;
+  color: black;
+  font-size: 30px;
+  height: 2em;
+  padding-top: 10px;
+}
+.properties-wrapper > div.row > div,
+.properties-wrapper > div.row > div figure {
+  overflow: hidden;
+  max-height: 230px;
+  height: 230px;
+}
+.properties-wrapper > div.row > div figure img {
+  height: 100%;
+  width: 100%;
+}
+
+.properties-wrapper > div figure figcaption .recent-rented-price {
+  color: white;
+  background: red;
+  width: 80px;
+  margin: 5px auto;
+  font-size: 20px;
+  font-weight: bold;
+  padding-bottom: 5px;
+}
+#card-view > div {
+  margin-bottom: 25px;
+  cursor: pointer;
+}

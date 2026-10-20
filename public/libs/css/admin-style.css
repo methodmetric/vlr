@@ -1,0 +1,83 @@
+*{box-sizing:border-box}
+body{font-family:Helvetica;background:#eee;-webkit-font-smoothing:antialiased}
+.center{text-align:center}
+hgroup{text-align:center;margin-top:12em}
+h1,h3{font-weight:300}
+h1{color:#636363}
+h3{color:#4a89dc}
+form{margin:1em auto;padding:3em 2em 2em;background:#fafafa;border:1px solid #ebebeb;box-shadow:rgba(0,0,0,0.14902) 0 1px 1px 0px,rgba(0,0,0,0.09804) 0 1px 2px 0}
+.group{position:relative;margin-bottom:45px}
+input:focus{outline:none}
+.bar{position:relative;display:block;width:100%}
+.bar:before,.bar:after{content:'';height:2px;width:0;bottom:1px;position:absolute;background:#4a89dc;-webkit-transition:all .2s ease;transition:all .2s ease}
+.bar:before{left:50%}
+.bar:after{right:50%}
+input:focus ~ .bar:before,input:focus ~ .bar:after{width:50%}
+.highlight{position:absolute;height:60%;width:100px;top:25%;left:0;pointer-events:none;opacity:.5}
+input:focus ~ .highlight{-webkit-animation:inputHighlighter .3s ease;animation:inputHighlighter .3s ease}
+@-webkit-keyframes inputHighlighter {
+from{background:#4a89dc}
+to{width:0;background:transparent}
+}
+@keyframes inputHighlighter {
+from{background:#4a89dc}
+to{width:0;background:transparent}
+}
+.button{position:relative;display:inline-block;padding:12px 24px;margin:.3em 0 1em;width:100%;vertical-align:middle;color:#fff;font-size:16px;line-height:20px;-webkit-font-smoothing:antialiased;text-align:center;letter-spacing:1px;background:transparent;border:0;border-bottom:2px solid #3160B6;cursor:pointer;-webkit-transition:all .15s ease;transition:all .15s ease}
+.button:focus{outline:0}
+.buttonBlue{background:#4a89dc;text-shadow:1px 1px 0 rgba(39,110,204,.5)}
+.buttonBlue:hover{background:#357bd8}
+.ripples{position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;background:transparent}
+.ripplesCircle{position:absolute;top:50%;left:50%;-webkit-transform:translate(-50%,-50%);transform:translate(-50%,-50%);opacity:0;width:0;height:0;border-radius:50%;background:rgba(255,255,255,0.25)}
+.ripples.is-active .ripplesCircle{-webkit-animation:ripples .4s ease-in;animation:ripples .4s ease-in}
+@-webkit-keyframes ripples {
+0%{opacity:0}
+25%{opacity:1}
+100%{width:200%;padding-bottom:200%;opacity:0}
+}
+@keyframes ripples {
+0%{opacity:0}
+25%{opacity:1}
+100%{width:200%;padding-bottom:200%;opacity:0}
+}
+footer{text-align:center}
+footer p{color:#888;font-size:13px;letter-spacing:.4px}
+footer a{color:#4a89dc;text-decoration:none;-webkit-transition:all .2s ease;transition:all .2s ease}
+footer a:hover{color:#666;text-decoration:underline}
+footer img{width:80px;-webkit-transition:all .2s ease;transition:all .2s ease}
+footer img:hover{opacity:.83}
+footer img:focus,footer a:focus{outline:none}
+.topnav{background-color:#333;overflow:hidden}
+.topnav a{float:left;display:block;color:#f2f2f2;text-align:center;padding:14px 16px;text-decoration:none;font-size:17px}
+.topnav a:hover,.topnav a:active{background-color:#3abc8c;color:#fff;text-decoration:none}
+.topnav a.current{background-color:#3abc8c;color:#fff;text-decoration:none}
+.topnav .icon{display:none}
+@media screen and (max-width: 600px) {
+.topnav a:not(:first-child){display:none}
+.topnav a.icon{float:right;display:block}
+.topnav.responsive{position:relative}
+.topnav.responsive a.icon{position:absolute;right:0;top:0}
+.topnav.responsive a{float:none;display:block;text-align:left}
+}
+.dropbtn{vertical-align:middle;height:45px;padding:12px 20px;margin:8px 0;box-sizing:border-box;border:none;background-color:#3CBC8D;color:#fff;font-size:18px}
+.newbtn{vertical-align:middle;width:160px;padding:12px 20px;margin:8px 0;box-sizing:border-box;border:none;background-color:#3CBC8D;color:#fff;display:inline-block}
+.newbtn:hover{width:160px;padding:10px 18px;margin:8px 0;box-sizing:border-box;border:none;background-color:#fff;color:#000;border:2px solid #4CAF50}
+#searchBar{width:150px;box-sizing:border-box;border:2px solid #ccc;border-radius:4px;font-size:16px;background-color:#fff;background-image:url(../../img/searchicon.png);background-position:10px 10px;background-repeat:no-repeat;padding:12px 20px 12px 40px;-webkit-transition:width .4s ease-in-out;transition:width .4s ease-in-out}
+#searchBar:focus{width:50%}
+.editButton{background-color:#3a83d1;-moz-border-radius:24px;-webkit-border-radius:24px;border-radius:24px;display:inline-block;cursor:pointer;color:#fff;font-family:Times New Roman;font-size:10px;padding:5px 12px;text-decoration:none;text-shadow:1px 1px 2px #2f6627}
+.editButton:hover{background-color:#2aacbd;color:#fff;text-decoration:none}
+.editButton:active{position:relative;top:1px}
+.deleteButton{background-color:#f51313;-moz-border-radius:24px;-webkit-border-radius:24px;border-radius:24px;display:inline-block;cursor:pointer;color:#fff;font-family:Times New Roman;font-size:10px;padding:5px 12px;text-decoration:none;text-shadow:1px 1px 2px #2f6627}
+.deleteButton:hover{background-color:#720404;color:#fff;text-decoration:none}
+.deleteButton:active{position:relative;top:1px}
+.btn{background-color:#3a83d1;-moz-border-radius:24px;-webkit-border-radius:24px;border-radius:24px;display:inline-block;cursor:pointer;color:#fff;font-family:Times New Roman;font-size:10px;padding:5px 12px;text-decoration:none;text-shadow:1px 1px 2px #2f6627}
+#admin_home_controller{margin:30px auto}
+.databaseBtn{width:100%;background-color:#3abc8c;-moz-border-radius:5px;-webkit-border-radius:5px;border-radius:5px;display:inline-block;cursor:pointer;color:#fff;text-align:center;padding:10px;text-decoration:none;text-shadow:1px 1px 2px #2f6627}
+.databaseBtn:hover,.databaseBtn.current{background:#3a83d1}
+#admin_database_forms textarea{width:100%;height:500px}
+#admin_register{width:500px;margin:0 auto}
+#admin_register input,#admin_register select{width:100%}
+#admin_database_forms textarea::-webkit-input-placeholder{text-align:center}
+#admin_database_forms textarea:-moz-placeholder{text-align:center}
+#admin_database_forms textarea::-moz-placeholder{text-align:center}
+#admin_database_forms textarea:-ms-input-placeholder{text-align:center}
