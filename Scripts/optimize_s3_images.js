@@ -6,7 +6,8 @@
  * files this script keeps next to itself). The bucket and server are both in
  * us-west-2, so transfer is free there; from a laptop it pulls ~71 GB and costs
  * egress. The AWS keys come from the environment, so load the env file first
- * (see Scripts/readme.txt):
+ * (see Scripts/readme.txt). Don't run deploy.sh while this runs: it runs
+ * `npm ci` in the same checkout.
  *
  *     node Scripts/optimize_s3_images.js --limit 200                # measure a sample
  *     node Scripts/optimize_s3_images.js                            # measure everything
@@ -15,15 +16,17 @@
  *     node Scripts/optimize_s3_images.js --apply --prefix 4070/     # just one property
  *     node Scripts/optimize_s3_images.js --apply --listing 3606     # same, by id or listing URL
  *
- * Why this exists: photos uploaded before the upload path moved to sharp at
- * quality 82 (lib/imageProcessing.js) were written by the old `images` package
- * at its default quality of 100. A 1920px photo at quality 100 averages ~1 MB
+ * Why this exists: photos uploaded by older versions of the code were saved by
+ * the `images` package at its default quality of 100 (the last `images`-based
+ * version already passed 82; see lib/imageProcessing.js). A 1920px photo at quality 100 averages ~1 MB
  * where quality 82 is ~230 KB, with no visible difference. A 24-image sample
  * across the bucket measured -77%.
  *
  * Safety properties:
- *   - Dry run is the DEFAULT. Nothing is written without --apply. (--dry-run is
- *     accepted but changes nothing.)
+ *   - Dry run is the DEFAULT. Nothing is written without --apply. Unknown or
+ *     misspelled flags (including --dry-run) are silently ignored, so a typo in
+ *     --prefix or --listing widens an --apply run to the whole bucket: check the
+ *     printed prefix before letting it run.
  *   - The bucket has versioning ENABLED, so every overwrite keeps the previous
  *     version and any object can be rolled back. Storage roughly doubles until
  *     noncurrent versions are expired, which needs the client's sign-off first.
@@ -33,13 +36,14 @@
  *     and tagged objects are always skipped, even with a fresh progress file.
  *   - A file is only replaced if the new version is meaningfully smaller
  *     (default: at least 15% off). Marginal gains are not worth generation loss.
- *   - Every re-encode is decoded and checked for non-zero dimensions before it
- *     is uploaded. Photos wider than --max-width (default 1920) are scaled down,
+ *   - Every re-encode's header is read back and must report non-zero dimensions
+ *     before it is uploaded. Photos wider than --max-width (default 1920) are scaled down,
  *     and EXIF orientation is applied, so dimensions can change.
  *   - Per-file failures are logged and skipped; they never abort the run.
  *   - PNGs are skipped by default: they are stored under .png keys referenced by
  *     `imgs[]` in MongoDB, so converting them to JPEG is a database change, not
- *     just a bucket change. Pass --include-png to re-encode them as PNG.
+ *     just a bucket change. --include-png re-encodes them as palette-quantised
+ *     (256-colour, lossy) PNG; don't use it on photographs.
  *
  * Uses the app's own sharp (a normal dependency in package.json). The script
  * reads config through config-lite, which also merges every command-line flag
@@ -65,15 +69,14 @@ try {
     console.error('  error    : ' + (e.code || '') + ' ' + e.message.split('\n')[0] + '\n');
 
     if (e.code === 'MODULE_NOT_FOUND' && /'sharp'/.test(e.message)) {
-        console.error('sharp is a dependency of the app but is not installed here. Run this from');
-        console.error('the directory that holds package.json, after installing dependencies:\n');
-        console.error('    cd ' + path.join(__dirname, '..'));
-        console.error('    npm ci\n');
-        console.error('sharp 0.35 needs Node 20.9+ (the app itself needs 22.9+).');
+        console.error('sharp is a dependency of the app but is not installed next to this script.');
+        console.error('Run `npm ci` in the git checkout and run the script from there. Never run');
+        console.error('npm ci in /opt/vlr/app: that is the running site\'s copy.\n');
+        console.error('sharp 0.35 needs Node 20.9+.');
     } else {
         console.error('sharp resolved but its native binary would not load. This is usually a platform');
-        console.error('mismatch, e.g. node_modules copied from another OS. Reinstall in place:\n');
-        console.error('    npm ci');
+        console.error('mismatch, e.g. node_modules copied from another OS. Run `npm ci` in the git');
+        console.error('checkout (never in /opt/vlr/app).');
     }
     process.exit(1);
 }

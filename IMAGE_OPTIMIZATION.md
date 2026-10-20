@@ -8,7 +8,7 @@
 
 Picking this up? Read **§1** (the problem), **§4.1** (dev and prod share one bucket — there is no isolated test environment), **§9** (what can and cannot be undone) and **§7** (gotchas). Then **§5** for what to do next; **§5.3** is the resume point for the S3 backfill.
 
-Asked "is there a script, and is it reversible?" — yes to both: `Scripts/optimize_s3_images.js`, and §9 has the reversibility answer including the three ways to destroy it by accident. Do not write a new script.
+Asked "is there a script, and is it reversible?" — yes to both: `Scripts/optimize_s3_images.js`, and §9 has the reversibility answer, including the one thing that destroys it. Do not write a new script.
 
 ---
 
@@ -20,7 +20,7 @@ The client reported that images across the site are too large — property detai
 
 ## 2. What is done
 
-§2.1–2.3 are in the handover code (`dedbc40`, our baseline). Per the vendor, that is exactly what production runs (TAKEOVER §5); we haven't been able to confirm it on the server yet.
+§2.1–2.3 are in the handover code (our baseline commit `f304cbb`, made from the vendor's `dedbc40` zip). Per the vendor, that is exactly what production runs (TAKEOVER §5); we haven't been able to confirm it on the server yet.
 
 ### 2.1 Static hero and page-header images — DONE
 
@@ -38,7 +38,7 @@ Re-encoded 7 banner JPEGs in `public/new-img/` at quality 80–82, downscaling t
 
 **Total 2892 KB → 1176 KB (−59%).** (The "after" sizes match the files in the repo.)
 
-`penthouse2.jpg` is one of three images the homepage hero picks at random in [`public/libs/js/main.js:37`](public/libs/js/main.js#L37) — the homepage was a dice roll between a 129 KB banner and a 1.4 MB one.
+`penthouse2.jpg` is one of three images the homepage hero picks at random in [`public/libs/js/main.js:37`](public/libs/js/main.js#L37) — the homepage had a one-in-three chance of a 1.4 MB banner (the other two are 129 KB and 209 KB).
 
 EXIF orientation was checked on every file before re-encoding (all `1` or absent), so dropping metadata cannot rotate anything.
 
@@ -56,11 +56,11 @@ Five had an alpha channel, but the transparency is a faint anti-aliased edge: al
 
 ### 2.3 Upload pipeline quality — DONE
 
-New uploads are processed by [`lib/imageProcessing.js`](lib/imageProcessing.js) with `sharp`, called from `PUT /properties/id/:id/images` (`routes/properties.js`). JPEGs are written at `JPEG_QUALITY = 82`; the old `images` package wrote quality 100, which is 2–3× the bytes with no visible difference.
+New uploads are processed by [`lib/imageProcessing.js`](lib/imageProcessing.js) with `sharp`, called from `PUT /properties/id/:id/images` (`routes/properties.js`). JPEGs are written at `JPEG_QUALITY = 82`. Older versions of the code saved with the `images` package's default of quality 100, which is 2–3× the bytes with no visible difference; the last `images`-based version already passed 82 (see the comment at the top of `lib/imageProcessing.js`).
 
 **Scope**: affects only photos uploaded *from now on*. The handler only processes images not already in the property's `imgs[]`. Nothing already in S3 is touched.
 
-**Known limitation**: `.png` uploads are still written losslessly as PNG (`image.png({ adaptiveFiltering: true })`) and stay large.
+**Known limitations**: `.png` uploads are still written losslessly as PNG (`image.png({ adaptiveFiltering: true })`) and stay large. And `uploadToS3` in `routes/properties.js` sets no `ContentType`, `Cache-Control` or `vlr-optimized` tag, so new uploads miss the header fix from §2.4 and the backfill will re-encode them (see §7).
 
 ### 2.4 S3 backfill script — WRITTEN AND PROVEN, two properties done
 
@@ -75,7 +75,7 @@ Two properties have been processed for real (per vendor):
 
 Verified afterwards in S3 (by the vendor): `ContentType: image/jpeg` (was missing or `application/octet-stream`), `Cache-Control: public, max-age=2592000` (was absent on every object in the bucket), metadata tag `vlr-optimized: 82`, and **2 versions retained** on each key (e.g. `3606/…` current 87 KB, previous 383 KB; `5810/12.jpg` current 468 KB, previous 1985 KB) so the originals are recoverable.
 
-Nothing else in the bucket has been touched.
+Per the vendor, the script has touched nothing else in the bucket.
 
 ---
 
@@ -94,7 +94,7 @@ By extension: 64,706 jpg (68.1 GB) · 1,468 jpeg (1.7 GB) · 1,297 png (1.2 GB) 
 
 35,587 files sit in the 1–2 MB band alone (46.8 GB). That ~1 MB average for a 1920px photo is the quality-100 signature.
 
-**Measured savings** from a 24-image sample spread evenly across the whole bucket, and reproduced by the script's own dry run: **−77% to −81%**. Projected **71 GB → ~16 GB**.
+**Measured savings** from a 24-image sample spread evenly across the whole bucket: **−77% to −81%**. (A dry run with `--limit N` takes the first N keys in listing order, i.e. the lowest-numbered properties, so it is not a spread sample.) Projected **71 GB → ~16 GB**.
 
 Properties numbered below ~3800 have smaller 700×465 images (156–374 KB); properties 4000+ are 1920px at 0.8–2 MB. Both compress ~77%, but the absolute win is far larger on the newer ones.
 
@@ -106,7 +106,7 @@ Properties numbered below ~3800 have smaller 700×465 images (156–374 KB); pro
 
 `config/default.js` and `config/production.js` both set `bucket: 'vancouverluxuryrental.com'`. **There is no separate dev copy of the images.** Running the app or a script locally with real AWS keys changes the live production site. This is why versioning matters.
 
-The vendor also verified this empirically on 2026-09-25: production and the (now retired) dev server emitted the **identical image URL string** for property 3606, and fetching that object returned the optimized copy with this script's `x-amz-meta-vlr-optimized: 82` tag. **Do not plan any "test on dev only" strategy for S3 photos — it does not exist.** Static images under `public/` *are* per-server, since they ship with the code; that asymmetry is the thing to keep straight.
+The vendor also verified this empirically on 2026-09-25: production and the (now stopped) dev server emitted the **identical image URL string** for property 3606, and fetching that object returned the optimized copy with this script's `x-amz-meta-vlr-optimized: 82` tag. **Do not plan any "test on dev only" strategy for S3 photos — it does not exist.** Static images under `public/` *are* per-server, since they ship with the code; that asymmetry is the thing to keep straight.
 
 If genuine isolation is ever needed, the options are: copy a few properties to a `test-<id>/` prefix and point a throwaway listing at them (needs temporary code changes), or stand up a separate dev bucket (a 71 GB copy that then drifts from production). Neither was judged worth it — versioning plus one-property-at-a-time covers the risk.
 
@@ -127,11 +127,17 @@ The gallery works only because [`views/listing.ejs:111-113`](views/listing.ejs#L
 
 ### 4.2 Where to run it
 
-On the production server, `vlr-prod-2026` (us-west-2, same region as the bucket, so transfer is free). `sharp` is a normal dependency of the app now, so the checkout `deploy.sh` runs from already has it after `npm ci`; nothing extra to install. Run from that git checkout rather than `/opt/vlr/app`: every deploy's `rsync --delete` wipes the progress and failure files the script keeps in `Scripts/`. Load the AWS keys from `/etc/vlr/env` first (`Scripts/readme.txt`).
+On the production server, `vlr-prod-2026` (us-west-2, same region as the bucket, so transfer is free). `sharp` is a normal dependency of the app now, so the checkout `deploy.sh` runs from already has it after `npm ci`; nothing extra to install. Run from that git checkout rather than `/opt/vlr/app`: every deploy's `rsync --delete` wipes the progress and failure files the script keeps in `Scripts/`. **Don't run `deploy.sh` while the backfill is running**: it pulls and runs `npm ci` (which replaces `node_modules`) in that same checkout.
 
-We don't have shell access or our own git checkout on that server yet (TAKEOVER §4, §8). The old servers the vendor used (`18.237.239.200`, `34.217.51.226`) ran Node 8 and needed a Node 16 + `sharp@0.32.6` workaround under `~/imgopt`; those servers are retired and the workaround no longer applies. In particular, **never delete `node_modules/sharp`** from the app as the old instructions said: `routes/properties.js` loads `lib/imageProcessing.js` at startup, so the site would fail to boot.
+The script only needs the AWS keys. `/etc/vlr/env` is a systemd environment file, not a shell script, and `deploy.sh` reads it with `sudo`, so export just those three keys into the shell you run the script from:
 
-vlr-prod-2026 is now the only web server, so the 1–3 hour CPU-heavy run competes with the live site. Keep `nice -n 19` and `--concurrency 4` (§5.3).
+```bash
+export $(sudo grep -E '^AWS_(ACCESS_KEY_ID|SECRET_ACCESS_KEY|REGION)=' /etc/vlr/env | xargs)
+```
+
+We don't have shell access or our own git checkout on that server yet (TAKEOVER §4, §8). The old servers the vendor used (`18.237.239.200`, `34.217.51.226`) ran Node 8 and needed a Node 16 + `sharp@0.32.6` workaround under `~/imgopt`. They no longer serve the site (old vlr-prod is running with the site stopped, vlr-staging is stopped, both pending termination; TAKEOVER §4), and the workaround doesn't apply to the new server. In particular, **never delete `node_modules/sharp`** from the app as the old instructions said: `routes/properties.js` loads `lib/imageProcessing.js` at startup, so the site would fail to boot.
+
+vlr-prod-2026 is now the only server running the site (TAKEOVER §4), and it also runs MongoDB. It's a t3.large: 2 burstable vCPUs. The run is CPU-heavy (sharp with mozjpeg), and if the instance uses standard CPU credits, running out of them throttles the whole machine, site included. How long the full run takes on this box hasn't been measured. Time a single property first, check the instance's credit specification, and keep `nice -n 19` with `--concurrency 2` (§5.3).
 
 ### 4.3 Running from a laptop costs egress
 
@@ -149,38 +155,38 @@ Keep `src` on the first slide only, put the rest in `data-src`, swap on slide ch
 
 ### 5.2 Stop downloading the carousel placeholders
 
-Per §2.2 — 453 KB still fetched and discarded on every listing view. Best fix: render the property's own photos server-side from `imgLinks` (already passed to the template and serialized at `views/listing.ejs:42`) and emit the area-image fallback only when `imgLinks` is empty. Also removes the JS dependency for the main image, which should help LCP and crawlers.
+Per §2.2 — 453 KB still fetched and discarded on every listing view. Best fix: render the property's own photos server-side from `imgLinks` (already passed to the template and serialized at `views/listing.ejs:42`), rewriting them to the REST endpoint on the server first (they're website-endpoint URLs, §4.1a, which only the JS at `views/listing.ejs:111-113` fixes today), and emit the area-image fallback only when `imgLinks` is empty. Also removes the JS dependency for the main image, which should help LCP and crawlers.
 
 ### 5.3 Finish the S3 backfill — resume point
 
-~68,200 objects, ~71 GB remaining. On the server (§4.2), from the deploy checkout, with `/etc/vlr/env` loaded:
+~66,100 JPEGs (~69.8 GB) remaining; the script only processes `.jpg`/`.jpeg` keys, so PNG, PDF and extensionless objects are skipped. On the server (§4.2), from the deploy checkout, with the AWS keys exported:
 
 ```bash
 node Scripts/optimize_s3_images.js --limit 200                # dry-run sanity check on a sample
-node Scripts/optimize_s3_images.js --apply --listing <id>     # one more 1920px property, then look at it
-# then, in screen/tmux — it is 1-3 hours:
-nice -n 19 node Scripts/optimize_s3_images.js --apply --concurrency 4
+time node Scripts/optimize_s3_images.js --apply --listing <id>   # one more 1920px property: look at it, and extrapolate the duration
+# then, in screen/tmux:
+nice -n 19 node Scripts/optimize_s3_images.js --apply --concurrency 2
 ```
 
-`nice` and `--concurrency 4` are deliberate: this is also the web server and sharp is CPU-hungry. Safe to interrupt and re-run — see §7.
+`nice` and `--concurrency 2` are deliberate: this is also the web and database server, it has 2 vCPUs, and sharp is CPU-hungry. Safe to interrupt and re-run — see §7.
 
-Storage roughly doubles until old versions are expired (~$2/month). **Do not add the S3 lifecycle rule that expires noncurrent versions until the client has signed off on the quality** — it deletes the originals permanently (§9). TAKEOVER §9 has the open question to the client.
+Until old versions are expired, the bucket keeps the ~71 GB of originals plus the ~16 GB of new copies (about +25%); expiring the originals would save roughly $1.6/month. **Do not add the S3 lifecycle rule that expires noncurrent versions until the client has signed off on the quality** — it deletes the originals permanently (§9). TAKEOVER §9 has the open question to the client.
 
 ### 5.4 Thumbnail variants — structural, do after 5.3
 
 Even at 230 KB, a search card renders a 1920px photo into a 230px-tall box ([`public/libs/css/properties.css:131-134`](public/libs/css/properties.css#L131-L134)). Generate `{propertyId}/thumb/{filename}` at 640w on upload and point the card URL builders at it.
 
-**Prerequisite**: S3 URL construction is copy-pasted across the code — five `getSignedUrl` calls in `routes/properties.js`, two website-endpoint URLs in `routes/user.js`, one in `routes/listing.js`, one in `routes/showRoom.js`, and path-style URLs in `lib/teamPhotos.js` and `lib/seoHelpers.js` (ARCHITECTURE §4.5). Centralize it into one module alongside `lib/urls.js` **first** — then this is a one-line change.
+**Prerequisite**: S3 URL construction is copy-pasted across the code — five `getSignedUrl` calls in `routes/properties.js`, two website-endpoint URLs in `routes/user.js`, one in `routes/listing.js`, one in `routes/showRoom.js`, path-style URLs in `lib/teamPhotos.js` and `lib/seoHelpers.js` (ARCHITECTURE §4.5), plus client-side host rewrites in `views/listing.ejs:111-113`, `views/myFavorites.ejs` and `views/tenant-forms.ejs`. Centralize it into one module alongside `lib/urls.js` **first**, so thumbnails become a change in one place.
 
 Also note `/properties` builds URLs with `s3.getSignedUrl` ([`routes/properties.js:286`](routes/properties.js#L286)); the signature changes every render, so the browser can never reuse a cached copy, and the URLs expire after 15 minutes (the `.replace()` after it never matches; VLR-21). `routes/listing.js` uses the plain website endpoint. These disagree, and the signed one defeats the new `Cache-Control` header entirely. Fix as part of the same consolidation.
 
-### 5.5 Agent portrait PNGs — worst byte-per-pixel on the site
+### 5.5 Agent portrait PNGs — repo bloat, not page weight
 
-Nine PNGs in `public/img/` totalling ~6.4 MB (`Baxter Welch.png` is 1011 KB at 469×550), used as mobile CSS backgrounds displayed at **170×190** ([`public/libs/css/content.css:499-537`](public/libs/css/content.css#L499-L537)). Photographs stored losslessly. JPEG would take the set under 300 KB. Team page only, but it is a ~6 MB page.
+Nine PNGs in `public/img/` totalling ~6.4 MB (`Baxter Welch.png` is 1011 KB at 469×550), referenced only as backgrounds by the `-pic` classes in [`public/libs/css/content.css:496-537`](public/libs/css/content.css#L496-L537). No view or script uses those classes, so no page downloads them (the vendor thought the team page did). Delete them with the §5.7 files, or convert them to JPEG if the classes are ever used again.
 
 ### 5.6 PNGs in the bucket — needs a DB migration, not just a bucket change
 
-1,297 files, 1.2 GB, averaging 970 KB. The script **skips these by default** for a reason: their `.png` keys are referenced by `imgs[]` in MongoDB, so converting to JPEG changes the filename and requires updating the database in lockstep. Do not run `--include-png` expecting a big win; it only re-compresses them as PNG.
+1,297 files, 1.2 GB, averaging 970 KB. The script **skips these by default** for a reason: their `.png` keys are referenced by `imgs[]` in MongoDB, so converting to JPEG changes the filename and requires updating the database in lockstep. Do not run `--include-png`: it re-encodes them as 8-bit palette PNGs (`palette: true`), which is visibly lossy on photographs, and nearly all of them would pass the 15% threshold and be rewritten.
 
 ### 5.7 Unreferenced files in the repo
 
@@ -203,36 +209,37 @@ Costs a vendor dependency and a monthly bill. It was offered and the backfill wa
 - **Nothing writes without `--apply`.** Dry run is the default; `--dry-run` is accepted but does nothing.
 - **Rollback**: versioning is on. Every original survives as a previous version.
 - **A file is only replaced if it saves ≥15%** (`--min-saving`), so already-efficient files are not degraded for nothing.
-- **Per-file failures are logged to `Scripts/.optimize_s3_failures.json` and skipped**, never aborting the run. Re-running retries them.
+- **Per-file failures are skipped**, never aborting the run, and written to `Scripts/.optimize_s3_failures.json` only when a run finishes (replacing any earlier file). An interrupted run records none, but re-running retries them anyway because failed keys are never marked done.
+- **New uploads aren't tagged.** `uploadToS3` sets no `vlr-optimized` tag, so the backfill re-encodes photos uploaded since the q82 change (q82 → q82) wherever that saves 15%. Tag uploads in `uploadToS3` first, or accept the extra generation loss on recent photos.
 - **Quality is one flag** (`--quality`). Re-running a property at a different quality does nothing on its own: tagged objects are always skipped, and a fresh progress file doesn't change that. To redo a property, restore its previous S3 versions first (the originals carry no tag), clear its keys from the progress log, then re-run.
-- **Script flags are merged into the app config** by config-lite. The script's own flags don't collide with config keys, but don't add ones named `--bucket`, `--port` or `--mongodb`.
+- **Script flags are merged into the app config** by config-lite, as are the `CONFIG` / `NODE_CONFIG` environment variables. The script's own flags don't collide with config keys, but any flag named after one would override it: `--port`, `--session`, `--mongodb`, `--bucket` (which would send every write to another bucket), `--canonicalHost`, `--redirectHosts`.
 
 ---
 
 ## 8. Deployment state
 
-The vendor's 2026-09-25 check found the old dev and production servers at different commits, with production still serving the 9963 KB placeholder PNGs and writing uploads at quality 100. Both servers are now retired. Production moved to `vlr-prod-2026` on 2026-10-16/17, built from `dedbc40`, which contains §2.1–2.3 (per vendor; TAKEOVER §5).
+The vendor's 2026-09-25 check found the old dev and production servers at different commits, with production still serving the 9963 KB placeholder PNGs and writing uploads at quality 100. Neither serves the site any more (TAKEOVER §4). Production moved to `vlr-prod-2026` on 2026-10-16/17, built from `dedbc40`, which contains §2.1–2.3 (per vendor; TAKEOVER §5).
 
 To confirm on the live site: `/img/Burnaby.jpg` should be served (72,586 bytes) and `/img/Burnaby.png` should not exist.
 
-**§2.4 is live regardless**, because S3 is shared and the objects were rewritten directly: properties 3606 and 5810 show the optimized photos on production.
+**§2.4 is live regardless**, because S3 is shared and the objects were rewritten directly: per the vendor, properties 3606 and 5810 show the optimized photos on production.
 
 ---
 
 ## 9. Reversibility — what can and cannot be undone
 
-The client's main worry is "will the site break, and can we go back". Short answers: **it will not break, and yes — but the ability to go back has three expiry conditions that are easy to destroy by accident.**
+The client's main worry is "will the site break, and can we go back". Short answers: **it should not break, and yes — as long as nobody deletes the old versions.**
 
 ### Why it cannot break the site
 
-Optimizing does not change filenames, keys, URLs, or formats: an object is replaced in place with a smaller image of the same type. Photos wider than 1920px are scaled down, and EXIF orientation is applied (which can swap width and height); both display the same in a browser. The worst realistic outcome is "one photo looks soft", never "images stopped loading". Verified by the vendor on property 3606: 27 photos re-encoded, all still serving `200 OK` with `Content-Type: image/jpeg`.
+Optimizing does not change filenames, keys or URLs: each `.jpg`/`.jpeg` object is replaced in place with a smaller JPEG. Photos wider than 1920px are scaled down, and EXIF orientation is applied (which can swap width and height); both display the same in a browser. The expected worst case is "one photo looks soft". Two edge cases: a `.jpg` key that actually holds PNG or WebP data becomes a real JPEG (transparency flattened), and the script doesn't recheck an object right before writing, so a photo re-uploaded under the same key mid-run could be overwritten with a re-encode of the old one (recoverable from versions). Verified by the vendor on property 3606: 27 photos re-encoded, all still serving `200 OK` with `Content-Type: image/jpeg`.
 
 ### What protects each category
 
 | What | How to undo |
 |---|---|
 | S3 photos | Bucket versioning — restore the previous version of the key |
-| Static images under `public/` | Not from git: our history starts at the handover baseline, which already contains the optimized files. The originals are only in the vendor's private repo |
+| Static images under `public/` | Not from git: our history starts at the handover baseline, which already contains the optimized files. The originals are in the vendor's private repo and on old vlr-prod's disk and snapshots (§8); copy them off before that server is terminated if they matter |
 | Upload-quality change | Change `JPEG_QUALITY` in `lib/imageProcessing.js` (only affects future uploads) |
 
 Confirmed live by the vendor on 2026-09-25 for a 3606 key:
@@ -244,15 +251,19 @@ versions: 2
   previous (original)  383 KB   2018-10-26
 ```
 
-The 2018 original is still there. Every rewritten object has one.
+Per the vendor, the 2018 original was retained, and every rewritten object keeps its previous version; we haven't checked the other keys ourselves.
 
-### The three things that END reversibility
+### What ENDS reversibility
 
-**1. An S3 lifecycle rule expiring noncurrent versions. THIS IS IRREVERSIBLE.** It would stop paying for both copies (about $2/month) — but **once noncurrent versions are expired the originals are gone permanently**. Do not add that rule until the client has signed off on the visual result. If in doubt, leave it; the cost is trivial next to losing 71 GB of originals.
+**Deleting noncurrent versions. THIS IS IRREVERSIBLE.** Either through an S3 lifecycle rule that expires them, or by deleting a version by its version ID. A lifecycle rule would save roughly $1.6/month, but **once noncurrent versions are gone the originals are gone permanently**. Do not add that rule until the client has signed off on the visual result. If in doubt, leave it; the cost is trivial next to losing 71 GB of originals.
 
-**2. Re-running at a different quality without restoring first.** It re-encodes the *already compressed* current version, compounding the loss — and the `vlr-optimized` tag makes the script skip those objects anyway. To genuinely redo a property: restore its previous S3 versions first, then re-run with the new quality (§7).
+Also never suspend bucket versioning: objects uploaded before versioning was turned on are stored as the "null" version, and while versioning is suspended the next write to that key replaces it.
 
-**3. Browser caches outlive an S3 rollback.** Rewritten objects carry `Cache-Control: public, max-age=2592000` (30 days). Restoring an old version in S3 takes effect instantly at the origin, but visitors who already cached the optimized copy may keep seeing it for up to 30 days. The key is unchanged, so there is no cache-busting URL to force a refresh. Factor this into any "we need to roll back now" conversation — and it is an argument for checking quality on a small batch *before* the full run, not after.
+### What complicates a rollback
+
+**Re-running at a different quality.** Without restoring first it does nothing (the `vlr-optimized` tag makes the script skip those objects), and forcing it would re-encode the already compressed copy. To genuinely redo a property, restore its previous versions first, then re-run (§7).
+
+**Browser caches outlive an S3 rollback.** Rewritten objects carry `Cache-Control: public, max-age=2592000` (30 days). Restoring an old version in S3 takes effect instantly at the origin, but visitors who already cached the optimized copy may keep seeing it for up to 30 days. The key is unchanged, so there is no cache-busting URL to force a refresh. Factor this into any "we need to roll back now" conversation — and it is an argument for checking quality on a small batch *before* the full run, not after.
 
 ### Practical guidance
 

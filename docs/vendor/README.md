@@ -1,6 +1,6 @@
 # Vendor docs (archived)
 
-The previous vendor's documents, moved here on 2026-10-20 (VLR-16). They're kept for history. Several of their claims were already wrong at handover, and they describe servers that have since been retired. For current facts use [CLAUDE.md](../../CLAUDE.md), [ARCHITECTURE.md](../../ARCHITECTURE.md) and [TAKEOVER.md](../TAKEOVER.md).
+The previous vendor's documents, moved here on 2026-10-20 (VLR-16). They're kept for history. Several of their claims were already wrong at handover, and they describe servers that no longer serve the site. For current facts use [CLAUDE.md](../../CLAUDE.md), [ARCHITECTURE.md](../../ARCHITECTURE.md) and [TAKEOVER.md](../TAKEOVER.md).
 
 | File | Was | What it is |
 |---|---|---|

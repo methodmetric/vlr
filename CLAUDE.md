@@ -5,7 +5,7 @@ VancouverLuxuryRentals.com (VLR): a Node/Express 4 + EJS + MongoDB rental site w
 ## Commands
 
 ```bash
-npm ci                                       # install (Node >= 22.9; prod runs 24)
+npm ci                                       # install; the npm scripts need Node >= 22.9 (not enforced), prod runs 24
 cp .env.example .env                         # then set SESSION_SECRET, or the server exits at startup
 npm run dev                                  # nodemon, loads .env, port 3000; needs MongoDB (MONGO_URL or localhost:27017/VLR)
 npm test                                     # 41 unit tests, no DB/AWS needed
@@ -13,23 +13,24 @@ node --test test/unit/imageProcessing.test.js   # one node:test file
 node test/unit/restartPolicy.test.js            # this one has its own runner, not node:test
 ```
 
-There are no route, SEO or email tests. Tests cover `lib/restartPolicy.js`, `lib/mongooseCompat.js` and `lib/imageProcessing.js`.
+There are no route, SEO or email tests. Tests cover `lib/restartPolicy.js`, `lib/mongooseCompat.js` (it also loads the `showRoom`, `propertyFavorite` and `meetTeam` models) and `lib/imageProcessing.js`.
 
 ## Rules
 
-- **The S3 bucket is live.** Dev and production use the same bucket (`vancouverluxuryrental.com`). With real AWS keys in `.env`, saving property images locally uploads to and deletes from production. Scripts in `Scripts/` hit it too: `optimize_s3_images.js` is a dry run unless given `--apply`; `migrate_team_photos.js` writes unless given `--dry-run`. Run image scripts on the server, not a laptop (the bucket is ~71 GB).
-- **Mail is live.** Any `MAILGUN_API_KEY` sends real email. Keep it empty in local `.env`.
-- **Secrets come from the environment.** `SESSION_SECRET`, `MAILGUN_API_KEY`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, optional `MONGO_URL`. Locally `.env`, on the server `/etc/vlr/env`. A new required variable goes in `.env.example` and in `REQUIRED_ENV` in `deploy.sh`.
-- **Deploy with `deploy.sh` only**, on the server, from the git checkout: `git pull`, then `./deploy.sh [branch]`. It checks `/etc/vlr/env` for every `REQUIRED_ENV` key before stopping anything, then rsyncs to `/opt/vlr/app` and restarts `vlr.service`. `server_restart.sh` restarts without pulling; `git_pull_and_update.sh` just runs `deploy.sh`. The site runs only under systemd (`sudo systemctl status vlr`, `sudo journalctl -u vlr -f`).
-- **Mongoose 8 runs old Mongoose 4 code.** Queries use callbacks, made to work by `lib/mongooseCompat.js`. It must be loaded before the first query (`lib/mongo.js` does this; standalone scripts require it themselves). It re-throws errors raised inside callbacks, and nothing catches them, so a throw in a DB callback kills the worker. Report errors through the response instead.
-- **config-lite merges command-line flags into the config.** A script flag with the same name as a config key (`--port`, `--bucket`, `--mongodb`) silently overrides it. `config/production.js` is shallow-merged over `config/default.js`, so a partial top-level key there replaces the whole default object.
-- **URLs have single sources of truth.** Listing paths come from `lib/urls.js` (shared by the canonical link, JSON-LD, sitemap and the 301 redirect; mismatches cause redirect loops). Search landing pages (`/for-rent/:slug`) come from `lib/forRentPages.js`. The sitemap is generated at `/sitemap.xml`; a `public/sitemap.xml` file would shadow it.
-- **Admin auth is per route.** Each admin route lists `AdminController.isAuthenticated` (and usually `isSuperAdmin`) itself. A new admin route needs both written out.
+- **The S3 bucket is live.** Dev and production use the same bucket (`vancouverluxuryrental.com`), and keys are `<propertyId>/<file>`. With AWS keys in `.env`, any image save or delete, team-photo or upload-form change in a local admin writes to and deletes from production, and a local property collides with the real listing of the same id. Leave the AWS keys empty locally unless you mean to touch production. Scripts in `Scripts/` hit the bucket too: `optimize_s3_images.js` is a dry run unless given `--apply`; `migrate_team_photos.js` writes (S3 and MongoDB) unless given `--dry-run`.
+- **Mail and the database are live.** Any `MAILGUN_API_KEY` sends real email; keep it empty in local `.env`. Every running instance also runs the daily 00:10 job that edits property status and emails tenants, so never point a local instance at the production database.
+- **Secrets come from the environment.** `SESSION_SECRET`, `MAILGUN_API_KEY`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, optional `MONGO_URL`. Locally `.env`, on the server `/etc/vlr/env`. A new required variable goes in `.env.example` and in `REQUIRED_ENV` in `deploy.sh`. `.env.production` is a local reference copy of the live values: never load it. `config/aws.json`, if present, is a leftover holding keys that nothing reads.
+- **Deploy with `deploy.sh` only**, on the server, from its git checkout: `./deploy.sh [branch]` (default `main`). It fetches, checks out and fast-forwards that branch itself, runs `npm ci --omit=dev`, checks `/etc/vlr/env` for every `REQUIRED_ENV` key before stopping anything, then rsyncs to `/opt/vlr/app` and restarts `vlr.service`. Run `git pull` first only to pick up changes to `deploy.sh` itself. We don't have our own checkout on the server yet (docs/TAKEOVER.md §4). `server_restart.sh` restarts without pulling; `git_pull_and_update.sh` just runs `deploy.sh`. The site runs only under systemd (`sudo systemctl status vlr`, `sudo journalctl -u vlr -f`).
+- **Errors go to the response, never `throw`.** Nothing catches exceptions thrown in async callbacks (DB, S3, fs), so each one kills the worker. Five quick deaths in a row make the cluster master exit (`lib/restartPolicy.js`), and after five of those systemd marks the unit failed and the site stays down. Pass errors to `next(err)` or send an error response.
+- **Mongoose 8 runs old Mongoose 4 code.** `lib/mongooseCompat.js` makes callbacks work, but only for the methods it lists; any other method given a callback throws at runtime. Write new queries with promises/`async`, or add the method to the compat layer with a test. The layer must load before the first query (`lib/mongo.js` does this; standalone scripts require it themselves).
+- **config-lite merges command-line flags into the config**, along with the `CONFIG`/`NODE_CONFIG` env vars. A flag named after a config key (`--port`, `--bucket`, `--mongodb`, `--session`) silently overrides it. `config/production.js` is shallow-merged over `config/default.js`, so a partial top-level key there replaces the whole default object.
+- **Canonical URLs come from `lib/urls.js`.** It builds the listing canonical link, JSON-LD, sitemap entries and the listing 301 comparison; use it for anything new, and never another slug function for the 301 (mismatches cause redirect loops). Views and email templates still build listing links inline and rely on the 301; the admin's per-property `seoCanonical` overrides the canonical. Search landing pages (`/for-rent/:slug`) come from `lib/forRentPages.js`, but some slugs are also hardcoded in `views/404.ejs` and `views/aboutUs.ejs`. The sitemap is generated at `/sitemap.xml`; a `public/sitemap.xml` file would shadow it.
+- **Admin auth is per route, with no router-level guard.** Write `AdminController.isAuthenticated` then `AdminController.isSuperAdmin`, in that order (`isSuperAdmin` reads `req.user`, and on failure it never responds). Admin endpoints also live under `/properties` and `/user`. Some routes have no auth at all: VLR-18.
 
 ## Where to look
 
 - `ARCHITECTURE.md`: read before changing request flow, search, listing pages, emails, the data model or the image pipeline. Checked against the code 2026-10-20.
 - `docs/TAKEOVER.md`: accounts, servers, secrets, backups, open questions. Wins over any other doc.
 - `IMAGE_OPTIMIZATION.md`: read before touching images in S3, the upload path or `Scripts/optimize_s3_images.js`. The backfill is paused with properties 3606 and 5810 done (per vendor); don't add an S3 lifecycle rule that expires old versions.
-- `docs/vendor/`: the previous vendor's docs, kept for history. Several of their claims are wrong; check the code before trusting one.
+- `docs/vendor/`: the previous vendor's docs, kept for history, and `FACT-CHECK.md`, the log of what they got wrong. Check the code before trusting a vendor claim.
 - Known security problems and bugs: Linear VLR-18 (unauthenticated upload endpoint), VLR-19 (tenant auth, data exposure), VLR-20 (crash resilience), VLR-21 (correctness bugs).

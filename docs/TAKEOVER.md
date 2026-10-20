@@ -134,11 +134,11 @@ Security problems and bugs found while checking the docs (VLR-16) are tracked in
 
 All committed in plain text in the zip. In our repo they were redacted at the baseline commit, and since `7b0fd42` the code reads the keys from the environment (see Config in §4). The values themselves are unchanged and still need rotating:
 
-| Where | What | Action |
+| Where (in the zip) | What | Action |
 |---|---|---|
-| `config/aws.json` | Access key for IAM user `vlr-web` (S3 + read access to EC2) | Rotate after we have our own repo; update the server too. |
-| `lib/mailer.js` | Mailgun API key, repeated 8 times | Rotate after taking over Mailgun; move to `/etc/vlr/env`. |
-| `config/default.js`, `config/production.js` | Session secret | Rotate (logs everyone out). |
+| `config/aws.json` | Access key for IAM user `vlr-web` (S3 + read access to EC2) | Rotate after we have our own repo; put the new key in `/etc/vlr/env`. |
+| `lib/mailer.js` | Mailgun API key, repeated 8 times | Rotate after taking over Mailgun; put the new key in `/etc/vlr/env`. |
+| `config/default.js`, `config/production.js` | Session secret | Rotate (logs everyone out); put the new value in `/etc/vlr/env`. |
 | `README.md` (bottom; now `docs/vendor/README-notes.md`) | Cloudflare login and password | Change the password. Already redacted in our repo. |
 | `docs/VLR website handover - final.md` (bottom) | AWS root and Cloudflare logins | Same password as above. Remove from the file. **Don't commit this file with passwords in it.** |
 

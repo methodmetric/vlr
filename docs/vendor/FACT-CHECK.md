@@ -80,7 +80,7 @@ Bugs and security problems found along the way are tracked separately: VLR-18, V
 | 5 | 114 | The script's header "is long and current" | Wrong | It said sharp is not in `package.json`, production runs Node 8.9.4, and its usage lines used `scripts/` (wrong case on Linux) | `Scripts/optimize_s3_images.js` at `7b0fd42` |
 | 6 | 107, 117 vs 10, 513 | §2.4 "one property done" | Partly | The same doc's §10 says two (3606, 5810) | — |
 | 7 | 135 | Credentials in `config/aws.json` | Outdated | Environment variables since `7b0fd42` | `.env.example` |
-| 8 | 217-280, 510-581 | Node 16 + `sharp@0.32.6` in `~/imgopt` via `NODE_PATH`; `vlr.service` uses `/usr/local/bin/node` | Outdated | Those servers are retired. sharp is a normal dependency; the unit runs `/usr/bin/node` in `/opt/vlr/app` | `vlr.service:21, 25` |
+| 8 | 217-280, 510-581 | Node 16 + `sharp@0.32.6` in `~/imgopt` via `NODE_PATH`; `vlr.service` uses `/usr/local/bin/node` | Outdated | Those servers no longer serve the site. sharp is a normal dependency; the unit runs `/usr/bin/node` in `/opt/vlr/app` | `vlr.service:21, 25` |
 | 9 | 287-291 | The `images` package crashes on Windows | Outdated | The package is gone | `package.json` |
 | 10 | 331-333, 589-591 | Add a lifecycle rule expiring noncurrent versions after the run | Partly | The doc's own §9 and `docs/TAKEOVER.md` say not before the client signs off: it permanently deletes the originals | — |
 | 11 | 342-343 | URL construction in ~9 places (6 in `properties.js`) | Partly | 5 `getSignedUrl` calls in `properties.js`, 2 in `user.js`, 1 in `listing.js`, plus `showRoom.js`, `teamPhotos.js`, `seoHelpers.js` | — |
@@ -89,12 +89,19 @@ Bugs and security problems found along the way are tracked separately: VLR-18, V
 | 14 | 413-417, 491-493 | Re-run a property with a fresh `--progress` file | Wrong | Objects tagged `vlr-optimized` are always skipped; no flag overrides it | `Scripts/optimize_s3_images.js:253-257` |
 | 15 | 442, 595-597 | Deploy = `git pull` + `systemctl restart` on `~/vlr_website` | Outdated | `deploy.sh` (env check, `npm ci`, rsync to `/opt/vlr/app`) | `deploy.sh` |
 | 16 | 454-455 | Objects replaced "with a smaller JPEG of the same dimensions" | Wrong | Wider than 1920 px is scaled down, and `.rotate()` applies EXIF orientation (can swap width and height). The "dimension-check" only checks they're non-zero | `Scripts/optimize_s3_images.js:274-283` |
+| 17 | 55-57 | The homepage hero was "a dice roll between a 129 KB banner and a 1.4 MB one" | Partly | A three-way pick; the third image is 209 KB | `public/libs/js/main.js:37` |
+| 18 | 96-97 | Uploads were written at quality 100 by the `images` package until the vendor's fix | Partly | The last `images`-based code already passed `quality: 82`; 100 applies to older uploads | `lib/imageProcessing.js:6-11` |
+| 19 | 150-152 | Savings "reproduced by the script's own dry-run" on a spread sample | Partly | `--limit N` takes the first N keys in listing order (lowest property ids), not a spread | `Scripts/optimize_s3_images.js` |
+| 20 | 268-273, 325-328 | The full run takes 1–3 hours; use `--concurrency 4` | Partly | Never measured; the new server is a 2-vCPU burstable t3.large that also runs MongoDB | `docs/TAKEOVER.md` §4 |
+| 21 | 331-333 | Storage roughly doubles until old versions expire | Wrong | ~71 GB originals + ~16 GB new copies: about +25% | — |
+| 22 | 356-360 | The agent portrait PNGs are mobile backgrounds on a ~6 MB team page | Wrong | The `-pic` CSS classes that reference them aren't used by any view or script, so no page downloads them | `public/libs/css/content.css:496-537` |
+| 23 | 366-367 | `--include-png` "only re-compresses them as PNG" | Wrong | It writes 8-bit palette PNGs (`palette: true`): lossy on photographs | `Scripts/optimize_s3_images.js` (`png({ … palette: true })`) |
 
 ## HANDOVER.md
 
 | # | Line | Vendor said | Verdict | What the code says | Evidence |
 |---|---|---|---|---|---|
-| 1 | 13-19 | Servers `18.237.239.200` (`~/vlr`) and `34.217.51.226` (`~/vlr_website`) | Outdated | Retired. Production is `vlr-prod-2026`, app in `/opt/vlr/app` | `vlr.service:21`, `docs/TAKEOVER.md` §4 |
+| 1 | 13-19 | Servers `18.237.239.200` (`~/vlr`) and `34.217.51.226` (`~/vlr_website`) | Outdated | No longer serve the site (pending termination). Production is `vlr-prod-2026`, app in `/opt/vlr/app` | `vlr.service:21`, `docs/TAKEOVER.md` §4 |
 | 2 | 30 | DB is `mongodb://localhost:27017/VLR` | Partly | `MONGO_URL` overrides it; set in `/etc/vlr/env` on the server | `lib/mongo.js:7` |
 | 3 | 40, 67, 175 | AWS credentials in `config/aws.json` | Outdated | Environment variables since `7b0fd42` | — |
 | 4 | 41-42, 102 | Images uploaded via `/VLR-admin/images`, watermarked, sent to S3 | Partly | `images.js` only stores the temp upload; watermark + S3 happen on property image save | `routes/properties.js:581-627` |
@@ -115,7 +122,7 @@ Bugs and security problems found along the way are tracked separately: VLR-18, V
 | 19 | 181 | Daily job emails users who favourited a property | Partly | It also flips Rented → Available, but only for properties with a `propertyFavorite` doc (VLR-21) | `lib/setAvailable.js:56-96` |
 | 20 | 188 | Errors logged via syslog + express-winston | Wrong | log4js files plus `console` to journald; no winston | `server.js:57-89` |
 | 21 | 196, 258 | `.npmrc` with `ignore-scripts=true` | Wrong | Doesn't exist | — |
-| 22 | 257 | Clone from Bitbucket | Outdated | Shut down | `docs/TAKEOVER.md` §3 |
+| 22 | 257 | Clone from Bitbucket | Outdated | Shut down (per vendor) | `docs/TAKEOVER.md` §3 |
 
 ## TESTING.md
 
@@ -141,7 +148,7 @@ Same fictional suite as `TESTING.md`: the tree with `seoHelpers` / `seoMiddlewar
 | 1 | 30 | `npm install` uses `--ignore-scripts` via `.npmrc` | Wrong | No `.npmrc` | — |
 | 2 | 31 | `npm run dev` runs nodemon on port 3000 | Partly | Also needs `.env` with `SESSION_SECRET`, or the server exits | `server.js:24-27` |
 | 3 | 40-51 | Deploy steps: `cd ~/vlr; ./deploy.sh`; checks `node_modules` (Node 8 can't install); fills in the unit's paths | Wrong | `deploy.sh` runs `npm ci --omit=dev`, checks `/etc/vlr/env`, rsyncs to `/opt/vlr/app`, copies the unit as-is | `deploy.sh:24-56` |
-| 4 | 62-65 | Servers `18.237.239.200` and `34.217.51.226` | Outdated | Retired (`docs/TAKEOVER.md` §4) | — |
+| 4 | 62-65 | Servers `18.237.239.200` and `34.217.51.226` | Outdated | No longer serve the site, pending termination (`docs/TAKEOVER.md` §4) | — |
 | 5 | 65 | Legacy scripts are untracked, start `forever`, must not be used | Outdated | Tracked, rewritten as safe wrappers | `git_pull_and_update.sh`, `server_restart.sh` |
 | 6 | 69-74 | Team photos: SSH to old prod, run the migration, `./deploy.sh` | Outdated | Admin UI at `/VLR-admin/showRoom/meetTeam`; no deploy needed for data | `routes/showRoom.js` |
 

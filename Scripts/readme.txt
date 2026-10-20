@@ -17,6 +17,9 @@ photos wherever they run.
 
 Scripts read their keys from the environment; plain `node` does not load .env.
   Locally:     node --env-file=.env Scripts/<script>.js
-  On a server: load /etc/vlr/env into the environment first (it is the same
-               KEY=value format), then run node Scripts/<script>.js from the
-               project root.
+  On a server: export the keys the script needs from /etc/vlr/env (a systemd
+               env file, readable with sudo), then run from the git checkout,
+               not /opt/vlr/app (deploys wipe files there).
+               For the S3 scripts:
+                 export $(sudo grep -E '^AWS_(ACCESS_KEY_ID|SECRET_ACCESS_KEY|REGION)=' /etc/vlr/env | xargs)
+                 node Scripts/<script>.js
