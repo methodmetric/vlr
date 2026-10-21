@@ -4,7 +4,7 @@ What the previous vendor's documentation got wrong, checked against the code on 
 
 **Method.** About 270 checkable claims in the eight vendor docs were compared with the code. Then a second, independent round tried to disprove the findings that matter most, reading the code and testing where it could (running the tests, Mongoose pluralisation, Express param decoding); it also found some of the entries below. This log lists the contradictions that matter; trivial ones are left out, and it may not be complete. Evidence is the code unless an entry cites `docs/TAKEOVER.md` (facts about servers and accounts) or "per vendor".
 
-**What counts as the vendor's.** The handover code is commit `f304cbb` (from the vendor's `dedbc40` zip). Three commits of ours follow it: `74a3486` (line endings), `f8fdac4` (adds `docs/TAKEOVER.md`) and `7b0fd42`, which moved secrets to the environment. `7b0fd42` changed vendor code and text: it removed the 10 `config/aws.json` `loadFromPath` calls, replaced the hardcoded session secret and Mailgun key with environment variables and added the `SESSION_SECRET` startup check, added `--env-file-if-exists` to the npm scripts, added the `--env-file` lines to `Scripts/readme.txt`, and rewrote the secrets sentence in `CLAUDE.md`'s Config section. Vendor claims are judged against the handover code; where only our change made one untrue, the verdict is Outdated and says so. Line numbers refer to the vendor docs as of `7b0fd42` (the archived files in this folder, or `git show 7b0fd42:<file>` for the rewritten ones), which match `f304cbb` apart from the edits above; code evidence refers to `7b0fd42`.
+**What counts as the vendor's.** The handover code is commit `f304cbb` (from the vendor's `dedbc40` zip). Three commits of ours follow it: `74a3486` (line endings), `f8fdac4` (adds `docs/TAKEOVER.md`) and `7b0fd42`, which moved secrets to the environment. `7b0fd42` changed vendor code and text: it removed the 9 `config/aws.json` `loadFromPath` calls, added the `REQUIRED_ENV` check of `/etc/vlr/env` to `deploy.sh`, added `.env.example` and the `.env*` lines in `.gitignore`, replaced the hardcoded session secret and Mailgun key with environment variables and added the `SESSION_SECRET` startup check, added `--env-file-if-exists` to the npm scripts, added the `--env-file` lines to `Scripts/readme.txt`, and rewrote the secrets sentence in `CLAUDE.md`'s Config section. Vendor claims are judged against the handover code; where only our change made one untrue, the verdict is Outdated and says so. Line numbers refer to the vendor docs as of `7b0fd42` (the archived files in this folder, or `git show 7b0fd42:<file>` for the rewritten ones), which match `f304cbb` apart from the edits above; code evidence refers to `7b0fd42`.
 
 **Verdicts.** **Wrong**: contradicted by the code. **Outdated**: was true for the old servers or the handover zip, not for the code now. **Partly**: true with a missing condition that matters. Claims that checked out aren't listed. Statements about live servers and S3 contents can't be checked from the repo and are left out unless the repo contradicts them.
 
@@ -64,11 +64,11 @@ Bugs and security problems found along the way are tracked separately: VLR-18, V
 | 23 | 286 | showRoom categories | Partly | Also `uploadForms`; the field is `value` | `routes/tenants.js:14-16`, `models/showRoom.js:6` |
 | 24 | 304 | Fine Uploader posts to `/VLR-admin/images` | Wrong | `/VLR-admin/images/uploads` | `routes/images.js:24` |
 | 25 | 311 | S3 used from `properties.js`, `images.js`, `listing.js` | Wrong | API calls are in `properties.js`, `showRoom.js`, `admin.js`, `lib/teamPhotos.js`. `images.js` builds a `createBucket` request that is never sent; `listing.js` only builds URLs. (`admin.js`'s one call, `listObjects`, sits in a branch that can't be reached) | `routes/images.js:20-22`, `routes/admin.js:411-421` |
-| 26 | 321-324 | Mailer functions `sendAvailableForProperty`, `setPriceChangeForProperty`; renewal "—" | Wrong | Those two live in `lib/setAvailable.js`; the mailer functions are `sendAvailableMail` and `sendPriceChangeMail`. Renewal is `sendRenewalMail`, fired from `POST /VLR-admin/mail/renewal/:id` | `lib/mailer.js:108, 230, 272`, `routes/admin.js:667` |
-| 27 | 322 | `sendOwnerLeadMail` → VLR admin | Partly | Hard-coded to `info@`, so the admin's "forward lead to agent" never reaches the agent (VLR-21) | `lib/mailer.js:215`, `routes/admin.js:636-657` |
+| 26 | 321 | `sendOwnerLeadMail` → VLR admin | Partly | Hard-coded to `info@`, so the admin's "forward lead to agent" never reaches the agent (VLR-21) | `lib/mailer.js:215`, `routes/admin.js:636-657` |
+| 27 | 322-324 | Mailer functions `sendAvailableForProperty`, `setPriceChangeForProperty`; renewal "—" | Wrong | Those two live in `lib/setAvailable.js`; the mailer functions are `sendAvailableMail` and `sendPriceChangeMail`. Renewal is `sendRenewalMail`, fired from `POST /VLR-admin/mail/renewal/:id` | `lib/mailer.js:108, 230, 272`, `routes/admin.js:667` |
 | 28 | 334 | SEO middleware covers `homepage`, `owners`, `area`, `property`, `blog` | Partly | Only the first three are wired up; `structuredData` is always `[]` | `lib/seoHelpers.js`, `routes/index.js:22, 94-144` |
 | 29 | 348 | Secrets committed in `config/aws.json`, `lib/mailer.js`, `config/*.js` | Outdated | True of the zip; since `7b0fd42` they come from the environment | `lib/mailer.js:12`, `config/default.js:4` |
-| 30 | 367 | Config files include `config/aws.json`, `.npmrc` | Partly | `.npmrc` doesn't exist. `config/aws.json` was read (10 `loadFromPath` calls) until our `7b0fd42` moved the keys to the environment | `git grep loadFromPath f304cbb` |
+| 30 | 367 | Config files include `config/aws.json`, `.npmrc` | Partly | `.npmrc` doesn't exist. `config/aws.json` was read (9 `loadFromPath` calls) until our `7b0fd42` moved the keys to the environment | `git grep -n loadFromPath f304cbb -- '*.js'` |
 
 ## IMAGE_OPTIMIZATION.md (vendor version, corrected in VLR-16)
 
@@ -81,7 +81,7 @@ Bugs and security problems found along the way are tracked separately: VLR-18, V
 | 5 | 96-97 | Uploads were written at quality 100 by the `images` package until the vendor's fix | Partly | The last `images`-based code already passed `quality: 82`; 100 applies to older uploads | `lib/imageProcessing.js:6-11` |
 | 6 | 108, 117 vs 10, 513 | §2.4 "one property done" | Partly | The same doc's §10 says two (3606, 5810) | — |
 | 7 | 113 | The script "follows the `--dry-run`-by-default convention of `migrate_team_photos.js`" | Wrong | Opposite: `migrate_team_photos.js` writes by default and needs `--dry-run` | `Scripts/migrate_team_photos.js:21` |
-| 8 | 114 | The script's header "is long and current" | Wrong | It said sharp is not in `package.json`, production runs Node 8.9.4, and its usage lines used `scripts/` (wrong case on Linux) | `Scripts/optimize_s3_images.js` at `7b0fd42` |
+| 8 | 114 | The script's header "is long and current" | Wrong | It says sharp is not in `package.json`, production runs Node 8.9.4, and to use nvm Node 16 + `sharp@0.32.6` via `NODE_PATH`; its usage lines use `scripts/` (wrong case on Linux); its sharp-load error suggests `npm install --no-save sharp`; its end-of-run message recommends the lifecycle rule | `Scripts/optimize_s3_images.js` |
 | 9 | 135 | Credentials in `config/aws.json` | Outdated | Environment variables since `7b0fd42` | `.env.example` |
 | 10 | 150-152 | Savings "reproduced by the script's own dry-run" on a spread sample | Partly | `--limit N` takes the first N keys in S3's lexicographic order (`10/` before `2/`), not a spread | `Scripts/optimize_s3_images.js` |
 | 11 | 217-280, 510-581 | Node 16 + `sharp@0.32.6` in `~/imgopt` via `NODE_PATH`; `vlr.service` uses `/usr/local/bin/node` | Outdated | Those servers no longer serve the site. sharp is a normal dependency; the unit runs `/usr/bin/node` in `/opt/vlr/app` | `vlr.service:21, 25` |
@@ -96,7 +96,7 @@ Bugs and security problems found along the way are tracked separately: VLR-18, V
 | 20 | 405-406 | Per-file failures are logged to `Scripts/.optimize_s3_failures.json` | Partly | The file is written only when a run finishes with failures; an interrupted run records none | `Scripts/optimize_s3_images.js` (end of run) |
 | 21 | 409-412 | `npm test` = `node test/unit/restartPolicy.test.js` | Wrong | It also runs the two `node --test` files, already in the handover code | `package.json:7` |
 | 22 | 413-417, 488-489 | Re-run a property with a fresh `--progress` file; re-running at a new quality re-encodes the compressed copy | Wrong | Objects tagged `vlr-optimized` are always skipped; no flag overrides it, so neither happens. (The doc's 491-493 gets this right) | `Scripts/optimize_s3_images.js:253-257` |
-| 23 | 442, 595-597 | Deploy = `git pull` + `systemctl restart` on `~/vlr_website` | Outdated | `deploy.sh` (env check, `npm ci`, rsync to `/opt/vlr/app`) | `deploy.sh` |
+| 23 | 442, 595-597 | Deploy = `git pull` + `systemctl restart` on `~/vlr_website` | Outdated | `deploy.sh` (`npm ci`, rsync to `/opt/vlr/app`) | `deploy.sh` |
 | 24 | 454-455 | Objects replaced "with a smaller JPEG of the same dimensions" | Wrong | Wider than 1920 px is scaled down, and `.rotate()` applies EXIF orientation (can swap width and height). The "dimension-check" only checks they're non-zero | `Scripts/optimize_s3_images.js:274-283` |
 
 ## HANDOVER.md
@@ -107,7 +107,7 @@ Bugs and security problems found along the way are tracked separately: VLR-18, V
 | 2 | 30 | DB is `mongodb://localhost:27017/VLR` | Partly | `MONGO_URL` overrides it; set in `/etc/vlr/env` on the server | `lib/mongo.js:7` |
 | 3 | 40, 67, 175 | AWS credentials in `config/aws.json` | Outdated | Environment variables since `7b0fd42` | — |
 | 4 | 41-42, 102 | Images uploaded via `/VLR-admin/images`, watermarked, sent to S3 | Partly | `images.js` only stores the temp upload; watermark + S3 happen on property image save | `routes/properties.js:581-627` |
-| 5 | 46, 193 | Mailgun API key hardcoded in `lib/mailer.js` | Outdated | `process.env.MAILGUN_API_KEY` | `lib/mailer.js:12` |
+| 5 | 46, 193 | Mailgun API key hardcoded in `lib/mailer.js` | Outdated | True of the handover code; since our `7b0fd42`, `process.env.MAILGUN_API_KEY` | `lib/mailer.js:12` |
 | 6 | 49 | Mail sent from both `info@vancouverluxuryrealty.com` and `info@vancouverluxuryrentals.com` | Partly | Only the first appears; the renewal mail uses the agent email the admin page posts | `lib/mailer.js:26, 128` |
 | 7 | 53 | `robots.txt` configured for all landing pages | Partly | Served from code: `Allow: /` plus the sitemap line. The repo-root `robots.txt` isn't served | `server.js:248-253` |
 | 8 | 62, 126, 173, 300 | Node v8+ | Outdated | True of the old servers. The code needs Node ≥ 20.9 (`sharp` 0.35) and runs Mongoose 8 | `node_modules/sharp/package.json` (`engines`) |
@@ -117,7 +117,7 @@ Bugs and security problems found along the way are tracked separately: VLR-18, V
 | 12 | 128 | Deploy cleans up `forever` | Partly | Stops the unit and `pkill`s `node .*server.js`; nothing refers to `forever` | `deploy.sh:41-43` |
 | 13 | 139-146 | Team photo update via SSH to old prod + `migrate_team_photos.js` | Outdated | Edited in the admin at `/VLR-admin/showRoom/meetTeam`; the script is a one-time migration and needs the env loaded | `routes/showRoom.js`, `Scripts/readme.txt` |
 | 14 | 160, 266 | 30 SEO unit tests; see `TESTING.md` | Wrong | 41 tests, none for SEO | `package.json:7`, `test/unit/` |
-| 15 | 176 | Session secret hardcoded in config | Outdated | `SESSION_SECRET`; startup exits without it | `config/default.js:4`, `server.js:24-27` |
+| 15 | 176 | Session secret hardcoded in config | Outdated | True of the handover code; since our `7b0fd42`, `SESSION_SECRET`, and startup exits without it | `config/default.js:4`, `server.js:24-27` |
 | 16 | 181 | Daily job emails users who favourited a property | Partly | It also flips Rented → Available, but only for properties with a `propertyFavorite` doc (VLR-21) | `lib/setAvailable.js:56-96` |
 | 17 | 188 | Errors logged via syslog + express-winston | Wrong | log4js files plus `console` to journald; no winston | `server.js:57-89` |
 | 18 | 196, 258 | `.npmrc` with `ignore-scripts=true` | Wrong | Doesn't exist | — |
@@ -146,7 +146,7 @@ Same fictional suite as `TESTING.md`: the tree with `seoHelpers` / `seoMiddlewar
 | # | Line | Vendor said | Verdict | What the code says | Evidence |
 |---|---|---|---|---|---|
 | 1 | 30 | `npm install` uses `--ignore-scripts` via `.npmrc` | Wrong | No `.npmrc` | — |
-| 2 | 40-51 | Deploy steps: `cd ~/vlr; ./deploy.sh`; checks `node_modules` (Node 8 can't install); fills in the unit's paths | Wrong | `deploy.sh` runs `npm ci --omit=dev`, checks `/etc/vlr/env`, rsyncs to `/opt/vlr/app`, copies the unit as-is | `deploy.sh:24-56` |
+| 2 | 40-51 | Deploy steps: `cd ~/vlr; ./deploy.sh`; checks `node_modules` (Node 8 can't install); fills in the unit's paths | Wrong | `deploy.sh` runs `npm ci --omit=dev`, rsyncs to `/opt/vlr/app`, copies the unit as-is | `deploy.sh:24-56` |
 | 3 | 62-65 | The two old servers | Outdated | No longer serve the site, pending termination | `docs/TAKEOVER.md` §4 |
 | 4 | 69-74 | Team photos: SSH to old prod, run the migration, `./deploy.sh` | Outdated | Admin UI at `/VLR-admin/showRoom/meetTeam`; no deploy needed for data | `routes/showRoom.js` |
 

@@ -8,4 +8,4 @@ Node/Express rental website and admin panel for Vancouver Luxury Rentals, mainta
 - [IMAGE_OPTIMIZATION.md](IMAGE_OPTIMIZATION.md): the paused S3 photo backfill.
 - [docs/vendor/](docs/vendor/): the previous vendor's docs, archived.
 
-Quick start: `npm ci`, `cp .env.example .env` and set `SESSION_SECRET`, then `npm run dev` (port 3000, needs MongoDB). Tests: `npm test`.
+Quick start: `npm ci`, `cp .env.example .env`, set `SESSION_SECRET` and set both AWS keys to a placeholder such as `local-disabled` (empty keys let the AWS SDK fall back to your own AWS credentials and write to the production bucket), then `npm run dev` (port 3000, needs MongoDB). Tests: `npm test`.

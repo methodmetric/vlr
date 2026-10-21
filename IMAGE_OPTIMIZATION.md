@@ -64,7 +64,7 @@ New uploads are processed by [`lib/imageProcessing.js`](lib/imageProcessing.js) 
 
 ### 2.4 S3 backfill script — WRITTEN AND PROVEN, two properties done
 
-[`Scripts/optimize_s3_images.js`](Scripts/optimize_s3_images.js) re-encodes existing photos in the bucket. It is a dry run unless given `--apply`. (The neighbouring `migrate_team_photos.js` is the opposite: it writes unless given `--dry-run`.) Its header comment and messages are the vendor's and partly stale: the Node 8 / `NODE_PATH` setup, `npm install --no-save sharp`, and an end-of-run message recommending the lifecycle rule. Follow this doc instead (fixing the script is VLR-22).
+[`Scripts/optimize_s3_images.js`](Scripts/optimize_s3_images.js) re-encodes existing photos in the bucket. It is a dry run unless given `--apply`. (The neighbouring `migrate_team_photos.js` is the opposite: it writes unless given `--dry-run`.) Its header comment and messages are the vendor's and partly stale: the Node 8 / `NODE_PATH` setup, usage lines with a lowercase `scripts/` path (wrong on Linux), `npm install --no-save sharp`, and an end-of-run message recommending the lifecycle rule. Follow this doc instead (fixing the script is VLR-22).
 
 Two properties have been processed for real (per vendor):
 
@@ -129,10 +129,10 @@ The gallery works only because [`views/listing.ejs:111-113`](views/listing.ejs#L
 
 On the production server, `vlr-prod-2026` (us-west-2, same region as the bucket, so transfer is free). `sharp` is a normal dependency of the app now, so the checkout `deploy.sh` runs from already has it after `npm ci`; nothing extra to install. Run from that git checkout rather than `/opt/vlr/app`, which is the running site's copy (owned by the `vlr` user). Run from `/opt/vlr/app`, the next deploy's `rsync --delete` would remove the progress and failure files the script keeps in `Scripts/`; run from the checkout, deploys copy them into `/opt/vlr/app`, which is harmless. **Don't run `deploy.sh` while the backfill is running**: it pulls and runs `npm ci` (which replaces `node_modules`) in that same checkout.
 
-The script only needs the AWS keys. `/etc/vlr/env` is a systemd environment file, not a shell script, and `deploy.sh` reads it with `sudo`, so load just those three keys into the shell you run the script from (bash or zsh), inside the tmux/screen session for a long run (a tmux server started earlier won't inherit them). The second line stops with an error if a key didn't load; without that check a failed load leaves the SDK free to use other credentials, such as the instance role. Each line is exported as-is, so values must be unquoted, as they normally are in a systemd environment file:
+The script only needs the AWS keys. `/etc/vlr/env` is a systemd environment file, not a shell script, and `deploy.sh` reads it with `sudo`, so load just those three keys into the shell you run the script from (bash or zsh), inside the tmux/screen session for a long run (a tmux server started earlier won't inherit them). The first line clears any keys left in the shell from earlier. The second prints an error if a key didn't load: if it does, don't run the script, or the SDK is free to use other credentials, such as the instance role. Each line is exported as-is, so values must be unquoted and the file must have Unix line endings, as a systemd environment file normally does:
 
 ```bash
-while IFS= read -r l; do export "$l"; done < <(sudo grep -E '^AWS_(ACCESS_KEY_ID|SECRET_ACCESS_KEY|REGION)=' /etc/vlr/env)
+unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION; while IFS= read -r l; do export "$l"; done < <(sudo grep -E '^AWS_(ACCESS_KEY_ID|SECRET_ACCESS_KEY|REGION)=' /etc/vlr/env)
 : "${AWS_ACCESS_KEY_ID:?not set}" "${AWS_SECRET_ACCESS_KEY:?not set}" "${AWS_REGION:?not set}"
 ```
 
@@ -207,7 +207,7 @@ Costs a vendor dependency and a monthly bill. It was offered and the backfill wa
 
 - **The script is safe to interrupt.** Completed keys are appended to the progress file (`--progress`, default `Scripts/.optimize_s3_progress.log`); a re-run skips them. Rewritten objects also carry a `vlr-optimized` metadata tag and are always skipped, even if the log is lost.
 - **That progress log is gitignored on purpose.** It is per-machine state. **A laptop's log does not know what the server has done, and vice versa** — the metadata tag is the real defence. Run from the git checkout, not `/opt/vlr/app` (§4.2).
-- **Nothing writes without `--apply`.** Dry run is the default. Unknown or misspelled flags, including `--dry-run`, are silently ignored, so a typo in `--prefix` or `--listing`, or `--prefix` given last with no value, widens an `--apply` run to the whole bucket (and `--limit abc` means no limit). The run starts immediately: if it prints `prefix : (all)` when you meant one property, press Ctrl-C.
+- **Nothing writes without `--apply`.** Dry run is the default. Unknown or misspelled flags, including `--dry-run`, are silently ignored, so a typo in `--prefix` or `--listing`, or `--prefix` given last with no value, widens an `--apply` run to the whole bucket (and `--limit abc` means no limit). The run starts immediately: if it prints `prefix      : (all)` when you meant one property, press Ctrl-C. (`--listing` given last with no value widens the run the same way.)
 - **Rollback**: versioning is on. Every original survives as a previous version.
 - **A file is only replaced if it saves ≥15%** (`--min-saving`), so already-efficient files are not degraded for nothing.
 - **Per-file failures are skipped**, never aborting the run, and written to `Scripts/.optimize_s3_failures.json` only when a run finishes with failures (replacing any earlier file; a clean run leaves an old file in place). An interrupted run records none, but re-running retries them anyway because failed keys are never marked done.

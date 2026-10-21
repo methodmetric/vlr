@@ -27,11 +27,13 @@ Scripts read their keys from the environment; plain `node` does not load .env.
                tmux/screen for long runs), then run from the git checkout,
                not /opt/vlr/app (the running site's copy).
                S3 scripts (optimize_s3_images, migrate_team_photos), in bash
-               or zsh (each line is exported as-is; values must be unquoted):
+               or zsh (each line is exported as-is; values must be unquoted,
+               Unix line endings):
+                 unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION;
                  while IFS= read -r l; do export "$l"; done < <(sudo grep -E '^AWS_(ACCESS_KEY_ID|SECRET_ACCESS_KEY|REGION)=' /etc/vlr/env)
                  : "${AWS_ACCESS_KEY_ID:?not set}" "${AWS_SECRET_ACCESS_KEY:?not set}" "${AWS_REGION:?not set}"
-               The second line stops with an error if a key didn't load;
-               without it a failed load leaves the SDK to find other
+               The last line prints an error if a key didn't load: if it
+               does, don't run the script, or the SDK will find other
                credentials. Database scripts (migrate_team_photos,
                build_sitemap) also need MONGO_URL, or they silently use
                localhost:27017/VLR:
