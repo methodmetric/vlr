@@ -1,55 +1,73 @@
 /**
  * One-time (resumable) backfill: re-encode existing property photos in S3.
  *
- * Run it on the SERVER, from the git checkout deploy.sh runs in, not
- * /opt/vlr/app (that is the running site's copy, owned by the vlr user). The
- * progress and failure files live next to this script. The bucket and server
- * are both in us-west-2, so transfer is free there; from a laptop it pulls
- * ~71 GB and costs egress. The AWS keys come from the environment, so load
- * them first (see Scripts/readme.txt). Don't run deploy.sh while this runs: it
- * runs `npm ci` in the same checkout.
+ * Run it on the SERVER, from the project root — the bucket is in us-west-2 and
+ * so is the app server, so transfer is free and fast there. Running it from a
+ * laptop pulls ~71 GB across the internet and costs egress:
  *
- *     node Scripts/optimize_s3_images.js --limit 200                # measure a sample
- *     node Scripts/optimize_s3_images.js                            # measure everything
- *     node Scripts/optimize_s3_images.js --apply --limit 200        # do 200 for real
- *     node Scripts/optimize_s3_images.js --apply                    # do the whole bucket
- *     node Scripts/optimize_s3_images.js --apply --prefix 4070/     # just one property
- *     node Scripts/optimize_s3_images.js --apply --listing 3606     # same, by id or listing URL
+ *     node scripts/optimize_s3_images.js --dry-run --limit 200   # measure a sample
+ *     node scripts/optimize_s3_images.js --dry-run               # measure everything
+ *     node scripts/optimize_s3_images.js --apply --limit 200     # do 200 for real
+ *     node scripts/optimize_s3_images.js --apply                 # do the whole bucket
+ *     node scripts/optimize_s3_images.js --apply --prefix 4070/  # just one property
  *
- * Why this exists: photos uploaded by older versions of the code were saved by
- * the `images` package at its default quality of 100 (the last `images`-based
- * version already passed 82; see lib/imageProcessing.js). A 1920px photo at
- * quality 100 averages ~1 MB where quality 82 is ~230 KB, with no visible
- * difference. A 24-image sample across the bucket measured -77%.
+ * Why this exists: images uploaded before the quality fix in routes/properties.js
+ * were written by the `images` package at its default quality of 100. A 1920px
+ * photo at quality 100 averages ~1 MB where quality 82 is ~230 KB, with no
+ * visible difference. A 24-image sample across the bucket measured -77%.
  *
  * Safety properties:
- *   - Dry run is the DEFAULT. Nothing is written without --apply. Unknown or
- *     misspelled flags (including --dry-run) are silently ignored, so a typo in
- *     --prefix or --listing widens an --apply run to the whole bucket: check the
- *     printed prefix before letting it run.
+ *   - --dry-run is the DEFAULT. Nothing is written without --apply.
  *   - The bucket has versioning ENABLED, so every overwrite keeps the previous
- *     version and any object can be rolled back. Storage grows by the new
- *     copies (~16 GB on top of ~71 GB, about +22%) until noncurrent versions are
- *     expired, which needs the client's sign-off first.
- *   - Resumable. Every completed key is appended to a progress file (--progress,
- *     default Scripts/.optimize_s3_progress.log); a re-run skips them.
+ *     version and any object can be rolled back. Storage roughly doubles until
+ *     noncurrent versions are expired (see the note at the bottom of this file).
+ *   - Resumable. Every completed key is appended to a progress file; a re-run
+ *     skips them, so an interrupted run costs nothing.
  *   - Idempotent. Re-encoded objects are tagged with metadata `vlr-optimized`,
- *     and tagged objects are always skipped, even with a fresh progress file.
+ *     and tagged objects are skipped even if the progress file is lost.
  *   - A file is only replaced if the new version is meaningfully smaller
  *     (default: at least 15% off). Marginal gains are not worth generation loss.
- *   - Every re-encode's header is read back and must report non-zero dimensions
- *     before it is uploaded. Photos wider than --max-width (default 1920) are
- *     scaled down, and EXIF orientation is applied, so dimensions can change.
+ *   - Every re-encode is decoded and dimension-checked before it is uploaded.
  *   - Per-file failures are logged and skipped; they never abort the run.
  *   - PNGs are skipped by default: they are stored under .png keys referenced by
  *     `imgs[]` in MongoDB, so converting them to JPEG is a database change, not
- *     just a bucket change. --include-png re-encodes them as palette-quantised
- *     (256-colour, lossy) PNG; don't use it on photographs.
+ *     just a bucket change. Pass --include-png to re-encode them as PNG.
  *
- * Uses the app's own sharp (a normal dependency in package.json). The script
- * reads config through config-lite, which also merges every command-line flag
- * into the config, so don't pass flags named after config keys (--bucket,
- * --port, --mongodb).
+ * Requires sharp, which is deliberately NOT in package.json — this is a one-time
+ * migration and sharp needs a far newer Node than the app runs on.
+ *
+ * The production server runs Node 8.9.4 (end-of-life since 2019); sharp needs
+ * Node 18.17+. Do NOT upgrade the system Node to run this — the app is served by
+ * it. Instead install a modern Node beside it and keep sharp out of the app's
+ * node_modules entirely, so nothing the running site depends on is touched:
+ *
+ *     # 1. a modern Node, user-local, system Node untouched
+ *     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+ *     source ~/.nvm/nvm.sh
+ *     nvm install 16          # NOT 18 or 20 — see the glibc note below
+ *
+ *     # 2. sharp in its own directory, NOT in the app's node_modules
+ *     mkdir -p ~/imgopt && cd ~/imgopt && npm init -y
+ *     npm install sharp@0.32.6
+ *
+ *     # 3. run from the project, pointing Node at that sharp
+ *     cd /path/to/vlr
+ *     NODE_PATH=~/imgopt/node_modules node Scripts/optimize_s3_images.js --dry-run --listing 3606
+ *
+ * Why Node 16 and sharp 0.32.6 rather than the current versions: this server is
+ * old enough that Node 18 and 20 will not start on it at all —
+ *
+ *     node: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.28' not found
+ *
+ * Node 18+ is built against glibc 2.28; this box has an older one (Ubuntu 16.04
+ * ships 2.23). Node 16 is built against glibc 2.17 and runs fine. sharp 0.33+
+ * in turn needs Node 18.17+, so 0.32.6 — the last release supporting Node 14-16 —
+ * is the pairing that works. Every sharp call this script makes exists in 0.32.6.
+ *
+ * Check with `ldd --version` if unsure: below 2.28 means Node 16.
+ *
+ * When you are finished, `nvm deactivate` and `rm -rf ~/imgopt` removes every
+ * trace; the app never saw any of it.
  */
 
 var fs = require('fs');
@@ -69,16 +87,36 @@ try {
     console.error('  looked in: ' + path.join(__dirname, '..', 'node_modules'));
     console.error('  error    : ' + (e.code || '') + ' ' + e.message.split('\n')[0] + '\n');
 
+    var major = parseInt(process.version.slice(1).split('.')[0], 10);
     if (e.code === 'MODULE_NOT_FOUND' && /'sharp'/.test(e.message)) {
-        console.error('sharp is a dependency of the app but is not installed next to this script.');
-        console.error('Run `npm ci` in the git checkout and run the script from there. Never run');
-        console.error('npm ci in /opt/vlr/app: that is the running site\'s copy.');
+        if (major < 18) {
+            console.error('Node ' + process.version + ' is too old for sharp, which needs Node 18.17+.');
+            console.error('npm will have installed nothing usable and still exited 0.\n');
+            console.error('Do NOT upgrade the system Node — the site is served by it. Install a modern');
+            console.error('Node beside it and keep sharp out of the app\'s node_modules:\n');
+            console.error('    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash');
+            console.error('    source ~/.nvm/nvm.sh && nvm install 16');
+            console.error('    mkdir -p ~/imgopt && cd ~/imgopt && npm init -y && npm install sharp@0.32.6');
+            console.error('    cd ' + path.join(__dirname, '..'));
+            console.error('    NODE_PATH=~/imgopt/node_modules node Scripts/optimize_s3_images.js --dry-run --listing 3606\n');
+            console.error('Node 16 and sharp 0.32.6 are deliberate: if `ldd --version` reports glibc');
+            console.error('below 2.28, Node 18 and 20 will not start on this machine at all, and');
+            console.error('sharp 0.33+ requires Node 18.17+. This pairing is the one that works.');
+        } else {
+            console.error('sharp is not in this project\'s node_modules. Most likely the install ran');
+            console.error('in a different directory. Run this from the SAME directory as package.json:\n');
+            console.error('    cd ' + path.join(__dirname, '..'));
+            console.error('    npm install --no-save sharp\n');
+            console.error('If npm printed no error but nothing was installed, optional dependencies may');
+            console.error('be disabled (sharp ships its binary as one). Check with:  npm config get optional');
+        }
     } else {
-        console.error('sharp resolved but its native binary would not load: an old Node, or a');
-        console.error('platform mismatch (e.g. node_modules copied from another OS). Run `npm ci`');
-        console.error('in the git checkout (never in /opt/vlr/app).');
+        console.error('sharp resolved but its native binary would not load. This is usually a platform');
+        console.error('or glibc mismatch. Try forcing a clean platform-correct install:\n');
+        console.error('    npm install --no-save --force --include=optional sharp\n');
+        console.error('On older distributions (Ubuntu 18.04 and similar), use:\n');
+        console.error('    npm install --no-save sharp@0.32.6');
     }
-    console.error('\nsharp 0.35 needs Node 20.9+; this is ' + process.version + '.');
     process.exit(1);
 }
 
@@ -354,8 +392,8 @@ function mb(bytes) { return (bytes / 1048576).toFixed(1) + ' MB'; }
 
     if (apply) {
         console.log('\nOld versions are retained (bucket versioning is on), so this is');
-        console.log('reversible. Do not add a lifecycle rule that expires noncurrent versions');
-        console.log('until the client has approved the quality: it deletes the originals.');
+        console.log('reversible. Once you are happy with how the site looks, expire them');
+        console.log('with a lifecycle rule on noncurrent versions to stop paying twice.');
     }
 })().catch(function (e) {
     console.error('\nFatal: ' + (e.stack || e.message));

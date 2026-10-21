@@ -111,7 +111,7 @@ The zip is commit `dedbc40`, which the vendor says is exactly what's running. Fo
 - **Upgrade layer:** `lib/mongooseCompat.js` lets the old Mongoose 4 callback code run on Mongoose 8. `lib/imageProcessing.js` replaced the old `images` package. `lib/restartPolicy.js` stops crash loops. All three have tests.
 - **Run locally:** `npm ci`, copy `.env.example` to `.env` and set `SESSION_SECRET` (the server exits without it), then `npm run dev` (port 3000). Needs MongoDB at `mongodb://localhost:27017/VLR` or `MONGO_URL`. There is no `.npmrc` despite what the vendor docs say.
 - **Tests:** `npm test` runs 41 unit tests (26 on Node's built-in runner, 15 with their own small runner). No tests for routes, SEO or email.
-- **S3 bucket name** `vancouverluxuryrental.com` is in `config/` and hardcoded in 5 more places (`lib/seoHelpers.js`, `views/listing.ejs`, `views/myFavorites.ejs` ×2, `views/tenant-forms.ejs`).
+- **S3 bucket name** `vancouverluxuryrental.com` is in `config/` and hardcoded in several more places, including `lib/seoHelpers.js`, `views/listing.ejs`, `views/myFavorites.ejs` ×2, `views/tenant-forms.ejs` and the `.replace()` strings in `routes/properties.js`.
 
 ### Known issues **verified**
 

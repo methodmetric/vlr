@@ -20,8 +20,7 @@ User=vlr
 Group=vlr
 WorkingDirectory=/opt/vlr/app
 Environment=NODE_ENV=production
-# Sets NODE_ENV (overriding the line above), MONGO_URL and the secrets in
-# deploy.sh's REQUIRED_ENV. Not in the repo.
+# Sets NODE_ENV and MONGO_URL (the database URL); overrides the line above.
 EnvironmentFile=/etc/vlr/env
 ExecStart=/usr/bin/node server.js
 AmbientCapabilities=CAP_NET_BIND_SERVICE

@@ -11,4 +11,4 @@ The previous vendor's documents, moved here on 2026-10-20 (VLR-16). They're kept
 
 ## What they get wrong
 
-[FACT-CHECK.md](FACT-CHECK.md) lists every claim in these files, and in the vendor versions of `CLAUDE.md`, `ARCHITECTURE.md`, `IMAGE_OPTIMIZATION.md` and `Scripts/readme.txt`, that the code contradicts, with evidence. In short: the descriptions of how the app works are mostly right; the runtime, test, deploy, server and secrets details are wrong or outdated, and `TESTING.md` / `test-README.md` describe a test suite that never existed.
+[FACT-CHECK.md](FACT-CHECK.md) lists the claims in these files, and in the vendor versions of `CLAUDE.md`, `ARCHITECTURE.md`, `IMAGE_OPTIMIZATION.md` and `Scripts/readme.txt`, that the code contradicts, with evidence. In short: the descriptions of how the app works are mostly right; the runtime, test, deploy, server and secrets details are wrong or outdated, and `TESTING.md` / `test-README.md` describe a test suite that never existed.

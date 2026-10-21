@@ -92,7 +92,7 @@ In registration order in `server.js`:
 - `config-lite` loads `config/<NODE_ENV>.js` (if `NODE_ENV` is set) and **shallow-merges** it over `config/default.js` with `_.assign`, so a partial top-level key in `production.js` would replace the whole object from `default.js`. Modules that need config call `require('config-lite')(__dirname)` themselves (several lib files and routes don't load it at all). `CONFIG_DIR`/`CONFIG_BASEDIR` (or `NODE_CONFIG_DIR`/`NODE_CONFIG_BASEDIR`) can relocate the config folder.
 - It also merges JSON from the `CONFIG` env var (or `NODE_CONFIG` if `CONFIG` is unset) and **all command-line flags** (via `optimist`) over the result. A script run with `--limit 200` gets `config.limit = 200`; a `--port` or `--bucket` flag would change those settings.
 - `default.js` and `production.js` differ only in `port` (3000 / 80), `canonicalHost` and `redirectHosts`. Both name the same S3 bucket.
-- Secrets come from the environment: `SESSION_SECRET`, `MAILGUN_API_KEY`, and AWS credentials through the SDK's own chain (`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` first, then `~/.aws/credentials` or an EC2 instance role). The S3 region comes only from `AWS_REGION`. `MONGO_URL` overrides `config.mongodb`. Locally they come from `.env` (loaded by `npm run dev`); in production from `/etc/vlr/env` (loaded by `vlr.service`, and it also sets `NODE_ENV=production`, which is what selects port 80).
+- Secrets come from the environment: `SESSION_SECRET`, `MAILGUN_API_KEY`, and AWS credentials through the SDK's own chain: `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` first, then `AMAZON_*` variables, SSO, `~/.aws/credentials` (`AWS_PROFILE`), container credentials, `credential_process`, a web-identity token, and the EC2 instance role. No code sets a region; it comes from `AWS_REGION` (or `AMAZON_REGION`, or `~/.aws/config` when `AWS_SDK_LOAD_CONFIG` is set). `MONGO_URL` overrides `config.mongodb`. Locally they come from `.env` (loaded by `npm run dev`); in production from `/etc/vlr/env` (loaded by `vlr.service`, and it also sets `NODE_ENV=production`, which is what selects port 80).
 
 ---
 
@@ -229,7 +229,7 @@ The bucket name is also hardcoded in some views (see TAKEOVER §5).
 ### 5.1 URL & Canonicalization
 
 - Slug format: `address-property-id-123`. Everything after the first `-property-id-` is taken as the id; the address portion is decorative.
-- `getListing` extracts `N`, looks up the property (excluding `Not list property`), and attaches `req.property` + image `req.urls`. A missing property goes to the error handler (302 to `/`), not a 404.
+- `getListing` extracts `N`, looks up the property (excluding `Not list property`), and attaches `req.property` + image `req.urls`. A missing property goes to the error handler (302 to `/`), not a 404. A non-numeric id (`…-property-id-abc`) fails the lookup instead, and that error is thrown in a callback and kills the worker; repeated requests can take the site down (VLR-20).
 - `redirectToCanonical()` 301s any non-canonical spelling (GET only) to the canonical path built by `lib/urls.buildListingPath` — the same function used by JSON-LD and the sitemap. They must stay in sync or it loops. (`lib/seoHelpers.js` has its own `toSlug`, which lowercases, used for the area-page canonicals; don't use it for listing URLs.)
 - Per-property SEO overrides (`seoTitle`, `seoDescription`, `seoCanonical`, `seoRobots`) from the admin panel take precedence over generated values.
 - A logged-in tenant's view increments that user's `visitCount`.
@@ -389,7 +389,7 @@ Bugs and security problems found while checking this document are tracked in Lin
 
 | Area | Files |
 |---|---|
-| Entry / process | `server.js`, `lib/restartPolicy.js` |
+| Entry / process | `server.js`, `lib/restartPolicy.js`, `lib/passportLocal.js` (admin login strategy) |
 | Routing | `routes/index.js`, `routes/properties.js`, `routes/listing.js`, `routes/owners.js`, `routes/user.js`, `routes/admin.js`, `routes/showRoom.js`, `routes/images.js`, `routes/tenants.js` (unmounted: `routes/availability.js`, `routes/sell.js`) |
 | Models | `models/*.js` (see §8) |
 | Business logic | `lib/setAvailable.js` (notifications), `lib/mailer.js` (email), `lib/imageProcessing.js` (sharp), `lib/urls.js` (canonical URLs), `lib/forRentPages.js` (SEO slugs), `lib/sitemap.js`, `lib/seoHelpers.js`, `lib/teamPhotos.js`, `lib/resourcePages.js` |
