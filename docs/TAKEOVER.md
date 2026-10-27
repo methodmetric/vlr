@@ -86,7 +86,7 @@ State and snapshots **verified**; descriptions **per vendor**.
 | OS | Probably Ubuntu 24.04 (the unit file mentions systemd 255). Unconfirmed. |
 | Node | 24.22.0 LTS (supported to April 2028). **per vendor** (an earlier vendor email said 26; this is the correction) |
 | App | `/opt/vlr/app`, run by `vlr.service` as user `vlr`, binds port 80 directly. **verified from the zip** |
-| Config | `/etc/vlr/env` sets `NODE_ENV` and `MONGO_URL` (**verified from the zip**). Since commit `7b0fd42` it must also hold `SESSION_SECRET`, `MAILGUN_API_KEY`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_REGION`; `deploy.sh` refuses to deploy until it does. Not in the repo. |
+| Config | `/etc/vlr/env` sets `NODE_ENV` and `MONGO_URL` (**verified from the zip**), and since 2026-10-27 also `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_REGION` (the `vlr-web` key, for the database backup). Mode 640, `root:vlr`. Since commit `7b0fd42` it must also hold `SESSION_SECRET`, `MAILGUN_API_KEY`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_REGION`; `deploy.sh` refuses to deploy until it does. Not in the repo. |
 | Database | MongoDB on the same machine (8.x per the code comments). Moved here 2026-10-17 00:13 UTC. **per vendor** |
 | Disks | 200 GiB root + 20 GiB second disk, both encrypted. Daily AWS snapshots of the 20 GiB disk only. **verified** |
 | Network | Behind Cloudflare. Port 80 and 22 are open to the internet; 443 is closed (Cloudflare handles HTTPS). **verified** |
@@ -96,7 +96,7 @@ State and snapshots **verified**; descriptions **per vendor**.
 
 `deploy.sh` in the zip is the current script for this server (not Node 8, despite what the docs say). It:
 1. pulls the branch from git (`origin`), runs `npm ci --omit=dev`
-2. stops `vlr.service` and copies the code to `/opt/vlr/app` with `rsync --delete`, keeping only `uploads/` and `log/`. Anything else there that isn't in the repo is deleted, including the gitignored `config/aws.json` that the database backup reads (§7)
+2. stops `vlr.service` and copies the code to `/opt/vlr/app` with `rsync --delete`, keeping only `uploads/` and `log/`. Anything else there that isn't in the repo is deleted, including the gitignored `config/aws.json`, which the vendor's code now running reads. The repo's code and the database backup (§7) read `/etc/vlr/env` instead
 3. installs `vlr.service`, starts it, and waits for `http://localhost/` to return 200
 
 It must run from a git checkout on the server. Our repo is `github.com/seta-workshop/vlr`; the server doesn't have a checkout of it yet (see [section 8](#8-security-and-access-checklist)). The vendor warns: don't deploy any older copy of the code.
@@ -136,7 +136,7 @@ All committed in plain text in the zip. In our repo they were redacted at the ba
 
 | Where (in the zip) | What | Action |
 |---|---|---|
-| `config/aws.json` | Access key for IAM user `vlr-web` (S3 + read access to EC2) | Rotate; put the new key in `/etc/vlr/env`. On the server the database backup reads the key from `/opt/vlr/app/config/aws.json` (§7), so update or replace that file too, or the backups stop. A deploy from our repo deletes that file (§4). |
+| `config/aws.json` | Access key for IAM user `vlr-web` (S3 + read access to EC2) | Rotate; put the new key in `/etc/vlr/env`, which the database backup (§7) and the repo's code read. Until the first deploy from our repo, the running app reads `/opt/vlr/app/config/aws.json`, so update that file too. |
 | `lib/mailer.js` | Mailgun API key, repeated 8 times | Rotate after taking over Mailgun; put the new key in `/etc/vlr/env`. |
 | `config/default.js`, `config/production.js` | Session secret | Rotate (logs everyone out); put the new value in `/etc/vlr/env`. |
 | `README.md` (bottom; now `docs/vendor/README-notes.md`) | Cloudflare login and password | Change the password. Already redacted in our repo. |
@@ -144,7 +144,7 @@ All committed in plain text in the zip. In our repo they were redacted at the ba
 
 The AWS root, Cloudflare and README passwords are **the same password**, and the vendor knows it, plus the `webadmin@vlr.ca` password.
 
-**Unresolved:** the vendor's final email says to "fill in the real keys first (see SECRETS-TO-FILL.md)" and that placeholders would break "photo uploads, email and the daily backup". Our zip has no `SECRETS-TO-FILL.md` and contains the real keys (not placeholders). The daily backup does exist, but on the server, not in the code (§7), and it reads `config/aws.json`, which explains the warning. Whether a later package with `SECRETS-TO-FILL.md` exists is still open. **Resolve by comparing `/opt/vlr/app` on the server with the zip.**
+**Unresolved:** the vendor's final email says to "fill in the real keys first (see SECRETS-TO-FILL.md)" and that placeholders would break "photo uploads, email and the daily backup". Our zip has no `SECRETS-TO-FILL.md` and contains the real keys (not placeholders). The daily backup does exist, but on the server, not in the code (§7). Until 2026-10-27 it read `config/aws.json`, which explains the warning. Whether a later package with `SECRETS-TO-FILL.md` exists is still open. **Resolve by comparing `/opt/vlr/app` on the server with the zip.**
 
 ---
 
@@ -156,7 +156,7 @@ The AWS root, Cloudflare and README passwords are **the same password**, and the
 - **Daily database backup (the vendor's "daily backup"):** a systemd timer on vlr-prod-2026, not in the repo and not a cron job. **verified 2026-10-26**
   - `vlr-db-backup.timer` runs daily at 10:30 UTC (up to 5 minutes late) and starts `vlr-db-backup.service`, which runs `/usr/local/sbin/vlr-db-backup`. The vendor installed it on Oct 17. Logs: `sudo journalctl -u vlr-db-backup`.
   - The script runs `mongodump --archive --gzip` with `MONGO_URL` from `/etc/vlr/env`, checks the archive, uploads it to `s3://vlr-backup/mongodump/vlr-prod-2026/VLR-<UTC stamp>.archive.gz` (about 6 MB) and checks that the uploaded size matches.
-  - It takes the AWS key from `/opt/vlr/app/config/aws.json` (`vlr-web`), not from `/etc/vlr/env`. Don't delete that file on the server, and update it when the key is rotated (§6). **The first `deploy.sh` run from our repo will delete it** (§4, Deploying), and every backup after that will fail, so move the backup's key somewhere else first (VLR-9, VLR-5).
+  - It takes the AWS key (`vlr-web`) from `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_REGION` in `/etc/vlr/env`, and exits with an error if any of them is missing. Until 2026-10-27 the vendor's version read `/opt/vlr/app/config/aws.json`, which `deploy.sh` deletes. It was changed and tested that day, and the vendor's script was kept as `vlr-db-backup.bak-20261027T015456Z`. The script isn't in the repo.
   - Bucket `vlr-backup` (us-west-2, VLR's account): SSE-S3 encryption, no bucket policy. Public-access block and versioning turned on 2026-10-26; neither was set before. Retention (lifecycle rule `expire-mongodumps`, added 2026-10-26): each dump under `mongodump/` expires after 90 days and is permanently deleted 30 days after that (about 120 days in all). The `vlr-web` key can also delete backups, versions included.
   - A failed run shows up only in the journal; nothing alerts.
   - **Test restore passed 2026-10-26:** the latest dump was restored into a temporary `mongod` on the server (a separate port and data directory) and every collection matched the live database's counts, apart from records added since the dump.
