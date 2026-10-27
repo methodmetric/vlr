@@ -21,7 +21,7 @@ No passwords or keys are written here. See [Secrets](#6-secrets) for where they 
 | Production | Runs on EC2 `vlr-prod-2026`. We don't have shell access yet. |
 | Accounts | AWS, Mailgun, GoDaddy and Google all belong to VLR. **per vendor** |
 | Database | Lives on `vlr-prod-2026`. A daily `mongodump` goes to the private S3 bucket `vlr-backup`, and AWS snapshots its data disk too. A test restore passed on 2026-10-26. See [section 7](#7-data-and-backups). |
-| Security | Several passwords and keys are known to the vendor and were written in the code they handed over (our repo now reads keys from the environment; the values still need rotating). AWS root currently has **no two-factor**. See [section 8](#8-security-and-access-checklist). |
+| Security | Several passwords and keys are known to the vendor and were written in the code they handed over (our repo now reads keys from the environment; the `vlr-web` AWS key was rotated 2026-10-27, the Mailgun key and session secret still need rotating). AWS root currently has **no two-factor**. See [section 8](#8-security-and-access-checklist). |
 | Monitoring | None. |
 
 ---
@@ -132,11 +132,11 @@ Security problems and bugs found while checking the docs (VLR-16) are tracked in
 
 ## 6. Secrets
 
-All committed in plain text in the zip. In our repo they were redacted at the baseline commit, and since `7b0fd42` the code reads the keys from the environment (see Config in §4). The values themselves are unchanged and still need rotating:
+All committed in plain text in the zip. In our repo they were redacted at the baseline commit, and since `7b0fd42` the code reads the keys from the environment (see Config in §4). The `vlr-web` AWS key was rotated on 2026-10-27; the other values are unchanged and still need rotating:
 
 | Where (in the zip) | What | Action |
 |---|---|---|
-| `config/aws.json` | Access key for IAM user `vlr-web` (S3 + read access to EC2) | Rotate; put the new key in `/etc/vlr/env`, which the database backup (§7) and the repo's code read. Until the first deploy from our repo, the running app reads `/opt/vlr/app/config/aws.json`, so update that file too. |
+| `config/aws.json` | Access key for IAM user `vlr-web`, which has `AmazonEC2FullAccess` and `AmazonS3FullAccess` (attached directly and through the group `web`), although the code only uses S3 | **Rotated 2026-10-27.** The new key (ending `T3YU`) is in `/etc/vlr/env`, which the database backup (§7) and the repo's code read, and in `/opt/vlr/app/config/aws.json`, which the running app reads until the first deploy from our repo. The old key (ending `FPDQ`, the one in the zip) is deactivated; delete it after 2026-11-03 (VLR-27). |
 | `lib/mailer.js` | Mailgun API key, repeated 8 times | Rotate after taking over Mailgun; put the new key in `/etc/vlr/env`. |
 | `config/default.js`, `config/production.js` | Session secret | Rotate (logs everyone out); put the new value in `/etc/vlr/env`. |
 | `README.md` (bottom; now `docs/vendor/README-notes.md`) | Cloudflare login and password | Change the password. Already redacted in our repo. |
@@ -194,7 +194,8 @@ The AWS root, Cloudflare and README passwords are **the same password**, and the
 - [ ] Terminate vlr-staging, easyrent-prod, easyrent-dev, easyrent-back, easy_rent_dev_old
 - [ ] Delete `admin.easyrent.ca` and `beta.easyrent.ca` DNS records
 - [ ] Delete `onepromisesolution.com` and the two `ec2-…` domains from Mailgun
-- [ ] Rotate the `vlr-web` AWS key, the Mailgun key and the session secret (already out of the code since `7b0fd42`)
+- [x] Rotate the `vlr-web` AWS key (2026-10-27; delete the deactivated old key after 2026-11-03, VLR-27)
+- [ ] Rotate the Mailgun key and the session secret (already out of the code since `7b0fd42`)
 - [ ] Decide on the blog: its server runs Debian 10 (no security updates since 2024), so rebuild it on a supported OS or retire wordpress-bitami
 - [ ] Ask Shahram whether anyone uses email at burnabyluxuryrentals.com (it goes to GoDaddy mail); if not, remove the MX record
 
