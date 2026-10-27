@@ -18,10 +18,10 @@ No passwords or keys are written here. See [Secrets](#6-secrets) for where they 
 |---|---|
 | Code | We hold the full source as `vlr-upgrade-new-vm.zip` (commit `dedbc40`). Installs cleanly, 41/41 tests pass on Node 24 and 26, boots locally. **verified** |
 | Git history | None. The vendor deployed from their own private GitHub repo, which is not part of the handover. Bitbucket is shut down. **per vendor** |
-| Production | Runs on EC2 `vlr-prod-2026`. We don't have shell access yet. |
+| Production | Runs on EC2 `vlr-prod-2026`. We have shell access with our own SSH key since 2026-10-22 (§4). |
 | Accounts | AWS, Mailgun, GoDaddy and Google all belong to VLR. **per vendor** |
 | Database | Lives on `vlr-prod-2026`. A daily `mongodump` goes to the private S3 bucket `vlr-backup`, and AWS snapshots its data disk too. A test restore passed on 2026-10-26. See [section 7](#7-data-and-backups). |
-| Security | Several passwords and keys are known to the vendor and were written in the code they handed over (our repo now reads keys from the environment; the `vlr-web` AWS key was rotated 2026-10-27, the Mailgun key and session secret still need rotating). AWS root currently has **no two-factor**. See [section 8](#8-security-and-access-checklist). |
+| Security | Several passwords and keys are known to the vendor and were written in the code they handed over (our repo now reads keys from the environment; the `vlr-web` AWS key was rotated 2026-10-27, the Mailgun key and session secret still need rotating). AWS root has two-factor again since 2026-10-22. See [section 8](#8-security-and-access-checklist). |
 | Monitoring | None. |
 
 ---
@@ -43,8 +43,8 @@ No passwords or keys are written here. See [Secrets](#6-secrets) for where they 
 
 | Service | Owner | Login | Notes |
 |---|---|---|---|
-| AWS | VLR, paid with VLR's card (**per vendor**) | Root: `webadmin@vlr.ca` | Region `us-west-2`. Vendor removed their MFA device; **root has no 2FA right now**. A root access key created 2026-10-06 must be deleted. Only IAM user is `vlr-web` (used by the site). |
-| Google (`webadmin@vlr.ca`) | VLR | Vendor sending via secure channel | Owns Tag Manager `GTM-K2XTMZ6S`, Google Ads `AW-947376741` and Search Console. Also the AWS root email and the Mailgun login, so whoever controls this mailbox controls all of those. GA4 unknown; if it exists it's set up in Tag Manager. |
+| AWS | VLR, paid with VLR's card (**per vendor**) | Root: `webadmin@vlr.ca` | Region `us-west-2`. Vendor removed their MFA device; since 2026-10-22 root has a new password and MFA on Jose's phone (VLR-2). The root access key the vendor created 2026-10-06 is deactivated; deleting it is VLR-24. Only IAM user is `vlr-web` (used by the site; full EC2 and S3 access, see §6). |
+| Google (`webadmin@vlr.ca`) | VLR | MM, with 2FA on one of their phones (VLR-1) | Owns Tag Manager `GTM-K2XTMZ6S`, Google Ads `AW-947376741` and Search Console. Also the AWS root email and the Mailgun login, so whoever controls this mailbox controls all of those. GA4 unknown; if it exists it's set up in Tag Manager. |
 | Google Workspace (`vlr.ca`) | VLR | Admin **unknown** | Hosts email for all three main domains. The Workspace admin can reset `webadmin@` and `administrator@`. **Ask Shahram who it is.** |
 | Mailgun | VLR (**per vendor**) | `webadmin@vlr.ca` (reset password from that mailbox) | Sending domain `mg.vancouverluxuryrentals.com`. Account also holds `onepromisesolution.com` (vendor's 2018 test domain, delete) and two unverified `ec2-…amazonaws.com` domains (delete). `mg.vancouverluxuryrental.com` (singular) is a parked domain for sale, not VLR's. **verified** |
 | Cloudflare | VLR | `administrator@vlr.ca` | DNS, proxy and HTTPS for all five domains. Our team can log in. **verified** |
@@ -82,7 +82,7 @@ State and snapshots **verified**; descriptions **per vendor**.
 
 | | |
 |---|---|
-| Access | AWS console → EC2 → vlr-prod-2026 → Connect → **EC2 Instance Connect**, user `ubuntu`. Then add our key (`~/.ssh/vlr_prod.pub`) to `~/.ssh/authorized_keys`. **per vendor** |
+| Access | SSH as `ubuntu` with our key `~/.ssh/vlr_prod` (passphrase-protected), installed 2026-10-22 through **EC2 Instance Connect** (AWS console → EC2 → vlr-prod-2026 → Connect), which still works as a fallback. **verified** |
 | OS | Probably Ubuntu 24.04 (the unit file mentions systemd 255). Unconfirmed. |
 | Node | 24.22.0 LTS (supported to April 2028). **per vendor** (an earlier vendor email said 26; this is the correction) |
 | App | `/opt/vlr/app`, run by `vlr.service` as user `vlr`, binds port 80 directly. **verified from the zip** |
@@ -90,7 +90,7 @@ State and snapshots **verified**; descriptions **per vendor**.
 | Database | MongoDB on the same machine (8.x per the code comments). Moved here 2026-10-17 00:13 UTC. **per vendor** |
 | Disks | 200 GiB root + 20 GiB second disk, both encrypted. Daily AWS snapshots of the 20 GiB disk only. **verified** |
 | Network | Behind Cloudflare. Port 80 and 22 are open to the internet; 443 is closed (Cloudflare handles HTTPS). **verified** |
-| EC2 key pair | `vlr-production` (also on old vlr-prod). Vendor says they removed their keys; confirm in `authorized_keys`. |
+| EC2 key pair | `vlr-production` (also on old vlr-prod). Removed from the `ubuntu` and `root` `authorized_keys` on 2026-10-22, so only our key is left (VLR-4). Old vlr-prod still has it (VLR-23). **verified** |
 
 ### Deploying
 
@@ -132,7 +132,7 @@ Security problems and bugs found while checking the docs (VLR-16) are tracked in
 
 ## 6. Secrets
 
-All committed in plain text in the zip. In our repo they were redacted at the baseline commit, and since `7b0fd42` the code reads the keys from the environment (see Config in §4). The `vlr-web` AWS key was rotated on 2026-10-27; the other values are unchanged and still need rotating:
+All committed in plain text in the zip. In our repo they were redacted at the baseline commit, and since `7b0fd42` the code reads the keys from the environment (see Config in §4). The `vlr-web` AWS key was rotated on 2026-10-27 and the passwords have been changed (see below the table); the Mailgun key and the session secret are unchanged and still need rotating:
 
 | Where (in the zip) | What | Action |
 |---|---|---|
@@ -142,7 +142,7 @@ All committed in plain text in the zip. In our repo they were redacted at the ba
 | `README.md` (bottom; now `docs/vendor/README-notes.md`) | Cloudflare login and password | Change the password. Already redacted in our repo. |
 | `docs/VLR website handover - final.md` (bottom) | AWS root and Cloudflare logins | Same password as above. Remove from the file. **Don't commit this file with passwords in it.** |
 
-The AWS root, Cloudflare and README passwords are **the same password**, and the vendor knows it, plus the `webadmin@vlr.ca` password.
+The AWS root, Cloudflare and README passwords were **the same password**, and the vendor knows it, plus the `webadmin@vlr.ca` password. The Cloudflare password was changed 2026-10-20 (VLR-3) and the AWS root password 2026-10-22 (VLR-2); MM now owns `webadmin@vlr.ca`, with 2FA on one of their phones (VLR-1).
 
 **Unresolved:** the vendor's final email says to "fill in the real keys first (see SECRETS-TO-FILL.md)" and that placeholders would break "photo uploads, email and the daily backup". Our zip has no `SECRETS-TO-FILL.md` and contains the real keys (not placeholders). The daily backup does exist, but on the server, not in the code (§7). Until 2026-10-27 it read `config/aws.json`, which explains the warning. Whether a later package with `SECRETS-TO-FILL.md` exists is still open. **Resolve by comparing `/opt/vlr/app` on the server with the zip.**
 
@@ -170,19 +170,19 @@ The AWS root, Cloudflare and README passwords are **the same password**, and the
 ## 8. Security and access checklist
 
 ### Today
-- [ ] AWS root: sign in, add our own MFA device, change the password
-- [ ] AWS root: delete the root access key created 2026-10-06 (Security credentials)
+- [x] AWS root: sign in, add our own MFA device, change the password (2026-10-22, VLR-2)
+- [ ] AWS root: delete the root access key created 2026-10-06 (Security credentials). Deactivated 2026-10-22; delete by 2026-11-05 (VLR-24)
 - [ ] AWS: update the account contact details if needed (Account → Contact information)
-- [ ] `webadmin@vlr.ca`: when the vendor sends it, change the password, add 2FA, check the recovery email and phone aren't the vendor's, sign out other sessions
-- [ ] Cloudflare: change the password, add 2FA, review Members
-- [ ] EC2: delete key pair `vlr-blog2` (vendor holds its private key)
+- [x] `webadmin@vlr.ca`: MM took it over, with 2FA on one of their phones (VLR-1)
+- [x] Cloudflare: change the password, add 2FA, review Members (VLR-3)
+- [x] EC2: delete key pair `vlr-blog2` (vendor holds its private key) (2026-10-22, VLR-4)
 
 ### This week
-- [ ] Get onto vlr-prod-2026 via EC2 Instance Connect; add our SSH key
+- [x] Get onto vlr-prod-2026 via EC2 Instance Connect; add our SSH key (2026-10-22, VLR-7)
 - [x] Take our own `mongodump` and store it somewhere we control (the daily dumps go to `vlr-backup`, in VLR's account; test restore passed 2026-10-26)
 - [ ] Compare `/opt/vlr/app` with the zip (resolves the SECRETS-TO-FILL question)
 - [ ] Copy `/etc/vlr/env` and `/etc/mongod.conf` into our own records (not the repo)
-- [ ] Check `authorized_keys` on vlr-prod-2026 and wordpress-bitami for leftover vendor keys
+- [ ] Check `authorized_keys` on vlr-prod-2026 and wordpress-bitami for leftover vendor keys. vlr-prod-2026 done 2026-10-22 (VLR-4); vlr-prod and wordpress-bitami are VLR-23
 - [x] Look for the vendor's "daily backup" (crontab, systemd timers): it's `vlr-db-backup.timer` (§7)
 - [ ] Take over Mailgun via `webadmin@`; create a new API key
 - [x] Set up our own git repo from the zip (`github.com/seta-workshop/vlr`)
