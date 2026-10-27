@@ -1,0 +1,13 @@
+[Unit]
+Description=Back up the VLR MongoDB database to S3
+Wants=network-online.target
+After=network-online.target mongod.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/vlr/env
+Environment=HOME=/root
+ExecStart=/usr/local/sbin/vlr-db-backup
+PrivateTmp=true
+Nice=10
+IOSchedulingClass=idle
