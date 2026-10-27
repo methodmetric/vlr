@@ -20,7 +20,7 @@ No passwords or keys are written here. See [Secrets](#6-secrets) for where they 
 | Git history | None. The vendor deployed from their own private GitHub repo, which is not part of the handover. Bitbucket is shut down. **per vendor** |
 | Production | Runs on EC2 `vlr-prod-2026`. We don't have shell access yet. |
 | Accounts | AWS, Mailgun, GoDaddy and Google all belong to VLR. **per vendor** |
-| Database | Only copy is on `vlr-prod-2026`, plus AWS snapshots of its data disk. We have no copy of our own yet. |
+| Database | Lives on `vlr-prod-2026`. A daily `mongodump` goes to the private S3 bucket `vlr-backup`, and AWS snapshots its data disk too. A test restore passed on 2026-10-26. See [section 7](#7-data-and-backups). |
 | Security | Several passwords and keys are known to the vendor and were written in the code they handed over (our repo now reads keys from the environment; the values still need rotating). AWS root currently has **no two-factor**. See [section 8](#8-security-and-access-checklist). |
 | Monitoring | None. |
 
@@ -136,7 +136,7 @@ All committed in plain text in the zip. In our repo they were redacted at the ba
 
 | Where (in the zip) | What | Action |
 |---|---|---|
-| `config/aws.json` | Access key for IAM user `vlr-web` (S3 + read access to EC2) | Rotate; put the new key in `/etc/vlr/env`. |
+| `config/aws.json` | Access key for IAM user `vlr-web` (S3 + read access to EC2) | Rotate; put the new key in `/etc/vlr/env`. On the server the database backup reads the key from `/opt/vlr/app/config/aws.json` (§7), so update or replace that file too, or the backups stop. |
 | `lib/mailer.js` | Mailgun API key, repeated 8 times | Rotate after taking over Mailgun; put the new key in `/etc/vlr/env`. |
 | `config/default.js`, `config/production.js` | Session secret | Rotate (logs everyone out); put the new value in `/etc/vlr/env`. |
 | `README.md` (bottom; now `docs/vendor/README-notes.md`) | Cloudflare login and password | Change the password. Already redacted in our repo. |
@@ -144,16 +144,22 @@ All committed in plain text in the zip. In our repo they were redacted at the ba
 
 The AWS root, Cloudflare and README passwords are **the same password**, and the vendor knows it, plus the `webadmin@vlr.ca` password.
 
-**Unresolved:** the vendor's final email says to "fill in the real keys first (see SECRETS-TO-FILL.md)" and that placeholders would break "photo uploads, email and the daily backup". Our zip has no `SECRETS-TO-FILL.md`, contains the real keys (not placeholders), and has no backup code. Either a later package exists that we never received, or the vendor is misremembering. **Resolve by comparing `/opt/vlr/app` on the server with the zip.**
+**Unresolved:** the vendor's final email says to "fill in the real keys first (see SECRETS-TO-FILL.md)" and that placeholders would break "photo uploads, email and the daily backup". Our zip has no `SECRETS-TO-FILL.md` and contains the real keys (not placeholders). The daily backup does exist, but on the server, not in the code (§7), and it reads `config/aws.json`, which explains the warning. Whether a later package with `SECRETS-TO-FILL.md` exists is still open. **Resolve by comparing `/opt/vlr/app` on the server with the zip.**
 
 ---
 
 ## 7. Data and backups
 
 - **Database:** only on vlr-prod-2026. Holds listings, admin logins, tenants (names, emails, phones), owner leads, viewing requests, redirects. Tenant data is covered by BC's PIPA.
-- **AWS snapshots:** a scheduled policy (`policy-03fe8bd0aa0dcdae0`) snapshots the 20 GiB disk daily. Retention unknown. The 200 GiB root disk isn't snapshotted. Restores have never been tested. **verified**
+- **AWS snapshots:** a scheduled policy (`policy-03fe8bd0aa0dcdae0`) snapshots the 20 GiB disk daily. Retention unknown. The 200 GiB root disk isn't snapshotted. Restoring from a snapshot has never been tested. **verified**
 - **Old vlr-prod:** monthly snapshots on the 7th (last 2026-10-07). **verified**
-- **"Daily backup":** mentioned by the vendor, not found in the code. Check the server for a cron job.
+- **Daily database backup (the vendor's "daily backup"):** a systemd timer on vlr-prod-2026, not in the repo and not a cron job. **verified 2026-10-26**
+  - `vlr-db-backup.timer` runs daily at 10:30 UTC (up to 5 minutes late) and starts `vlr-db-backup.service`, which runs `/usr/local/sbin/vlr-db-backup`. The vendor installed it on Oct 17. Logs: `sudo journalctl -u vlr-db-backup`.
+  - The script runs `mongodump --archive --gzip` with `MONGO_URL` from `/etc/vlr/env`, checks the archive, uploads it to `s3://vlr-backup/mongodump/vlr-prod-2026/VLR-<UTC stamp>.archive.gz` (about 6 MB) and checks that the uploaded size matches.
+  - It takes the AWS key from `/opt/vlr/app/config/aws.json` (`vlr-web`), not from `/etc/vlr/env`. Don't delete that file on the server, and update it when the key is rotated (§6).
+  - Bucket `vlr-backup` (us-west-2, VLR's account): SSE-S3 encryption, no bucket policy. Public-access block and versioning turned on 2026-10-26; neither was set before. No lifecycle rule as of 2026-10-26, so backups are kept until one is added (retention is tracked in VLR-9). The `vlr-web` key can also delete backups, versions included.
+  - A failed run shows up only in the journal; nothing alerts.
+  - **Test restore passed 2026-10-26:** the latest dump was restored into a temporary `mongod` on the server (a separate port and data directory) and every collection matched the live database's counts, apart from records added since the dump.
 - **Photos:** S3 bucket `vancouverluxuryrental.com`, ~68,000 objects / ~71 GB. Versioning on, no lifecycle rule, so every original is recoverable. **verified**
 
 ### Image optimization (paused)
@@ -173,15 +179,15 @@ The AWS root, Cloudflare and README passwords are **the same password**, and the
 
 ### This week
 - [ ] Get onto vlr-prod-2026 via EC2 Instance Connect; add our SSH key
-- [ ] Take our own `mongodump` and store it somewhere we control
+- [x] Take our own `mongodump` and store it somewhere we control (the daily dumps go to `vlr-backup`, in VLR's account; test restore passed 2026-10-26)
 - [ ] Compare `/opt/vlr/app` with the zip (resolves the SECRETS-TO-FILL question)
 - [ ] Copy `/etc/vlr/env` and `/etc/mongod.conf` into our own records (not the repo)
 - [ ] Check `authorized_keys` on vlr-prod-2026 and wordpress-bitami for leftover vendor keys
-- [ ] Look for the vendor's "daily backup" (crontab, systemd timers)
+- [x] Look for the vendor's "daily backup" (crontab, systemd timers): it's `vlr-db-backup.timer` (§7)
 - [ ] Take over Mailgun via `webadmin@`; create a new API key
 - [x] Set up our own git repo from the zip (`github.com/seta-workshop/vlr`)
 - [ ] Clone it on vlr-prod-2026 for `deploy.sh`
-- [ ] Set up uptime monitoring and automated database backups to S3
+- [ ] Set up uptime monitoring, and an alert when the daily database backup fails (the backup itself exists, §7)
 
 ### Cleanup, after the move is confirmed
 - [ ] Final snapshot of vlr-prod, then terminate it
@@ -206,7 +212,6 @@ The AWS root, Cloudflare and README passwords are **the same password**, and the
 
 ### Still unknown
 - Whether a newer code package with `SECRETS-TO-FILL.md` exists.
-- What the vendor's "daily backup" is.
 - The snapshot retention period.
 - Whether a GA4 property exists.
 
