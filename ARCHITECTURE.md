@@ -381,7 +381,7 @@ Bugs and security problems found while checking this document are tracked in Lin
 3. **`searchColumn` full-doc regex** — every property stores a JSON.stringify of itself for regex search; heavy and unindexed. Consider a real text index.
 4. **Tenant identity** is an unverified email string. Don't extend it to anything sensitive without real auth.
 5. **Dependencies** — AWS SDK v2 is end-of-support; `npm audit` reports many vulnerable packages (TAKEOVER §5).
-6. **DB backups live outside the repo**: a systemd timer on the server runs a daily `mongodump` to S3. It reads the `vlr-web` key from `/etc/vlr/env` and alerts no one if it fails (TAKEOVER §7).
+6. **DB backups aren't deployed with the app**: a systemd timer on the server runs a daily `mongodump` to S3. Its script and units are kept in `ops/db-backup/` but installed by hand. It reads the `vlr-web` key from `/etc/vlr/env` and alerts no one if it fails (TAKEOVER §7).
 
 ---
 
