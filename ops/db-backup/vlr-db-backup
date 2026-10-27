@@ -1,0 +1,36 @@
+#!/bin/bash
+# Daily logical backup of the VLR MongoDB database to S3, started by vlr-db-backup.service.
+# MONGO_URL and the AWS keys (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION) come from
+# /etc/vlr/env via the unit's EnvironmentFile. Not from config/aws.json: deploy.sh deletes that file.
+set -euo pipefail
+
+BUCKET=vlr-backup
+PREFIX=mongodump/vlr-prod-2026
+AWS=/snap/bin/aws
+
+# Fail loudly instead of letting the CLI fall back to other credentials (e.g. /root/.aws).
+: "${MONGO_URL:?MONGO_URL missing from /etc/vlr/env}"
+: "${AWS_ACCESS_KEY_ID:?AWS_ACCESS_KEY_ID missing from /etc/vlr/env}"
+: "${AWS_SECRET_ACCESS_KEY:?AWS_SECRET_ACCESS_KEY missing from /etc/vlr/env}"
+: "${AWS_REGION:?AWS_REGION missing from /etc/vlr/env}"
+export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_DEFAULT_REGION="$AWS_REGION"
+
+WORK=$(mktemp -d)
+trap 'rm -rf "$WORK"' EXIT
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+ARCHIVE="$WORK/VLR-$STAMP.archive.gz"
+KEY="$PREFIX/VLR-$STAMP.archive.gz"
+
+# The connection string goes through a 0600 config file, not argv, so its password stays out of ps.
+( umask 077; printf 'uri: "%s"\n' "$MONGO_URL" > "$WORK/mongo.yaml" )
+mongodump --config="$WORK/mongo.yaml" --archive="$ARCHIVE" --gzip --quiet
+gzip -t "$ARCHIVE"
+
+"$AWS" s3 cp "$ARCHIVE" "s3://$BUCKET/$KEY" --only-show-errors
+SIZE=$(stat -c %s "$ARCHIVE")
+REMOTE_SIZE=$("$AWS" s3api head-object --bucket "$BUCKET" --key "$KEY" --query ContentLength --output text)
+if [ "$SIZE" != "$REMOTE_SIZE" ]; then
+  echo "upload size mismatch for s3://$BUCKET/$KEY: local $SIZE, S3 $REMOTE_SIZE" >&2
+  exit 1
+fi
+echo "backup ok: s3://$BUCKET/$KEY ($SIZE bytes)"
