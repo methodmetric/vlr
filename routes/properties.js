@@ -1079,13 +1079,17 @@ function uploadToS3(sourceFolder, fileName, destFolder) {
       throw error;
     }
 
-    // upload file to S3
+    // upload file to S3; the extra parameters tell the S3 backfill script
+    // (Scripts/optimize_s3_images.js) that the photo is already optimized
     s3.putObject(
-      {
-        Bucket: config.bucket,
-        Key: destFilePath,
-        Body: fileContent,
-      },
+      Object.assign(
+        {
+          Bucket: config.bucket,
+          Key: destFilePath,
+          Body: fileContent,
+        },
+        imageProcessing.s3UploadParams(fileName)
+      ),
       function (err, data) {
         if (err) throw err;
         else log.info(data);

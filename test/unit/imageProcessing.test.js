@@ -182,3 +182,20 @@ test('a missing watermark file does not throw when loaded; processing with it re
     await assert.rejects(imageProcessing.watermarkPhoto(file, missing), /no-such-logo/);
     assert.ok(fs.readFileSync(file).equals(before));
 });
+
+test('S3 upload parameters tag JPEGs for the backfill script, case-insensitively', () => {
+    for (const name of ['photo.jpg', 'PHOTO.JPEG']) {
+        assert.deepStrictEqual(imageProcessing.s3UploadParams(name), {
+            CacheControl: 'public, max-age=2592000',
+            ContentType: 'image/jpeg',
+            Metadata: { 'vlr-optimized': '82' }
+        });
+    }
+});
+
+test('S3 upload parameters do not tag PNGs or GIFs', () => {
+    assert.deepStrictEqual(imageProcessing.s3UploadParams('plan.png'),
+        { CacheControl: 'public, max-age=2592000', ContentType: 'image/png' });
+    assert.deepStrictEqual(imageProcessing.s3UploadParams('anim.GIF'),
+        { CacheControl: 'public, max-age=2592000', ContentType: 'image/gif' });
+});
