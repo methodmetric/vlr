@@ -120,6 +120,10 @@ try {
     process.exit(1);
 }
 
+// After the sharp check: it requires sharp too. Shares the upload path's
+// quality, cache lifetime and tag, so uploads and re-encodes stay alike.
+var imageProcessing = require('../lib/imageProcessing');
+
 // ---------------------------------------------------------------- arguments
 
 function flag(name) { return process.argv.indexOf('--' + name) !== -1; }
@@ -148,11 +152,11 @@ if (listing) {
     console.log('--listing resolved to prefix: ' + prefix);
 }
 var limit = parseInt(value('limit', '0'), 10) || 0;
-var quality = parseInt(value('quality', '82'), 10);
+var quality = parseInt(value('quality', String(imageProcessing.JPEG_QUALITY)), 10);
 var maxWidth = parseInt(value('max-width', '1920'), 10);
 var concurrency = parseInt(value('concurrency', '8'), 10);
 var minSaving = parseFloat(value('min-saving', '0.15'));
-var cacheSeconds = parseInt(value('cache-seconds', '2592000'), 10);
+var cacheSeconds = parseInt(value('cache-seconds', String(imageProcessing.CACHE_SECONDS)), 10);
 var progressFile = value('progress', path.join(__dirname, '.optimize_s3_progress.log'));
 
 if (!apply) {
@@ -225,12 +229,10 @@ function put(key, body, contentType) {
         ContentType: contentType,
         // These were missing entirely before, which is why S3 served the photos
         // as binary/octet-stream with no caching hint.
-        // 30 days, deliberately NOT `immutable`. An agent can delete a photo and
-        // upload a different one under the same generic filename (12.jpg, IMG_017.jpg),
-        // which reuses the S3 key — `immutable` would pin the stale image in
-        // returning visitors' browsers for the full year. Override with --cache-seconds.
+        // Default from CACHE_SECONDS in lib/imageProcessing.js (why not `immutable`
+        // is explained there). Override with --cache-seconds.
         CacheControl: 'public, max-age=' + cacheSeconds,
-        Metadata: { 'vlr-optimized': String(quality) }
+        Metadata: { [imageProcessing.OPTIMIZED_TAG]: String(quality) }
     }).promise();
 }
 
@@ -250,7 +252,7 @@ async function processKey(item) {
         return;
     }
 
-    if (head.Metadata && head.Metadata['vlr-optimized']) {
+    if (head.Metadata && head.Metadata[imageProcessing.OPTIMIZED_TAG]) {
         stats.skippedTagged++;
         markDone(key);
         return;
