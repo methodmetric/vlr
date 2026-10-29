@@ -9,6 +9,10 @@ One-off and maintenance scripts.
                          unless --apply. Run it on the server from the git
                          checkout; follow IMAGE_OPTIMIZATION.md (the file's
                          own header comment is stale).
+  restore_s3_originals.js rollback for optimize_s3_images.js: copies each
+                         re-encoded photo's original (its previous S3 version)
+                         back on top. Dry run unless --apply; --apply needs
+                         --listing, --prefix or --all. Deletes nothing.
   migrate_team_photos.js one-time move of team photos from MongoDB to S3 (team/).
                          WRITES BY DEFAULT; pass --dry-run to only report.
 

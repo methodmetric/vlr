@@ -4,7 +4,7 @@
   "description": "This is VLR website's development environment",
   "main": "server.js",
   "scripts": {
-    "test": "node test/unit/restartPolicy.test.js && node --test test/unit/mongooseCompat.test.js test/unit/imageProcessing.test.js",
+    "test": "node test/unit/restartPolicy.test.js && node --test test/unit/mongooseCompat.test.js test/unit/imageProcessing.test.js test/unit/s3Restore.test.js",
     "dev": "nodemon --exec \"node --env-file-if-exists=.env\" server.js",
     "prod": "NODE_ENV=production nodemon --exec \"node --env-file-if-exists=.env\" server.js"
   },

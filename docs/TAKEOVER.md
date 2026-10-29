@@ -99,7 +99,7 @@ State and snapshots **verified**; descriptions **per vendor**.
 2. stops `vlr.service` and copies the code to `/opt/vlr/app` with `rsync --delete`, keeping only `uploads/` and `log/`. Anything else there that isn't in the repo is deleted, including the gitignored `config/aws.json`, which the vendor's code now running reads. The repo's code and the database backup (§7) read `/etc/vlr/env` instead
 3. installs `vlr.service`, starts it, and waits for `http://localhost/` to return 200
 
-It must run from a git checkout on the server. Our repo is `github.com/seta-workshop/vlr`; the server doesn't have a checkout of it yet (see [section 8](#8-security-and-access-checklist)). The vendor warns: don't deploy any older copy of the code.
+It must run from a git checkout on the server. Our repo is `github.com/seta-workshop/vlr`; the server's checkout is `~ubuntu/vlr` (since 2026-10-28). No deploy has run from it yet. The vendor warns: don't deploy any older copy of the code.
 
 ---
 
@@ -110,7 +110,7 @@ The zip is commit `dedbc40`, which the vendor says is exactly what's running. Fo
 - **Stack:** Node/Express 4, EJS templates, MongoDB via Mongoose 8, sharp for image watermarking, AWS SDK v2 for S3, nodemailer + Mailgun.
 - **Upgrade layer:** `lib/mongooseCompat.js` lets the old Mongoose 4 callback code run on Mongoose 8. `lib/imageProcessing.js` replaced the old `images` package. `lib/restartPolicy.js` stops crash loops. All three have tests.
 - **Run locally:** `npm ci`, copy `.env.example` to `.env`, set `SESSION_SECRET` (the server exits without it) and set both AWS keys to a placeholder such as `local-disabled` (empty keys let the AWS SDK fall back to your own AWS credentials and write to the production bucket), then `npm run dev` (port 3000). Needs MongoDB at `mongodb://localhost:27017/VLR` or `MONGO_URL`. There is no `.npmrc` despite what the vendor docs say.
-- **Tests:** `npm test` runs 43 unit tests (28 on Node's built-in runner, 15 with their own small runner). No tests for routes, SEO or email.
+- **Tests:** `npm test` runs 47 unit tests (32 on Node's built-in runner, 15 with their own small runner). No tests for routes, SEO or email.
 - **S3 bucket name** `vancouverluxuryrental.com` is in `config/` and hardcoded in several more places, including `lib/seoHelpers.js`, `views/listing.ejs`, `views/myFavorites.ejs` ×2, `views/tenant-forms.ejs` and the `.replace()` strings in `routes/properties.js`.
 
 ### Known issues **verified**
@@ -186,7 +186,7 @@ The AWS root, Cloudflare and README passwords were **the same password**, and th
 - [x] Look for the vendor's "daily backup" (crontab, systemd timers): it's `vlr-db-backup.timer` (§7)
 - [ ] Take over Mailgun via `webadmin@`; create a new API key
 - [x] Set up our own git repo from the zip (`github.com/seta-workshop/vlr`)
-- [ ] Clone it on vlr-prod-2026 for `deploy.sh`
+- [x] Clone it on vlr-prod-2026 for `deploy.sh`: `~ubuntu/vlr`, pulling with a read-only deploy key (`~/.ssh/vlr_github`) (2026-10-28). The vendor's plain copy that was at `~/vlr` is now `~/vlr-vendor-2026-10-16`; it holds a world-readable `config/aws.json`
 - [ ] Set up uptime monitoring, and an alert when the daily database backup fails (the backup itself exists, §7)
 
 ### Cleanup, after the move is confirmed
