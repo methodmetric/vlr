@@ -88,8 +88,8 @@ Measured with `listObjectVersions` from the server, right before and after the f
 
 | | Before (04:04 UTC) | After (15:46 UTC) |
 |---|---|---|
-| Current objects | 68,929 files, 74.85 GB | 68,929 files, **15.07 GB** |
-| … of which JPEG | 66,841 files, 73.55 GB | 66,841 files, 13.77 GB |
+| Current objects, all types | 68,929 files, 74.85 GB | 68,929 files, **15.07 GB** |
+| Current JPEGs only (included in the row above) | 66,841 files, 73.55 GB | 66,841 files, 13.77 GB |
 | Older versions | 8,810 files, 9.45 GB | 75,146 files, 82.88 GB |
 | Total stored | 84.30 GB | 97.95 GB |
 | Delete markers | 8,200 | 8,200 |
