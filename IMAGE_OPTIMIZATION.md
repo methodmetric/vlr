@@ -212,7 +212,7 @@ Costs a vendor dependency and a monthly bill. It was offered and the backfill wa
 - **A file is only replaced if it saves ≥15%** (`--min-saving`), so already-efficient files are not degraded for nothing.
 - **Per-file failures are skipped**, never aborting the run, and written to `Scripts/.optimize_s3_failures.json` only when a run finishes with failures (replacing any earlier file; a clean run leaves an old file in place). An interrupted run records none, but re-running retries them anyway because failed keys are never marked done.
 - **Uploads from before the tag fix aren't tagged.** Uploads are tagged `vlr-optimized` only once the VLR-15 change to `uploadToS3` is deployed. Photos uploaded between the q82 change and that deploy carry no tag, so the backfill re-encodes them (q82 → q82) wherever that saves 15%. We accept that extra generation loss. The quality, cache lifetime and tag name the script uses by default come from `lib/imageProcessing.js`, shared with the upload path.
-- **Quality is one flag** (`--quality`). Re-running a property at a different quality does nothing on its own: tagged objects are always skipped, and a fresh progress file doesn't change that. To redo a property, restore its previous S3 versions first (the originals carry no tag), clear its keys from the progress log, then re-run.
+- **Quality is one flag** (`--quality`). Re-running a property at a different quality does nothing on its own: tagged objects are always skipped, and a fresh progress file doesn't change that. To redo a property, restore its originals first (`node Scripts/restore_s3_originals.js --apply --listing <id>`), then re-run with a fresh progress file (`--progress <new file>`), because the default one still lists those keys as done.
 - **Script flags are merged into the app config** by config-lite, as are the `CONFIG` / `NODE_CONFIG` environment variables. The script's own flags don't collide with config keys, but any flag named after one would override it: `--port`, `--session`, `--mongodb`, `--bucket` (which would send every write to another bucket), `--canonicalHost`, `--redirectHosts`.
 
 ---
@@ -239,7 +239,7 @@ Optimizing does not change filenames, keys or URLs: each `.jpg`/`.jpeg` object i
 
 | What | How to undo |
 |---|---|
-| S3 photos | Bucket versioning — restore the previous version of the key |
+| S3 photos | Bucket versioning — restore the previous version of the key. `Scripts/restore_s3_originals.js` does it for a property (`--listing <id>`), a prefix or the whole bucket (`--all`); dry run unless `--apply`. It copies the original back on top and deletes nothing |
 | Static images under `public/` | Not from git: our history starts at the handover baseline, which already contains the optimized files. The originals are in the vendor's private repo and on old vlr-prod's disk and snapshots (TAKEOVER §4, §7); copy them off before that server is terminated if they matter |
 | Upload-quality change | Change `JPEG_QUALITY` in `lib/imageProcessing.js` (only affects future uploads, and the backfill's default `--quality`) |
 
