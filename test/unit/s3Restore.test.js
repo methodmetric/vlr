@@ -21,14 +21,25 @@ test('restores the version just before the current one', () => {
     }]);
 });
 
-test('orders versions by date, not by the order S3 listed them', () => {
+test('uses S3 listing order, even for versions written in the same second', () => {
     const plans = s3Restore.planRestores([
-        version('1/a.JPEG', 'oldest', '2018-01-01T00:00:00Z'),
         version('1/a.JPEG', 'current', '2026-10-29T15:00:00Z', true),
-        version('1/a.JPEG', 'middle', '2020-01-01T00:00:00Z')
+        version('1/a.JPEG', 'restored', '2026-10-29T15:00:00Z'),
+        version('1/a.JPEG', 'reencoded', '2026-10-29T15:00:00Z'),
+        version('1/a.JPEG', 'original', '2018-01-01T00:00:00Z')
     ]);
     assert.strictEqual(plans[0].current, 'current');
-    assert.strictEqual(plans[0].previous, 'middle');
+    assert.strictEqual(plans[0].previous, 'restored');
+});
+
+test('a delete marker in the same second as the previous version counts as in between', () => {
+    const plans = s3Restore.planRestores([
+        version('1/a.jpg', 'v2', '2026-10-29T15:00:05Z', true),
+        version('1/a.jpg', 'v1', '2026-10-29T15:00:00Z')
+    ], [
+        version('1/a.jpg', 'dm', '2026-10-29T15:00:00Z')
+    ]);
+    assert.strictEqual(plans[0].skip, 'previous is a delete marker');
 });
 
 test('skips keys that cannot be a restore', () => {

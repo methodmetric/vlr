@@ -136,7 +136,7 @@ unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION; while IFS= read -r l; 
 : "${AWS_ACCESS_KEY_ID:?not set}" "${AWS_SECRET_ACCESS_KEY:?not set}" "${AWS_REGION:?not set}"
 ```
 
-We don't have shell access or our own git checkout on that server yet (TAKEOVER §4, §8). The old servers the vendor used (old dev and old vlr-prod) ran Node 8 and needed a Node 16 + `sharp@0.32.6` workaround under `~/imgopt`. They no longer serve the site (old vlr-prod is running with the site stopped, vlr-staging is stopped, both pending termination; TAKEOVER §4), and the workaround doesn't apply to the new server. In particular, **never delete `node_modules/sharp`** from the app as the old instructions said: `routes/properties.js` loads `lib/imageProcessing.js` at startup, so the site would fail to boot.
+We have SSH access, and our git checkout is `~ubuntu/vlr` (TAKEOVER §4, since 2026-10-28). The old servers the vendor used (old dev and old vlr-prod) ran Node 8 and needed a Node 16 + `sharp@0.32.6` workaround under `~/imgopt`. They no longer serve the site (old vlr-prod is running with the site stopped, vlr-staging is stopped, both pending termination; TAKEOVER §4), and the workaround doesn't apply to the new server. In particular, **never delete `node_modules/sharp`** from the app as the old instructions said: `routes/properties.js` loads `lib/imageProcessing.js` at startup, so the site would fail to boot.
 
 vlr-prod-2026 is now the only server running the site (TAKEOVER §4), and it also runs MongoDB. It's a t3.large: 2 burstable vCPUs. The run is CPU-heavy (sharp with mozjpeg), and if the instance uses standard CPU credits, running out of them throttles the whole machine, site included. How long the full run takes on this box hasn't been measured. Time a single property first, check the instance's credit specification, and keep `nice -n 19` with `--concurrency 2` (§5.3).
 
@@ -239,7 +239,7 @@ Optimizing does not change filenames, keys or URLs: each `.jpg`/`.jpeg` object i
 
 | What | How to undo |
 |---|---|
-| S3 photos | Bucket versioning — restore the previous version of the key. `Scripts/restore_s3_originals.js` does it for a property (`--listing <id>`), a prefix or the whole bucket (`--all`); dry run unless `--apply`. It copies the original back on top and deletes nothing |
+| S3 photos | Bucket versioning — restore the previous version of the key. `Scripts/restore_s3_originals.js` does it for a property (`--listing <id>`), a prefix or the whole bucket (`--all`); dry run unless `--apply`. It copies the original back on top (with `image/jpeg` and the cache header, without the tag) and deletes nothing. After our first deploy uploads are tagged too, so limit a restore to the run with `--since`/`--until` |
 | Static images under `public/` | Not from git: our history starts at the handover baseline, which already contains the optimized files. The originals are in the vendor's private repo and on old vlr-prod's disk and snapshots (TAKEOVER §4, §7); copy them off before that server is terminated if they matter |
 | Upload-quality change | Change `JPEG_QUALITY` in `lib/imageProcessing.js` (only affects future uploads, and the backfill's default `--quality`) |
 
