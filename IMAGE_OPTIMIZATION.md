@@ -1,12 +1,12 @@
 # Image Optimization — Work In Progress
 
-> **Status**: partially complete, paused. Safe to leave as is.
-> **Last checked against the code**: 2026-10-20 (VLR-16). Written by the previous vendor up to 2026-09-29.
+> **Status**: S3 backfill done on 2026-10-29 (§5.3). The originals are kept as old S3 versions until the client signs off (§9).
+> **Last checked against the code**: 2026-10-20 (VLR-16). Backfill results added 2026-10-29 (VLR-15). Written by the previous vendor up to 2026-09-29.
 > **Read this with**: [docs/TAKEOVER.md](docs/TAKEOVER.md) (servers, accounts), [ARCHITECTURE.md](ARCHITECTURE.md) §4.4–4.5 (upload pipeline, image URLs)
 >
 > The vendor's commit hashes for this work (`b2deba0`, `dcea73d`, …) are from their private repo and don't exist in ours, which starts at the handover baseline. Results of runs against S3 (sizes, versions, headers) are the vendor's measurements; we haven't re-checked them.
 
-Picking this up? Read **§1** (the problem), **§4.1** (dev and prod share one bucket — there is no isolated test environment), **§9** (what can and cannot be undone) and **§7** (gotchas). Then **§5** for what to do next; **§5.3** is the resume point for the S3 backfill.
+Picking this up? Read **§1** (the problem), **§4.1** (dev and prod share one bucket — there is no isolated test environment), **§9** (what can and cannot be undone) and **§7** (gotchas). Then **§5** for what to do next; **§5.3** records the S3 backfill run.
 
 Asked "is there a script, and is it reversible?" — yes to both: `Scripts/optimize_s3_images.js`, and §9 has the reversibility answer, including the one thing that destroys it. Do not write a new script.
 
@@ -62,20 +62,21 @@ New uploads are processed by [`lib/imageProcessing.js`](lib/imageProcessing.js) 
 
 **Known limitations**: `.png` uploads are still written losslessly as PNG (`image.png({ adaptiveFiltering: true })`) and stay large. Since VLR-15, `uploadToS3` in `routes/properties.js` sets the same `ContentType`, `Cache-Control` and (JPEGs only) `vlr-optimized` tag as the backfill, from `s3UploadParams()` in `lib/imageProcessing.js`; photos uploaded before that deploy have none of them (see §7).
 
-### 2.4 S3 backfill script — WRITTEN AND PROVEN, two properties done
+### 2.4 S3 backfill script — RUN ON THE WHOLE BUCKET (2026-10-29)
 
 [`Scripts/optimize_s3_images.js`](Scripts/optimize_s3_images.js) re-encodes existing photos in the bucket. It is a dry run unless given `--apply`. (The neighbouring `migrate_team_photos.js` is the opposite: it writes unless given `--dry-run`.) Its header comment and messages are the vendor's and partly stale: the Node 8 / `NODE_PATH` setup, usage lines with a lowercase `scripts/` path (wrong on Linux), `npm install --no-save sharp`, and an end-of-run message recommending the lifecycle rule. Follow this doc instead (fixing the script is VLR-22).
 
-Two properties have been processed for real (per vendor):
+The vendor processed two properties (per vendor); we did one more as a test, then the rest of the bucket (§5.3):
 
 ```
 3606   27 photos    5.7 MB -> 1.08 MB   (-81%)   0 failures   2026-09-20, from a laptop
 5810   40 photos   63.2 MB -> 13.1 MB   (-79%)   0 failures   2026-09-29, from the old dev server
+5799   22 photos   31.3 MB ->  5.6 MB   (-82%)   0 failures   2026-10-28, vlr-prod-2026
 ```
 
 Verified afterwards in S3 (by the vendor): `ContentType: image/jpeg` (was missing or `application/octet-stream`), `Cache-Control: public, max-age=2592000` (was absent on every object in the bucket), metadata tag `vlr-optimized: 82`, and **2 versions retained** on each key (e.g. `3606/…` current 87 KB, previous 383 KB; `5810/12.jpg` current 468 KB, previous 1985 KB) so the originals are recoverable.
 
-Per the vendor, the script has touched nothing else in the bucket.
+Before our runs the script had touched nothing else in the bucket (per vendor). On 5799 we also tested the rollback, `Scripts/restore_s3_originals.js` (§9): restored to the originals, then re-encoded again.
 
 ---
 
@@ -83,18 +84,23 @@ Per the vendor, the script has touched nothing else in the bucket.
 
 Bucket `vancouverluxuryrental.com`, region `us-west-2`. Credentials come from the environment (`AWS_*`, see CLAUDE.md). Keys are `{propertyId}/{filename}`.
 
-| | |
-|---|---|
-| Objects | 68,261 |
-| Total size | ~71 GB |
-| Mean object | 1066 KB |
-| Versioning | **Enabled** |
+Measured with `listObjectVersions` from the server, right before and after the full backfill on 2026-10-29 (GB = 10⁹ bytes):
 
-By extension: 64,706 jpg (68.1 GB) · 1,468 jpeg (1.7 GB) · 1,297 png (1.2 GB) · 771 extensionless (7.5 MB) · 19 pdf.
+| | Before (04:04 UTC) | After (15:46 UTC) |
+|---|---|---|
+| Current objects | 68,929 files, 74.85 GB | 68,929 files, **15.07 GB** |
+| … of which JPEG | 66,841 files, 73.55 GB | 66,841 files, 13.77 GB |
+| Older versions | 8,810 files, 9.45 GB | 75,146 files, 82.88 GB |
+| Total stored | 84.30 GB | 97.95 GB |
+| Delete markers | 8,200 | 8,200 |
+
+What the site serves went from 74.85 GB to 15.07 GB (−80%). The older versions grew by exactly the 66,336 photos re-encoded: each original is kept, so the total stored went *up* until those versions are expired (§9). Versioning is **enabled**.
+
+The vendor's earlier measurement (2026-09): 68,261 objects, ~71 GB, mean object 1066 KB. By extension: 64,706 jpg (68.1 GB) · 1,468 jpeg (1.7 GB) · 1,297 png (1.2 GB) · 771 extensionless (7.5 MB) · 19 pdf.
 
 35,587 files sit in the 1–2 MB band alone (46.8 GB). That ~1 MB average for a 1920px photo is the quality-100 signature.
 
-**Measured savings** from a 24-image sample spread evenly across the whole bucket: **−77% to −81%**. (A dry run with `--limit N` takes the first N keys in S3's lexicographic order (`10/` sorts before `2/`), so it is not a spread sample.) Projected **71 GB → ~16 GB**.
+**Measured savings** from a 24-image sample spread evenly across the whole bucket: **−77% to −81%**. (A dry run with `--limit N` takes the first N keys in S3's lexicographic order (`10/` sorts before `2/`), so it is not a spread sample.) Projected **71 GB → ~16 GB**; the real result was 15.07 GB (above).
 
 Properties numbered below ~3800 have smaller 700×465 images (156–374 KB); properties 4000+ are 1920px at 0.8–2 MB. Both compress ~77%, but the absolute win is far larger on the newer ones.
 
@@ -158,9 +164,33 @@ Keep `src` on the first slide only, put the rest in `data-src`, swap on slide ch
 
 Per §2.2 — 453 KB still fetched and discarded on every listing view. Best fix: render the property's own photos server-side from `imgLinks` (already passed to the template and serialized at `views/listing.ejs:42`), rewriting them to the REST endpoint on the server first (they're website-endpoint URLs, §4.1a, which only the JS at `views/listing.ejs:111-113` fixes today), and emit the area-image fallback only when `imgLinks` is empty. Also removes the JS dependency for the main image, which should help LCP and crawlers.
 
-### 5.3 Finish the S3 backfill — resume point
+### 5.3 The S3 backfill — DONE 2026-10-29
 
-~66,100 JPEGs (~69.8 GB) remaining; the script only processes `.jpg`/`.jpeg` keys, so PNG, PDF and extensionless objects are skipped. On the server (§4.2), from the deploy checkout, with the AWS keys exported:
+Run on vlr-prod-2026 from our checkout (`~ubuntu/vlr`), unattended, as a one-off systemd timer that read the keys from `/etc/vlr/env`:
+
+```
+sudo systemd-run --unit=vlr-backfill --uid=ubuntu --working-directory=/home/ubuntu/vlr \
+  --property=EnvironmentFile=/etc/vlr/env --property=Nice=19 \
+  --on-calendar='2026-10-29 02:00:00 America/Vancouver' \
+  "$(which node)" Scripts/optimize_s3_images.js --apply --concurrency 2
+```
+
+| | |
+|---|---|
+| Run | 2026-10-29 09:00:01 to 14:55:33 UTC (5 h 55 min), 7 h 51 min of CPU, 645 MB peak memory |
+| Examined | 66,806 JPEGs |
+| Rewritten | 66,336 |
+| Skipped | 402 (would save under 15%), 68 already tagged (3606, 5810). 5799 was left out by the progress file |
+| Failed | 0 |
+| Size | 70,124 MB → 13,108 MB (−81%; the script's MB are 2²⁰ bytes) |
+| CPU credits | standard; balance 864 → lowest 603, so no throttling |
+| Site | responded normally throughout (homepage 0.2–0.9 s) |
+
+Checked afterwards from outside: all 435 JPEGs on the 15 featured listings load as `image/jpeg`, carry `vlr-optimized: 82` and average 204 KB.
+
+Photos uploaded after the run, until our first deploy, are written at quality 82 but without the tag (the vendor's upload code is still running). A later re-run of the backfill would re-encode those; there's no need to re-run it.
+
+The original instructions, kept for a re-run (on the server (§4.2), from the deploy checkout, with the AWS keys exported):
 
 ```bash
 node Scripts/optimize_s3_images.js --limit 200                # dry-run sanity check on a sample
@@ -171,7 +201,7 @@ nice -n 19 node Scripts/optimize_s3_images.js --apply --concurrency 2
 
 `nice` and `--concurrency 2` are deliberate: this is also the web and database server, it has 2 vCPUs, and sharp is CPU-hungry. Safe to interrupt and re-run — see §7.
 
-Until old versions are expired, the bucket keeps the ~71 GB of originals plus the ~16 GB of new copies (about +22%); expiring the originals would save roughly $1.6/month. **Do not add the S3 lifecycle rule that expires noncurrent versions until the client has signed off on the quality** — it deletes the originals permanently (§9). TAKEOVER §9 has the open question to the client.
+Until old versions are expired, the bucket keeps the originals as older versions: 82.88 GB of them against 15.07 GB of current objects, 97.95 GB in all (§3). At S3 Standard prices that's about US$2.25/month; expiring the old versions would bring it to about US$0.35/month. **Do not add the S3 lifecycle rule that expires noncurrent versions until the client has signed off on the quality** — it deletes the originals permanently (§9). TAKEOVER §9 has the open question to the client.
 
 ### 5.4 Thumbnail variants — structural, do after 5.3
 
@@ -223,7 +253,7 @@ The vendor's 2026-09-25 check found the old dev and production servers at differ
 
 To confirm on the live site: `/img/Burnaby.jpg` should be served (72,586 bytes) and `/img/Burnaby.png` should not exist.
 
-**§2.4 is live regardless**, because S3 is shared and the objects were rewritten directly: per the vendor, properties 3606 and 5810 show the optimized photos on production.
+**§2.4 is live regardless**, because S3 is shared and the objects were rewritten directly: since 2026-10-29 every listing serves the optimized photos (§5.3).
 
 ---
 
@@ -256,7 +286,7 @@ Per the vendor, the 2018 original was retained, and every rewritten object keeps
 
 ### What ENDS reversibility
 
-**Deleting noncurrent versions. THIS IS IRREVERSIBLE.** Either through an S3 lifecycle rule that expires them, or by deleting a version by its version ID. A lifecycle rule would save roughly $1.6/month, but **once noncurrent versions are gone the originals are gone permanently**. Do not add that rule until the client has signed off on the visual result. If in doubt, leave it; the cost is trivial next to losing 71 GB of originals.
+**Deleting noncurrent versions. THIS IS IRREVERSIBLE.** Either through an S3 lifecycle rule that expires them, or by deleting a version by its version ID. A lifecycle rule would save roughly $1.9/month, but **once noncurrent versions are gone the originals are gone permanently**. Do not add that rule until the client has signed off on the visual result. If in doubt, leave it; the cost is trivial next to losing 71 GB of originals.
 
 Also never suspend bucket versioning: objects uploaded before versioning was turned on are stored as the "null" version, and while versioning is suspended the next write to that key replaces it.
 
@@ -268,4 +298,4 @@ Also never suspend bucket versioning: objects uploaded before versioning was tur
 
 ### Practical guidance
 
-Run a property, look at it, then continue. That is what was done with 3606 and 5810 and it worked. Do not add the lifecycle rule until the whole run is done and approved.
+Run a property, look at it, then continue. That is what was done with 3606, 5810 and 5799 before the full run, and it worked. The whole run is done; do not add the lifecycle rule until the client has approved the result.
