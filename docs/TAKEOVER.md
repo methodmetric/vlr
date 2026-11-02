@@ -165,10 +165,10 @@ The AWS root, Cloudflare and README passwords were **the same password**, and th
   - Bucket `vlr-backup` (us-west-2, VLR's account): SSE-S3 encryption, no bucket policy. Public-access block and versioning turned on 2026-10-26; neither was set before. Retention (lifecycle rule `expire-mongodumps`, added 2026-10-26): each dump under `mongodump/` expires after 90 days and is permanently deleted 30 days after that (about 120 days in all). The `vlr-web` key can also delete backups, versions included.
   - A failed run shows up only in the journal; nothing alerts.
   - **Test restore passed 2026-10-26, and again 2026-10-27** on the first dump from the changed script. `ops/db-backup/restore-test.sh` restores the latest dump into a temporary `mongod` on the server (a separate port and data directory) and compares each collection's count with the live database. Every collection matched, apart from records added since the dump.
-- **Photos:** S3 bucket `vancouverluxuryrental.com`, ~68,000 objects / ~71 GB. Versioning on, no lifecycle rule, so every original is recoverable. **verified**
+- **Photos:** S3 bucket `vancouverluxuryrental.com`: 68,929 current objects / 15.07 GB, plus 75,146 older versions / 82.88 GB, mostly the originals of the compressed photos (measured 2026-10-29). Versioning on, no lifecycle rule, so every original is recoverable. **verified**
 
-### Image optimization (paused)
-`Scripts/optimize_s3_images.js` compresses existing photos (JPEG quality 82, about −80%). Only properties 3606 and 5810 are done. No job is running or scheduled (**per vendor**). Instructions in `IMAGE_OPTIMIZATION.md`, corrected 2026-10-20: the vendor's version had steps for the retired Node 8 servers, including one (deleting `node_modules/sharp`) that would now stop the site booting. **Do not add an S3 lifecycle rule that expires old versions until the client approves the quality**: that permanently deletes the originals.
+### Image optimization (done 2026-10-29)
+`Scripts/optimize_s3_images.js` compressed the existing photos (JPEG quality 82): 66,336 photos, −81%, no failures, run on vlr-prod-2026 on 2026-10-29 (VLR-15). What the site serves went from 74.85 GB to 15.07 GB. `Scripts/restore_s3_originals.js` puts originals back if needed. Details in `IMAGE_OPTIMIZATION.md` §3 and §5.3. **Do not add an S3 lifecycle rule that expires old versions until the client approves the quality**: that permanently deletes the originals.
 
 ---
 
@@ -214,7 +214,7 @@ The AWS root, Cloudflare and README passwords were **the same password**, and th
 - Whose card pays for GoDaddy auto-renew, and who has that login?
 - Who is `jesse@methodandmetric.com`, and should they keep SuperAdmin?
 - Is EasyRent (`easyrent.ca`) part of our scope? If so, who has its hosting and WordPress logins?
-- Are the compressed photos on properties 3606 and 5810 approved?
+- Now that every listing's photos are compressed (2026-10-29), are they approved? Until then we keep the originals.
 
 ### Still unknown
 - The snapshot retention period.
@@ -234,3 +234,4 @@ The AWS root, Cloudflare and README passwords were **the same password**, and th
 | 2026-10-17 00:13 UTC | Database moved to `vlr-prod-2026`; vlr-staging stopped. |
 | 2026-10-19 | We audited the package and the live setup. |
 | 2026-10-20 | Our questions answered by Oscar and Edward; vendor contract ended. easyrent-prod stopped with a final snapshot. |
+| 2026-10-29 | Image optimization run on the whole photo bucket (66,336 photos, −81%). |

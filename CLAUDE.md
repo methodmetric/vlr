@@ -31,6 +31,6 @@ There are no route, SEO or email tests. Tests cover `lib/restartPolicy.js`, `lib
 
 - `ARCHITECTURE.md`: read before changing request flow, search, listing pages, emails, the data model or the image pipeline. Checked against the code 2026-10-20.
 - `docs/TAKEOVER.md`: accounts, servers, secrets, backups, open questions. Wins over any other doc.
-- `IMAGE_OPTIMIZATION.md`: read before touching images in S3, the upload path or `Scripts/optimize_s3_images.js`; that script's own header comment and messages are stale, so follow the doc. The backfill is paused with properties 3606 and 5810 done (per vendor); don't add an S3 lifecycle rule that expires old versions.
+- `IMAGE_OPTIMIZATION.md`: read before touching images in S3, the upload path or `Scripts/optimize_s3_images.js`; that script's own header comment and messages are stale, so follow the doc. The backfill ran on the whole bucket on 2026-10-29; the originals are kept as old S3 versions until the client signs off, so don't add an S3 lifecycle rule that expires old versions.
 - `docs/vendor/`: the previous vendor's docs, kept for history, and `FACT-CHECK.md`, the log of what they got wrong. Check the code before trusting a vendor claim.
 - Known security problems and bugs: Linear VLR-18 (unauthenticated upload endpoint), VLR-19 (tenant auth, data exposure), VLR-20 (crash resilience), VLR-21 (correctness bugs).
