@@ -105,7 +105,7 @@ It must run from a git checkout on the server. Our repo is `github.com/seta-work
 
 ## 5. The code
 
-The zip is commit `dedbc40`, which the vendor says is exactly what's running. Folder-by-folder guide: https://claude.ai/artifact/3ouYCEkfiwtpZHjGKemt4v
+The zip is commit `dedbc40`, which is exactly what's running: `/opt/vlr/app` matches it file for file (**verified 2026-11-02**, VLR-8; see the server-only files below). Folder-by-folder guide: https://claude.ai/artifact/3ouYCEkfiwtpZHjGKemt4v
 
 - **Stack:** Node/Express 4, EJS templates, MongoDB via Mongoose 8, sharp for image watermarking, AWS SDK v2 for S3, nodemailer + Mailgun.
 - **Upgrade layer:** `lib/mongooseCompat.js` lets the old Mongoose 4 callback code run on Mongoose 8. `lib/imageProcessing.js` replaced the old `images` package. `lib/restartPolicy.js` stops crash loops. All three have tests.
@@ -126,7 +126,12 @@ Security problems and bugs found while checking the docs (VLR-16) are tracked in
 - Views still include two Universal Analytics IDs, which Google has shut down.
 - `npm audit`: 33 vulnerable dependencies (10 critical), mostly via `nodemailer`, `nodemailer-mailgun-transport`, `config-lite`, `ejs`.
 - AWS SDK v2 is end-of-support.
-- The zip's text files have Windows (CRLF) line endings. Harmless for the app; run `dos2unix *.sh vlr.service` if copying scripts straight to Linux.
+- The zip's text files have Windows (CRLF) line endings, added by the export: the copies on the server are LF. Harmless for the app; run `dos2unix *.sh vlr.service` if copying scripts straight from the zip to Linux.
+- **Files on the server that are not in the zip or the repo** (VLR-8). The first `deploy.sh` run deletes them (`rsync --delete`). All except the `.bak` are also in `~/vlr-vendor-2026-10-16`, which deploy doesn't touch:
+  - `public/update_at_march_5.csv` and `public/VLR Properties from Trusted Tenant - Properties Revised.csv`: the same listing export (address, rent, amenities, `agent`, `Additional Note`, lat/lng; no tenant or owner contacts). **Publicly downloadable** from the site root (200 on 2026-11-02). Left in place until the first deploy removes them; check they 404 afterwards.
+  - `JSON FILES/`: about 130 MB of 2019 production property dumps and recovery reports. Not served.
+  - `designs/` (home page mockups), `google_review.txt`, `.kiro/specs/seo-ux-improvements/` (the vendor's SEO/UX plan, now in `docs/vendor/kiro-seo-ux-spec/`), `.vscode/`, `.DS_Store`.
+  - `config/aws.json` (current key) and `config/aws.json.bak-20261027T120301Z` (the old, deactivated key; remove with VLR-27).
 
 ---
 
@@ -144,7 +149,7 @@ All committed in plain text in the zip. In our repo they were redacted at the ba
 
 The AWS root, Cloudflare and README passwords were **the same password**, and the vendor knows it, plus the `webadmin@vlr.ca` password. The Cloudflare password was changed 2026-10-20 (VLR-3) and the AWS root password 2026-10-22 (VLR-2); MM now owns `webadmin@vlr.ca`, with 2FA on one of their phones (VLR-1).
 
-**Unresolved:** the vendor's final email says to "fill in the real keys first (see SECRETS-TO-FILL.md)" and that placeholders would break "photo uploads, email and the daily backup". Our zip has no `SECRETS-TO-FILL.md` and contains the real keys (not placeholders). The daily backup does exist, but on the server, not in the code (§7). Until 2026-10-27 it read `config/aws.json`, which explains the warning. Whether a later package with `SECRETS-TO-FILL.md` exists is still open. **Resolve by comparing `/opt/vlr/app` on the server with the zip.**
+**`SECRETS-TO-FILL.md`:** the vendor's final email says to "fill in the real keys first (see SECRETS-TO-FILL.md)" and that placeholders would break "photo uploads, email and the daily backup". Our zip has no `SECRETS-TO-FILL.md` and contains the real keys (not placeholders). The server has no such file either, and runs the same code as the zip (checked 2026-11-02, VLR-8), so the note was out of date or refers to a package we never received. The daily backup does exist, but on the server, not in the code (§7). Until 2026-10-27 it read `config/aws.json`, which explains the warning.
 
 ---
 
@@ -180,7 +185,7 @@ The AWS root, Cloudflare and README passwords were **the same password**, and th
 ### This week
 - [x] Get onto vlr-prod-2026 via EC2 Instance Connect; add our SSH key (2026-10-22, VLR-7)
 - [x] Take our own `mongodump` and store it somewhere we control (the daily dumps go to `vlr-backup`, in VLR's account; test restore passed 2026-10-26)
-- [ ] Compare `/opt/vlr/app` with the zip (resolves the SECRETS-TO-FILL question)
+- [x] Compare `/opt/vlr/app` with the zip: same code, no `SECRETS-TO-FILL.md`; server-only files listed in §5 (2026-11-02, VLR-8)
 - [ ] Copy `/etc/vlr/env` and `/etc/mongod.conf` into our own records (not the repo)
 - [ ] Check `authorized_keys` on vlr-prod-2026 and wordpress-bitami for leftover vendor keys. vlr-prod-2026 done 2026-10-22 (VLR-4); vlr-prod and wordpress-bitami are VLR-23
 - [x] Look for the vendor's "daily backup" (crontab, systemd timers): it's `vlr-db-backup.timer` (§7)
@@ -212,7 +217,6 @@ The AWS root, Cloudflare and README passwords were **the same password**, and th
 - Are the compressed photos on properties 3606 and 5810 approved?
 
 ### Still unknown
-- Whether a newer code package with `SECRETS-TO-FILL.md` exists.
 - The snapshot retention period.
 - Whether a GA4 property exists.
 
