@@ -8,6 +8,7 @@ The previous vendor's documents, moved here on 2026-10-20 (VLR-16). They're kept
 | `TESTING.md` | `/TESTING.md` | Testing guide |
 | `test-README.md` | `/test/README.md` | Test folder guide |
 | `README-notes.md` | `/README.md` | The vendor's working notes |
+| `kiro-seo-ux-spec/` | `/opt/vlr/app/.kiro/specs/seo-ux-improvements/` on the server, not in the zip | The vendor's abandoned SEO/UX plan; see its README for what was built (added 2026-11-02, VLR-8) |
 
 ## What they get wrong
 
