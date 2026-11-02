@@ -912,6 +912,9 @@ router.get("/featured", function (req, res, next) {
           propertyId: {
             $in: featuredProperties.value,
           },
+          // The curated list is edited by hand and goes stale: drop anything
+          // rented or unlisted, whose listing page would not open.
+          status: "Available",
         },
         function (err, properties) {
           if (err) {
