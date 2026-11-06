@@ -2,7 +2,7 @@
 
 Everything our team knows about VancouverLuxuryRentals.com (VLR) after taking it over from the previous vendor. Last updated 2026-10-20.
 
-The previous vendor's contract has ended and they will not answer further questions. This document is the source of truth from here on. The vendor's own documents are archived in `docs/vendor/` (plus the untracked `docs/VLR website handover - final.md`) and describe the old Node 8 servers in places. `CLAUDE.md`, `ARCHITECTURE.md` and `IMAGE_OPTIMIZATION.md` were checked against the code and corrected on 2026-10-20 (VLR-16). Where any doc disagrees with this file, this file wins.
+The previous vendor's contract has ended and they will not answer further questions. This document is the source of truth from here on. The vendor's own documents are archived in `docs/vendor/` (plus the untracked `docs/VLR website handover - final.md`) and describe the old Node 8 servers in places. `CLAUDE.md`, `ARCHITECTURE.md` and `IMAGE_OPTIMIZATION.md` were checked against the code and corrected on 2026-10-20 ([VLR-16]). Where any doc disagrees with this file, this file wins.
 
 **How facts are marked**
 - **verified**: we checked it ourselves (the code, the live site, DNS/whois, or read-only AWS and Mailgun API calls on 2026-10-19 and 10-20).
@@ -43,8 +43,8 @@ No passwords or keys are written here. See [Secrets](#6-secrets) for where they 
 
 | Service | Owner | Login | Notes |
 |---|---|---|---|
-| AWS | VLR, paid with VLR's card (**per vendor**) | Root: `webadmin@vlr.ca` | Region `us-west-2`. Vendor removed their MFA device; since 2026-10-22 root has a new password and MFA on Jose's phone (VLR-2). The root access key the vendor created 2026-10-06 is deactivated; deleting it is VLR-24. Only IAM user is `vlr-web` (used by the site; full EC2 and S3 access, see §6). |
-| Google (`webadmin@vlr.ca`) | VLR | MM, with 2FA on one of their phones (VLR-1) | Owns Tag Manager `GTM-K2XTMZ6S`, Google Ads `AW-947376741` and Search Console. Also the AWS root email and the Mailgun login, so whoever controls this mailbox controls all of those. GA4 unknown; if it exists it's set up in Tag Manager. |
+| AWS | VLR, paid with VLR's card (**per vendor**) | Root: `webadmin@vlr.ca` | Region `us-west-2`. Vendor removed their MFA device; since 2026-10-22 root has a new password and MFA on Jose's phone ([VLR-2]). The root access key the vendor created 2026-10-06 is deactivated; deleting it is [VLR-24]. Only IAM user is `vlr-web` (used by the site; full EC2 and S3 access, see §6). |
+| Google (`webadmin@vlr.ca`) | VLR | MM, with 2FA on one of their phones ([VLR-1]) | Owns Tag Manager `GTM-K2XTMZ6S`, Google Ads `AW-947376741` and Search Console. Also the AWS root email and the Mailgun login, so whoever controls this mailbox controls all of those. GA4 unknown; if it exists it's set up in Tag Manager. |
 | Google Workspace (`vlr.ca`) | VLR | Admin **unknown** | Hosts email for all three main domains. The Workspace admin can reset `webadmin@` and `administrator@`. **Ask Shahram who it is.** |
 | Mailgun | VLR (**per vendor**) | `webadmin@vlr.ca` (reset password from that mailbox) | Sending domain `mg.vancouverluxuryrentals.com`. Account also holds `onepromisesolution.com` (vendor's 2018 test domain, delete) and two unverified `ec2-…amazonaws.com` domains (delete). `mg.vancouverluxuryrental.com` (singular) is a parked domain for sale, not VLR's. **verified** |
 | Cloudflare | VLR | `administrator@vlr.ca` | DNS, proxy and HTTPS for all five domains. Our team can log in. **verified** |
@@ -90,7 +90,7 @@ State and snapshots **verified**; descriptions **per vendor**.
 | Database | MongoDB on the same machine (8.x per the code comments). Moved here 2026-10-17 00:13 UTC. **per vendor** |
 | Disks | 200 GiB root + 20 GiB second disk, both encrypted. Daily AWS snapshots of the 20 GiB disk only. **verified** |
 | Network | Behind Cloudflare. Port 80 and 22 are open to the internet; 443 is closed (Cloudflare handles HTTPS). **verified** |
-| EC2 key pair | `vlr-production` (also on old vlr-prod). Removed from the `ubuntu` and `root` `authorized_keys` on 2026-10-22, so only our key is left (VLR-4). Old vlr-prod still has it (VLR-23). **verified** |
+| EC2 key pair | `vlr-production` (also on old vlr-prod). Removed from the `ubuntu` and `root` `authorized_keys` on 2026-10-22, so only our key is left ([VLR-4]). Old vlr-prod still has it ([VLR-23]). **verified** |
 
 ### Deploying
 
@@ -105,7 +105,7 @@ It must run from a git checkout on the server. Our repo is `github.com/seta-work
 
 ## 5. The code
 
-The zip is commit `dedbc40`, which is exactly what's running: `/opt/vlr/app` matches it file for file (**verified 2026-11-02**, VLR-8; see the server-only files below). Folder-by-folder guide: https://claude.ai/artifact/3ouYCEkfiwtpZHjGKemt4v
+The zip is commit `dedbc40`, which is exactly what's running: `/opt/vlr/app` matches it file for file (**verified 2026-11-02**, [VLR-8]; see the server-only files below). Folder-by-folder guide: https://claude.ai/artifact/3ouYCEkfiwtpZHjGKemt4v
 
 - **Stack:** Node/Express 4, EJS templates, MongoDB via Mongoose 8, sharp for image watermarking, AWS SDK v2 for S3, nodemailer + Mailgun.
 - **Upgrade layer:** `lib/mongooseCompat.js` lets the old Mongoose 4 callback code run on Mongoose 8. `lib/imageProcessing.js` replaced the old `images` package. `lib/restartPolicy.js` stops crash loops. All three have tests.
@@ -115,7 +115,7 @@ The zip is commit `dedbc40`, which is exactly what's running: `/opt/vlr/app` mat
 
 ### Known issues **verified**
 
-Security problems and bugs found while checking the docs (VLR-16) are tracked in Linear: VLR-18 (the image upload endpoint has no auth and allows arbitrary file write/delete — urgent), VLR-19 (tenant auth and data exposure), VLR-20 (crash resilience), VLR-21 (correctness bugs).
+Security problems and bugs found while checking the docs ([VLR-16]) are tracked in Asana: [VLR-18] (the image upload endpoint has no auth and allows arbitrary file write/delete — urgent), [VLR-19] (tenant auth and data exposure), [VLR-20] (crash resilience), [VLR-21] (correctness bugs).
 
 - `/properties/debug-search` is public and returns property data (and `/properties/api/all` returns every property, unlisted ones included).
 - `/VLR-admin/maintenance` and `/VLR-admin/inspection` render views that don't exist; the admin menu links to Maintenance.
@@ -127,11 +127,11 @@ Security problems and bugs found while checking the docs (VLR-16) are tracked in
 - `npm audit`: 33 vulnerable dependencies (10 critical), mostly via `nodemailer`, `nodemailer-mailgun-transport`, `config-lite`, `ejs`.
 - AWS SDK v2 is end-of-support.
 - The zip's text files have Windows (CRLF) line endings, added by the export: the copies on the server are LF. Harmless for the app; run `dos2unix *.sh vlr.service` if copying scripts straight from the zip to Linux.
-- **Files on the server that are not in the zip or the repo** (VLR-8). The first `deploy.sh` run deletes them (`rsync --delete`). All except the `.bak` are also in `~/vlr-vendor-2026-10-16`, which deploy doesn't touch:
+- **Files on the server that are not in the zip or the repo** ([VLR-8]). The first `deploy.sh` run deletes them (`rsync --delete`). All except the `.bak` are also in `~/vlr-vendor-2026-10-16`, which deploy doesn't touch:
   - `public/update_at_march_5.csv` and `public/VLR Properties from Trusted Tenant - Properties Revised.csv`: the same listing export (address, rent, amenities, `agent`, `Additional Note`, lat/lng; no tenant or owner contacts). **Publicly downloadable** from the site root (200 on 2026-11-02). Left in place until the first deploy removes them; check they 404 afterwards.
   - `JSON FILES/`: about 130 MB of 2019 production property dumps and recovery reports. Not served.
   - `designs/` (home page mockups), `google_review.txt`, `.kiro/specs/seo-ux-improvements/` (the vendor's SEO/UX plan, now in `docs/vendor/kiro-seo-ux-spec/`), `.vscode/`, `.DS_Store`.
-  - `config/aws.json` (current key) and `config/aws.json.bak-20261027T120301Z` (the old, deactivated key; remove with VLR-27).
+  - `config/aws.json` (current key) and `config/aws.json.bak-20261027T120301Z` (the old, deactivated key; remove with [VLR-27]).
 
 ---
 
@@ -141,15 +141,15 @@ All committed in plain text in the zip. In our repo they were redacted at the ba
 
 | Where (in the zip) | What | Action |
 |---|---|---|
-| `config/aws.json` | Access key for IAM user `vlr-web`, which has `AmazonEC2FullAccess` and `AmazonS3FullAccess` (attached directly and through the group `web`), although the code only uses S3 | **Rotated 2026-10-27.** The new key (ending `T3YU`) is in `/etc/vlr/env`, which the database backup (§7) and the repo's code read, and in `/opt/vlr/app/config/aws.json`, which the running app reads until the first deploy from our repo. The old key (ending `FPDQ`, the one in the zip) is deactivated; delete it after 2026-11-03 (VLR-27). |
+| `config/aws.json` | Access key for IAM user `vlr-web`, which has `AmazonEC2FullAccess` and `AmazonS3FullAccess` (attached directly and through the group `web`), although the code only uses S3 | **Rotated 2026-10-27.** The new key (ending `T3YU`) is in `/etc/vlr/env`, which the database backup (§7) and the repo's code read, and in `/opt/vlr/app/config/aws.json`, which the running app reads until the first deploy from our repo. The old key (ending `FPDQ`, the one in the zip) is deactivated; delete it after 2026-11-03 ([VLR-27]). |
 | `lib/mailer.js` | Mailgun API key, repeated 8 times | Rotate after taking over Mailgun; put the new key in `/etc/vlr/env`. |
 | `config/default.js`, `config/production.js` | Session secret | Rotate (logs everyone out); put the new value in `/etc/vlr/env`. |
 | `README.md` (bottom; now `docs/vendor/README-notes.md`) | Cloudflare login and password | Change the password. Already redacted in our repo. |
 | `docs/VLR website handover - final.md` (bottom) | AWS root and Cloudflare logins | Same password as above. Remove from the file. **Don't commit this file with passwords in it.** |
 
-The AWS root, Cloudflare and README passwords were **the same password**, and the vendor knows it, plus the `webadmin@vlr.ca` password. The Cloudflare password was changed 2026-10-20 (VLR-3) and the AWS root password 2026-10-22 (VLR-2); MM now owns `webadmin@vlr.ca`, with 2FA on one of their phones (VLR-1).
+The AWS root, Cloudflare and README passwords were **the same password**, and the vendor knows it, plus the `webadmin@vlr.ca` password. The Cloudflare password was changed 2026-10-20 ([VLR-3]) and the AWS root password 2026-10-22 ([VLR-2]); MM now owns `webadmin@vlr.ca`, with 2FA on one of their phones ([VLR-1]).
 
-**`SECRETS-TO-FILL.md`:** the vendor's final email says to "fill in the real keys first (see SECRETS-TO-FILL.md)" and that placeholders would break "photo uploads, email and the daily backup". Our zip has no `SECRETS-TO-FILL.md` and contains the real keys (not placeholders). The server has no such file either, and runs the same code as the zip (checked 2026-11-02, VLR-8), so the note was out of date or refers to a package we never received. The daily backup does exist, but on the server, not in the code (§7). Until 2026-10-27 it read `config/aws.json`, which explains the warning.
+**`SECRETS-TO-FILL.md`:** the vendor's final email says to "fill in the real keys first (see SECRETS-TO-FILL.md)" and that placeholders would break "photo uploads, email and the daily backup". Our zip has no `SECRETS-TO-FILL.md` and contains the real keys (not placeholders). The server has no such file either, and runs the same code as the zip (checked 2026-11-02, [VLR-8]), so the note was out of date or refers to a package we never received. The daily backup does exist, but on the server, not in the code (§7). Until 2026-10-27 it read `config/aws.json`, which explains the warning.
 
 ---
 
@@ -168,26 +168,26 @@ The AWS root, Cloudflare and README passwords were **the same password**, and th
 - **Photos:** S3 bucket `vancouverluxuryrental.com`: 68,929 current objects / 15.07 GB, plus 75,146 older versions / 82.88 GB, mostly the originals of the compressed photos (measured 2026-10-29). Versioning on, no lifecycle rule, so every original is recoverable. **verified**
 
 ### Image optimization (done 2026-10-29)
-`Scripts/optimize_s3_images.js` compressed the existing photos (JPEG quality 82): 66,336 photos, −81%, no failures, run on vlr-prod-2026 on 2026-10-29 (VLR-15). What the site serves went from 74.85 GB to 15.07 GB. `Scripts/restore_s3_originals.js` puts originals back if needed. Details in `IMAGE_OPTIMIZATION.md` §3 and §5.3. **Do not add an S3 lifecycle rule that expires old versions until the client approves the quality**: that permanently deletes the originals.
+`Scripts/optimize_s3_images.js` compressed the existing photos (JPEG quality 82): 66,336 photos, −81%, no failures, run on vlr-prod-2026 on 2026-10-29 ([VLR-15]). What the site serves went from 74.85 GB to 15.07 GB. `Scripts/restore_s3_originals.js` puts originals back if needed. Details in `IMAGE_OPTIMIZATION.md` §3 and §5.3. **Do not add an S3 lifecycle rule that expires old versions until the client approves the quality**: that permanently deletes the originals.
 
 ---
 
 ## 8. Security and access checklist
 
 ### Today
-- [x] AWS root: sign in, add our own MFA device, change the password (2026-10-22, VLR-2)
-- [ ] AWS root: delete the root access key created 2026-10-06 (Security credentials). Deactivated 2026-10-22; delete by 2026-11-05 (VLR-24)
+- [x] AWS root: sign in, add our own MFA device, change the password (2026-10-22, [VLR-2])
+- [ ] AWS root: delete the root access key created 2026-10-06 (Security credentials). Deactivated 2026-10-22; delete by 2026-11-05 ([VLR-24])
 - [ ] AWS: update the account contact details if needed (Account → Contact information)
-- [x] `webadmin@vlr.ca`: MM took it over, with 2FA on one of their phones (VLR-1)
-- [x] Cloudflare: change the password, add 2FA, review Members (VLR-3)
-- [x] EC2: delete key pair `vlr-blog2` (vendor holds its private key) (2026-10-22, VLR-4)
+- [x] `webadmin@vlr.ca`: MM took it over, with 2FA on one of their phones ([VLR-1])
+- [x] Cloudflare: change the password, add 2FA, review Members ([VLR-3])
+- [x] EC2: delete key pair `vlr-blog2` (vendor holds its private key) (2026-10-22, [VLR-4])
 
 ### This week
-- [x] Get onto vlr-prod-2026 via EC2 Instance Connect; add our SSH key (2026-10-22, VLR-7)
+- [x] Get onto vlr-prod-2026 via EC2 Instance Connect; add our SSH key (2026-10-22, [VLR-7])
 - [x] Take our own `mongodump` and store it somewhere we control (the daily dumps go to `vlr-backup`, in VLR's account; test restore passed 2026-10-26)
-- [x] Compare `/opt/vlr/app` with the zip: same code, no `SECRETS-TO-FILL.md`; server-only files listed in §5 (2026-11-02, VLR-8)
+- [x] Compare `/opt/vlr/app` with the zip: same code, no `SECRETS-TO-FILL.md`; server-only files listed in §5 (2026-11-02, [VLR-8])
 - [ ] Copy `/etc/vlr/env` and `/etc/mongod.conf` into our own records (not the repo)
-- [ ] Check `authorized_keys` on vlr-prod-2026 and wordpress-bitami for leftover vendor keys. vlr-prod-2026 done 2026-10-22 (VLR-4); vlr-prod and wordpress-bitami are VLR-23
+- [ ] Check `authorized_keys` on vlr-prod-2026 and wordpress-bitami for leftover vendor keys. vlr-prod-2026 done 2026-10-22 ([VLR-4]); vlr-prod and wordpress-bitami are [VLR-23]
 - [x] Look for the vendor's "daily backup" (crontab, systemd timers): it's `vlr-db-backup.timer` (§7)
 - [ ] Take over Mailgun via `webadmin@`; create a new API key
 - [x] Set up our own git repo from the zip (`github.com/seta-workshop/vlr`)
@@ -199,7 +199,7 @@ The AWS root, Cloudflare and README passwords were **the same password**, and th
 - [ ] Terminate vlr-staging, easyrent-prod, easyrent-dev, easyrent-back, easy_rent_dev_old
 - [ ] Delete `admin.easyrent.ca` and `beta.easyrent.ca` DNS records
 - [ ] Delete `onepromisesolution.com` and the two `ec2-…` domains from Mailgun
-- [x] Rotate the `vlr-web` AWS key (2026-10-27; delete the deactivated old key after 2026-11-03, VLR-27)
+- [x] Rotate the `vlr-web` AWS key (2026-10-27; delete the deactivated old key after 2026-11-03, [VLR-27])
 - [ ] Rotate the Mailgun key and the session secret (already out of the code since `7b0fd42`)
 - [ ] Decide on the blog: its server runs Debian 10 (no security updates since 2024), so rebuild it on a supported OS or retire wordpress-bitami
 - [ ] Ask Shahram whether anyone uses email at burnabyluxuryrentals.com (it goes to GoDaddy mail); if not, remove the MX record
@@ -235,3 +235,20 @@ The AWS root, Cloudflare and README passwords were **the same password**, and th
 | 2026-10-19 | We audited the package and the live setup. |
 | 2026-10-20 | Our questions answered by Oscar and Edward; vendor contract ended. easyrent-prod stopped with a final snapshot. |
 | 2026-10-29 | Image optimization run on the whole photo bucket (66,336 photos, −81%). |
+
+<!-- Task links: Asana, Vancouver Luxury Realty › Developer Tasks Tracker -->
+[VLR-1]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304608648537
+[VLR-2]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304608574708
+[VLR-3]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304608703812
+[VLR-4]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304645078848
+[VLR-7]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304791191267
+[VLR-8]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304662869628
+[VLR-15]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304645425581
+[VLR-16]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304662869648
+[VLR-18]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304895151778
+[VLR-19]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304792173110
+[VLR-20]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304792144552
+[VLR-21]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304663362463
+[VLR-23]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304266171391
+[VLR-24]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304663053437
+[VLR-27]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304791737642
