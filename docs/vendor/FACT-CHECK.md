@@ -1,6 +1,6 @@
 # Vendor docs: fact-check log
 
-What the previous vendor's documentation got wrong, checked against the code on 2026-10-20 for VLR-16.
+What the previous vendor's documentation got wrong, checked against the code on 2026-10-20 for [VLR-16].
 
 **Method.** About 270 checkable claims in the eight vendor docs were compared with the code. Then a second, independent round tried to disprove the findings that matter most, reading the code and testing where it could (running the tests, Mongoose pluralisation, Express param decoding); it also found some of the entries below. This log lists the contradictions that matter; trivial ones are left out, and it may not be complete. Evidence is the code unless an entry cites `docs/TAKEOVER.md` (facts about servers and accounts) or "per vendor".
 
@@ -10,11 +10,11 @@ What the previous vendor's documentation got wrong, checked against the code on 
 
 **Summary.** The descriptions of how the app works were mostly right: routing, search filters, listing pages, owner leads, the SEO layer, scheduled jobs. Almost everything about the runtime and operations was wrong or outdated: Node 8, Mongoose 4, the `images` package, `forever`, `.npmrc`, the test suite, the servers, secrets in the code, the deploy steps. `TESTING.md` and `test/README.md` describe a test suite that never existed.
 
-Bugs and security problems found along the way are tracked separately: VLR-18, VLR-19, VLR-20, VLR-21.
+Bugs and security problems found along the way are tracked separately: [VLR-18], [VLR-19], [VLR-20], [VLR-21].
 
 ---
 
-## CLAUDE.md (vendor version, rewritten in VLR-16)
+## CLAUDE.md (vendor version, rewritten in [VLR-16])
 
 | # | Line | Vendor said | Verdict | What the code says | Evidence |
 |---|---|---|---|---|---|
@@ -24,7 +24,7 @@ Bugs and security problems found along the way are tracked separately: VLR-18, V
 | 4 | 49 | The cleaner worker is designated "via `process.send`" | Partly | The master calls `worker.send(...)`; the worker listens with `process.on('message')` | `server.js:104, 332` |
 | 5 | 53 | config-lite keyed off `__dirname` from `server.js`; dev reads `default.js`, prod reads `production.js` | Partly | Modules that need config call config-lite with their own directory. `production.js` is shallow-merged over `default.js`, and command-line flags and the `CONFIG` (or `NODE_CONFIG`) env var are merged over both | `node_modules/config-lite/index.js:13-46` |
 | 6 | 59-70 | Route table | Partly | Also mounted: `/VLR-admin/showRoom` (from `admin.js`), `/sitemap.xml`, `/robots.txt`. `routes/sell.js` and `routes/availability.js` are never mounted | `routes/index.js:224-232`, `routes/admin.js:756` |
-| 7 | 68 | `/VLR-admin` "protected by `AdminController.isAuthenticated`" | Wrong | Auth is per route. `/VLR-admin/images` has no auth at all (VLR-18); `/VLR-admin/csv` and `/login` are public | `routes/images.js:24-25`, `routes/admin.js:247` |
+| 7 | 68 | `/VLR-admin` "protected by `AdminController.isAuthenticated`" | Wrong | Auth is per route. `/VLR-admin/images` has no auth at all ([VLR-18]); `/VLR-admin/csv` and `/login` are public | `routes/images.js:24-25`, `routes/admin.js:247` |
 | 8 | 87 | `availableDate<N` becomes a date range | Partly | Kept only for old bookmarked URLs | `routes/properties.js:158-177` |
 | 9 | 100 | Landing-page slugs are `<city>`, `-furnished`, `-unfurnished`, `all` | Partly | `all-furnished` and `all-unfurnished` exist too: 54 pages | `lib/forRentPages.js:180-186` |
 | 10 | 104 | Email types list | Partly | Also `agent` / `sendAgentMail`, which nothing calls | `lib/mailer.js:75` |
@@ -35,7 +35,7 @@ Bugs and security problems found along the way are tracked separately: VLR-18, V
 | 15 | 138 | One property (3606) backfilled | Outdated | 3606 and 5810 (per vendor) | `docs/TAKEOVER.md` §7 |
 | 16 | 141 | "the server's Node 8 / glibc constraints" | Outdated | True of the old servers. The code can't run on Node 8: `sharp` 0.35 needs Node ≥ 20.9, and Mongoose is 8. Production runs 24.22.0 (per vendor) | `node_modules/sharp/package.json` (`engines`) |
 
-## ARCHITECTURE.md (vendor version, corrected in VLR-16)
+## ARCHITECTURE.md (vendor version, corrected in [VLR-16])
 
 | # | Line | Vendor said | Verdict | What the code says | Evidence |
 |---|---|---|---|---|---|
@@ -47,30 +47,30 @@ Bugs and security problems found along the way are tracked separately: VLR-18, V
 | 6 | 55, 75 | Logging: log4js + express-winston | Wrong | No winston. log4js `connectLogger` for HTTP; the cluster master logs via `console` to journald; in cluster mode only the master writes the log files | `server.js:57-89, 178` |
 | 7 | 62 | Dead workers are re-forked | Partly | Unless 5 in a row die within 30 s of starting; then the master exits | `lib/restartPolicy.js`, `server.js:120-130` |
 | 8 | 91 | All routes composed in `routes/index.js` | Partly | `/VLR-admin/showRoom` is mounted from `admin.js`; two routers are never mounted; `/unsubscribe`, `/email`, `/property-management/…` and the `/for-rent` → `/for-rent/all` redirect were missing | `routes/index.js:44-50, 205-222`, `routes/admin.js:756` |
-| 9 | 109 | `/VLR-admin/images/*` is admin-only | Wrong | No auth middleware; mounted before the admin router (VLR-18) | `routes/images.js:24-25`, `routes/index.js:228` |
+| 9 | 109 | `/VLR-admin/images/*` is admin-only | Wrong | No auth middleware; mounted before the admin router ([VLR-18]) | `routes/images.js:24-25`, `routes/index.js:228` |
 | 10 | 110 | `GET *` 404 fallback | Partly | Renders `404.ejs` with status 200 | `routes/index.js:232-234` |
 | 11 | 148 | Unless `status` is Available/Rented, unlisted properties are excluded | Partly | Only in the non-date branch; with an availability filter any `status` passes through | `routes/properties.js:176-192` |
-| 12 | 156 | `buildPropertiesSeo()` canonicalises both URL forms to the clean path | Partly | Not with `furnished=Yes/No`: it reads `req.query` after `getProperties` rewrote it, so the canonical becomes `?furnished!=…` (VLR-21) | `routes/properties.js:56, 204-208, 275` |
+| 12 | 156 | `buildPropertiesSeo()` canonicalises both URL forms to the clean path | Partly | Not with `furnished=Yes/No`: it reads `req.query` after `getProperties` rewrote it, so the canonical becomes `?furnished!=…` ([VLR-21]) | `routes/properties.js:56, 204-208, 275` |
 | 13 | 157 | Sitemap advertises the clean URLs | Partly | Only `all`, `all-furnished`, `all-unfurnished` and the base page of cities with stock; also lists `/properties?…` URLs for Rented facets | `lib/sitemap.js:140-163, 211` |
 | 14 | 170 | `/properties/rented` = rented count + 500 | Partly | Counts `status != "Available"`, which includes unlisted properties | `routes/properties.js:1023-1036` |
 | 15 | 175 | `/properties/attributes` admin | Partly | SuperAdmin | `routes/properties.js:812-816` |
-| 16 | 178 | `PUT /properties/id/:id` updates the property | Partly | It also creates it if missing, writes `maxId`, and resets `createdAt` on every edit (VLR-21) | `routes/properties.js:430-468, 556-562` |
+| 16 | 178 | `PUT /properties/id/:id` updates the property | Partly | It also creates it if missing, writes `maxId`, and resets `createdAt` on every edit ([VLR-21]) | `routes/properties.js:430-468, 556-562` |
 | 17 | 188-199 | Signed URL, then host rewritten to the public endpoint; two URL strategies | Wrong | The `.replace()` looks for the website domain, not the bucket, so it never matches: pages serve signed URLs that expire after 15 min. There are three strategies, plus an https-on-website-endpoint URL in `showRoom.js` | `routes/properties.js:286-291`, `routes/showRoom.js:486-490`, `lib/teamPhotos.js:28` |
 | 18 | 207 | Only the trailing `-property-id-N` is parsed | Partly | Everything after the *first* `-property-id-` is taken as the id (`indexOf`) | `routes/listing.js:223-226` |
 | 19 | 237, 285 | Owner leads in the `ownerleads` collection | Wrong | Model `'Leads'` → collection `leads` | `models/ownerLeads.js:39` |
-| 20 | 265, 268 | `POST /user/newfavorite` and `DELETE /user/favorite` require a session | Wrong | Neither reads the session; both trust `req.body.user` (VLR-19) | `routes/user.js:265-309, 358-397` |
+| 20 | 265, 268 | `POST /user/newfavorite` and `DELETE /user/favorite` require a session | Wrong | Neither reads the session; both trust `req.body.user` ([VLR-19]) | `routes/user.js:265-309, 358-397` |
 | 21 | 270 | `DELETE /user/id/:id` | Partly | `:id` is matched against `email` | `routes/user.js:48-67` |
 | 22 | 272 | Both sides of favourites updated with `$addToSet` / `$pull` | Partly | Only the `propertyFavorite` side; the user side is a plain array edit + `save()` | `routes/user.js:275, 281-293, 368` |
 | 23 | 286 | showRoom categories | Partly | Also `uploadForms`; the field is `value` | `routes/tenants.js:14-16`, `models/showRoom.js:6` |
 | 24 | 304 | Fine Uploader posts to `/VLR-admin/images` | Wrong | `/VLR-admin/images/uploads` | `routes/images.js:24` |
 | 25 | 311 | S3 used from `properties.js`, `images.js`, `listing.js` | Wrong | API calls are in `properties.js`, `showRoom.js`, `admin.js`, `lib/teamPhotos.js`. `images.js` builds a `createBucket` request that is never sent; `listing.js` only builds URLs. (`admin.js`'s one call, `listObjects`, sits in a branch that can't be reached) | `routes/images.js:20-22`, `routes/admin.js:411-421` |
-| 26 | 321 | `sendOwnerLeadMail` → VLR admin | Partly | Hard-coded to `info@`, so the admin's "forward lead to agent" never reaches the agent (VLR-21) | `lib/mailer.js:215`, `routes/admin.js:636-657` |
+| 26 | 321 | `sendOwnerLeadMail` → VLR admin | Partly | Hard-coded to `info@`, so the admin's "forward lead to agent" never reaches the agent ([VLR-21]) | `lib/mailer.js:215`, `routes/admin.js:636-657` |
 | 27 | 322-324 | Mailer functions `sendAvailableForProperty`, `setPriceChangeForProperty`; renewal "—" | Wrong | Those two live in `lib/setAvailable.js`; the mailer functions are `sendAvailableMail` and `sendPriceChangeMail`. Renewal is `sendRenewalMail`, fired from `POST /VLR-admin/mail/renewal/:id` | `lib/mailer.js:108, 230, 272`, `routes/admin.js:667` |
 | 28 | 334 | SEO middleware covers `homepage`, `owners`, `area`, `property`, `blog` | Partly | Only the first three are wired up; `structuredData` is always `[]` | `lib/seoHelpers.js`, `routes/index.js:22, 94-144` |
 | 29 | 348 | Secrets committed in `config/aws.json`, `lib/mailer.js`, `config/*.js` | Outdated | True of the zip; since `7b0fd42` they come from the environment | `lib/mailer.js:12`, `config/default.js:4` |
 | 30 | 367 | Config files include `config/aws.json`, `.npmrc` | Partly | `.npmrc` doesn't exist. `config/aws.json` was read (9 `loadFromPath` calls) until our `7b0fd42` moved the keys to the environment | `git grep -n loadFromPath f304cbb -- '*.js'` |
 
-## IMAGE_OPTIMIZATION.md (vendor version, corrected in VLR-16)
+## IMAGE_OPTIMIZATION.md (vendor version, corrected in [VLR-16])
 
 | # | Line | Vendor said | Verdict | What the code says | Evidence |
 |---|---|---|---|---|---|
@@ -118,7 +118,7 @@ Bugs and security problems found along the way are tracked separately: VLR-18, V
 | 13 | 139-146 | Team photo update via SSH to old prod + `migrate_team_photos.js` | Outdated | Edited in the admin at `/VLR-admin/showRoom/meetTeam`; the script is a one-time migration and needs the env loaded | `routes/showRoom.js`, `Scripts/readme.txt` |
 | 14 | 160, 266 | 30 SEO unit tests; see `TESTING.md` | Wrong | 41 tests, none for SEO | `package.json:7`, `test/unit/` |
 | 15 | 176 | Session secret hardcoded in config | Outdated | True of the handover code; since our `7b0fd42`, `SESSION_SECRET`, and startup exits without it | `config/default.js:4`, `server.js:24-27` |
-| 16 | 181 | Daily job emails users who favourited a property | Partly | It also flips Rented → Available, but only for properties with a `propertyFavorite` doc (VLR-21) | `lib/setAvailable.js:56-96` |
+| 16 | 181 | Daily job emails users who favourited a property | Partly | It also flips Rented → Available, but only for properties with a `propertyFavorite` doc ([VLR-21]) | `lib/setAvailable.js:56-96` |
 | 17 | 188 | Errors logged via syslog + express-winston | Wrong | log4js files plus `console` to journald; no winston | `server.js:57-89` |
 | 18 | 196, 258 | `.npmrc` with `ignore-scripts=true` | Wrong | Doesn't exist | — |
 | 19 | 257 | Clone from Bitbucket | Outdated | Shut down (per vendor) | `docs/TAKEOVER.md` §3 |
@@ -150,8 +150,15 @@ Same fictional suite as `TESTING.md`: the tree with `seoHelpers` / `seoMiddlewar
 | 3 | 62-65 | The two old servers | Outdated | No longer serve the site, pending termination | `docs/TAKEOVER.md` §4 |
 | 4 | 69-74 | Team photos: SSH to old prod, run the migration, `./deploy.sh` | Outdated | Admin UI at `/VLR-admin/showRoom/meetTeam`; no deploy needed for data | `routes/showRoom.js` |
 
-## Scripts/readme.txt (corrected in VLR-16)
+## Scripts/readme.txt (corrected in [VLR-16])
 
 | # | Line | Vendor said | Verdict | What the code says |
 |---|---|---|---|---|
 | 1 | 1 | The folder holds scripts that help build the sitemap | Partly | Only `build_sitemap.js` does; the others re-encode S3 photos and migrate team photos |
+
+<!-- Task links: Asana, Vancouver Luxury Realty › Developer Tasks Tracker -->
+[VLR-16]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304662869648
+[VLR-18]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304895151778
+[VLR-19]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304792173110
+[VLR-20]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304792144552
+[VLR-21]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304663362463

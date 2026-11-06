@@ -1,7 +1,7 @@
 # Image Optimization — Work In Progress
 
 > **Status**: S3 backfill done on 2026-10-29 (§5.3). The originals are kept as old S3 versions until the client signs off (§9).
-> **Last checked against the code**: 2026-10-20 (VLR-16). Backfill results added 2026-10-29 (VLR-15). Written by the previous vendor up to 2026-09-29.
+> **Last checked against the code**: 2026-10-20 ([VLR-16]). Backfill results added 2026-10-29 ([VLR-15]). Written by the previous vendor up to 2026-09-29.
 > **Read this with**: [docs/TAKEOVER.md](docs/TAKEOVER.md) (servers, accounts), [ARCHITECTURE.md](ARCHITECTURE.md) §4.4–4.5 (upload pipeline, image URLs)
 >
 > The vendor's commit hashes for this work (`b2deba0`, `dcea73d`, …) are from their private repo and don't exist in ours, which starts at the handover baseline. Results of runs against S3 (sizes, versions, headers) are the vendor's measurements; we haven't re-checked them.
@@ -60,11 +60,11 @@ New uploads are processed by [`lib/imageProcessing.js`](lib/imageProcessing.js) 
 
 **Scope**: affects only photos uploaded *from now on*. The handler only processes images not already in the property's `imgs[]`. Nothing already in S3 is touched.
 
-**Known limitations**: `.png` uploads are still written losslessly as PNG (`image.png({ adaptiveFiltering: true })`) and stay large. Since VLR-15, `uploadToS3` in `routes/properties.js` sets the same `ContentType`, `Cache-Control` and (JPEGs only) `vlr-optimized` tag as the backfill, from `s3UploadParams()` in `lib/imageProcessing.js`; photos uploaded before that deploy have none of them (see §7).
+**Known limitations**: `.png` uploads are still written losslessly as PNG (`image.png({ adaptiveFiltering: true })`) and stay large. Since [VLR-15], `uploadToS3` in `routes/properties.js` sets the same `ContentType`, `Cache-Control` and (JPEGs only) `vlr-optimized` tag as the backfill, from `s3UploadParams()` in `lib/imageProcessing.js`; photos uploaded before that deploy have none of them (see §7).
 
 ### 2.4 S3 backfill script — RUN ON THE WHOLE BUCKET (2026-10-29)
 
-[`Scripts/optimize_s3_images.js`](Scripts/optimize_s3_images.js) re-encodes existing photos in the bucket. It is a dry run unless given `--apply`. (The neighbouring `migrate_team_photos.js` is the opposite: it writes unless given `--dry-run`.) Its header comment and messages are the vendor's and partly stale: the Node 8 / `NODE_PATH` setup, usage lines with a lowercase `scripts/` path (wrong on Linux), `npm install --no-save sharp`, and an end-of-run message recommending the lifecycle rule. Follow this doc instead (fixing the script is VLR-22).
+[`Scripts/optimize_s3_images.js`](Scripts/optimize_s3_images.js) re-encodes existing photos in the bucket. It is a dry run unless given `--apply`. (The neighbouring `migrate_team_photos.js` is the opposite: it writes unless given `--dry-run`.) Its header comment and messages are the vendor's and partly stale: the Node 8 / `NODE_PATH` setup, usage lines with a lowercase `scripts/` path (wrong on Linux), `npm install --no-save sharp`, and an end-of-run message recommending the lifecycle rule. Follow this doc instead (fixing the script is [VLR-22]).
 
 The vendor processed two properties (per vendor); we did one more as a test, then the rest of the bucket (§5.3):
 
@@ -129,7 +129,7 @@ http://vancouverluxuryrental.com.s3-website-us-west-2.amazonaws.com/3606/...jpg
 
 The gallery works only because [`views/listing.ejs:111-113`](views/listing.ejs#L111-L113) rewrites that host to the REST endpoint (`http://s3.us-west-2.amazonaws.com/vancouverluxuryrental.com/...`) in client-side JavaScript.
 
-**Consequence: the `og:image` meta tag (and the JSON-LD `image`) is broken.** It carries the un-rewritten website-endpoint URL, meta tags are not touched by that JS, and crawlers do not run JS — so sharing any listing on Facebook, LinkedIn or WhatsApp produces **no preview image**. Tracked in VLR-21; fix it as part of the URL consolidation in §5.4.
+**Consequence: the `og:image` meta tag (and the JSON-LD `image`) is broken.** It carries the un-rewritten website-endpoint URL, meta tags are not touched by that JS, and crawlers do not run JS — so sharing any listing on Facebook, LinkedIn or WhatsApp produces **no preview image**. Tracked in [VLR-21]; fix it as part of the URL consolidation in §5.4.
 
 ### 4.2 Where to run it
 
@@ -209,7 +209,7 @@ Even at 230 KB, a search card renders a 1920px photo into a 230px-tall box ([`pu
 
 **Prerequisite**: S3 URL construction is copy-pasted across the code — five `getSignedUrl` calls in `routes/properties.js`, two website-endpoint URLs in `routes/user.js`, one in `routes/listing.js`, one in `routes/showRoom.js`, path-style URLs in `lib/teamPhotos.js` and `lib/seoHelpers.js` (ARCHITECTURE §4.5), plus client-side host rewrites in `views/listing.ejs:111-113`, `views/myFavorites.ejs` and `views/tenant-forms.ejs`. Centralize it into one module alongside `lib/urls.js` **first**, so thumbnails become a change in one place.
 
-Also note `/properties` builds URLs with `s3.getSignedUrl` ([`routes/properties.js:286`](routes/properties.js#L286)); the signature changes every render, so the browser can never reuse a cached copy, and the URLs expire after 15 minutes (the `.replace()` after it never matches; VLR-21). `routes/listing.js` uses the plain website endpoint. These disagree, and the signed one defeats the new `Cache-Control` header entirely. Fix as part of the same consolidation.
+Also note `/properties` builds URLs with `s3.getSignedUrl` ([`routes/properties.js:286`](routes/properties.js#L286)); the signature changes every render, so the browser can never reuse a cached copy, and the URLs expire after 15 minutes (the `.replace()` after it never matches; [VLR-21]). `routes/listing.js` uses the plain website endpoint. These disagree, and the signed one defeats the new `Cache-Control` header entirely. Fix as part of the same consolidation.
 
 ### 5.5 Agent portrait PNGs — repo bloat, not page weight
 
@@ -241,7 +241,7 @@ Costs a vendor dependency and a monthly bill. It was offered and the backfill wa
 - **Rollback**: versioning is on. Every original survives as a previous version.
 - **A file is only replaced if it saves ≥15%** (`--min-saving`), so already-efficient files are not degraded for nothing.
 - **Per-file failures are skipped**, never aborting the run, and written to `Scripts/.optimize_s3_failures.json` only when a run finishes with failures (replacing any earlier file; a clean run leaves an old file in place). An interrupted run records none, but re-running retries them anyway because failed keys are never marked done.
-- **Uploads from before the tag fix aren't tagged.** Uploads are tagged `vlr-optimized` only once the VLR-15 change to `uploadToS3` is deployed. Photos uploaded between the q82 change and that deploy carry no tag, so the backfill re-encodes them (q82 → q82) wherever that saves 15%. We accept that extra generation loss. The quality, cache lifetime and tag name the script uses by default come from `lib/imageProcessing.js`, shared with the upload path.
+- **Uploads from before the tag fix aren't tagged.** Uploads are tagged `vlr-optimized` only once the [VLR-15] change to `uploadToS3` is deployed. Photos uploaded between the q82 change and that deploy carry no tag, so the backfill re-encodes them (q82 → q82) wherever that saves 15%. We accept that extra generation loss. The quality, cache lifetime and tag name the script uses by default come from `lib/imageProcessing.js`, shared with the upload path.
 - **Quality is one flag** (`--quality`). Re-running a property at a different quality does nothing on its own: tagged objects are always skipped, and a fresh progress file doesn't change that. To redo a property, restore its originals first (`node Scripts/restore_s3_originals.js --apply --listing <id>`), then re-run with a fresh progress file (`--progress <new file>`), because the default one still lists those keys as done.
 - **Script flags are merged into the app config** by config-lite, as are the `CONFIG` / `NODE_CONFIG` environment variables. The script's own flags don't collide with config keys, but any flag named after one would override it: `--port`, `--session`, `--mongodb`, `--bucket` (which would send every write to another bucket), `--canonicalHost`, `--redirectHosts`.
 
@@ -299,3 +299,9 @@ Also never suspend bucket versioning: objects uploaded before versioning was tur
 ### Practical guidance
 
 Run a property, look at it, then continue. That is what was done with 3606, 5810 and 5799 before the full run, and it worked. The whole run is done; do not add the lifecycle rule until the client has approved the result.
+
+<!-- Task links: Asana, Vancouver Luxury Realty › Developer Tasks Tracker -->
+[VLR-15]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304645425581
+[VLR-16]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304662869648
+[VLR-21]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304663362463
+[VLR-22]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304663313551

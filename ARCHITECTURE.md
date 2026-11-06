@@ -3,7 +3,7 @@
 > **Project**: VancouverLuxuryRentals.com (VLR)
 > **Purpose**: Deep-dive reference for developers — system architecture, data model, and upstream/downstream API flows.
 > **Companion docs**: [CLAUDE.md](CLAUDE.md) (commands, rules, quick map), [docs/TAKEOVER.md](docs/TAKEOVER.md) (accounts, servers, secrets), [IMAGE_OPTIMIZATION.md](IMAGE_OPTIMIZATION.md).
-> **Last checked against the code**: 2026-10-20 (VLR-16). Originally written by the previous vendor; their other docs are archived in [docs/vendor/](docs/vendor/).
+> **Last checked against the code**: 2026-10-20 ([VLR-16]). Originally written by the previous vendor; their other docs are archived in [docs/vendor/](docs/vendor/).
 
 ---
 
@@ -85,7 +85,7 @@ In registration order in `server.js`:
 10. A middleware that sets `res.locals.user`. Only reached by non-GET/HEAD requests that no route answered (GET/HEAD are caught by the router's `GET *`); they then get Express's default 404.
 11. **Error handler** — logs the error and redirects to `/`.
 
-> ⚠️ **Error handling**: only errors passed to `next(err)` or thrown synchronously reach the handler, and it answers every one with a redirect to `/`. Errors thrown inside async callbacks (DB, S3, fs) are not caught: `lib/mongooseCompat.js` re-throws callback exceptions, and there is no `uncaughtException` handler, so they kill the worker. Some error paths also return without responding, leaving the socket open until the 120 s server timeout. Tracked in VLR-20.
+> ⚠️ **Error handling**: only errors passed to `next(err)` or thrown synchronously reach the handler, and it answers every one with a redirect to `/`. Errors thrown inside async callbacks (DB, S3, fs) are not caught: `lib/mongooseCompat.js` re-throws callback exceptions, and there is no `uncaughtException` handler, so they kill the worker. Some error paths also return without responding, leaving the socket open until the 120 s server timeout. Tracked in [VLR-20].
 
 ### 2.2 Configuration
 
@@ -119,8 +119,8 @@ Auth is per route, not per prefix: each admin route lists its own `AdminControll
 | `/owners/*` | `owners.js` | public | HTML | Owner pages + list-property lead form (§6.1; the POST returns an empty 200) |
 | `/tenants/*` | `tenants.js` | public | HTML | Tenant info pages |
 | `/user/*` | `user.js` | mixed | HTML+JSON | Tenant sign-in + favourites (§7) |
-| `/VLR-admin/images/*` | `images.js` | ⚠️ **none** | JSON | Fine Uploader temp-upload endpoint (§4.4). Mounted before `/VLR-admin` and has no auth middleware — VLR-18 |
-| `/VLR-admin/*` | `admin.js` | admin, mostly SuperAdmin | HTML+JSON | Admin panel: properties, admins, CSV import/export/drop, schedules and lead forwarding, renewal mail, redirect rules, log viewer. `GET /VLR-admin/csv`, `/login` and `/logout` are public. A non-SuperAdmin on a SuperAdmin route gets no response (`isSuperAdmin` sets status 550 without sending; VLR-20) |
+| `/VLR-admin/images/*` | `images.js` | ⚠️ **none** | JSON | Fine Uploader temp-upload endpoint (§4.4). Mounted before `/VLR-admin` and has no auth middleware — [VLR-18] |
+| `/VLR-admin/*` | `admin.js` | admin, mostly SuperAdmin | HTML+JSON | Admin panel: properties, admins, CSV import/export/drop, schedules and lead forwarding, renewal mail, redirect rules, log viewer. `GET /VLR-admin/csv`, `/login` and `/logout` are public. A non-SuperAdmin on a SuperAdmin route gets no response (`isSuperAdmin` sets status 550 without sending; [VLR-20]) |
 | `/VLR-admin/showRoom/*` | `showRoom.js` | SuperAdmin | JSON | Featured / banner / recently-rented lists, FAQ, announcement, upload forms, team members |
 | `GET *` | `index.js` | public | HTML | Renders `404.ejs` **with status 200** |
 
@@ -165,7 +165,7 @@ req._properties  →  next()
 
 Default status behaviour (non-date branch): unless `status` is explicitly `Available` or `Rented`, the query excludes `status = "Not list property"`.
 
-On any query error — including a cast error from input like `?rent=abc` — the handler returns without responding (VLR-20).
+On any query error — including a cast error from input like `?rent=abc` — the handler returns without responding ([VLR-20]).
 
 ### 4.2 Clean URL ↔ Query Duality
 
@@ -173,7 +173,7 @@ On any query error — including a cast error from input like `?rent=abc` — th
 - `/for-rent/richmond` ⇔ `/properties?city=Richmond&status=Available`
 - Slug forms: `<city>`, `<city>-furnished`, `<city>-unfurnished`, plus `all`, `all-furnished`, `all-unfurnished` — 17 cities + `all`, × 3 = 54 pages.
 - `routes/index.js` resolves the slug into `req.query`, then runs the **same** `getProperties` + `renderPropertiesPage`.
-- `routes/properties.js` `buildPropertiesSeo()` sets the canonical `<link>` to the clean path when the query form maps to a landing page. It is a canonical tag, not a redirect. Known gap: it reads `req.query` *after* `getProperties` has rewritten `furnished`, so the query form with `furnished=Yes/No` canonicalises to a `?furnished!=…` URL instead of the landing page (VLR-21).
+- `routes/properties.js` `buildPropertiesSeo()` sets the canonical `<link>` to the clean path when the query form maps to a landing page. It is a canonical tag, not a redirect. Known gap: it reads `req.query` *after* `getProperties` has rewritten `furnished`, so the query form with `furnished=Yes/No` canonicalises to a `?furnished!=…` URL instead of the landing page ([VLR-21]).
 - `lib/sitemap.js` advertises `/for-rent/all`, `all-furnished`, `all-unfurnished`, and, for each distinct city with Available stock, its `/for-rent/<city>` page (or a `/properties?city=…&status=Available` URL when the city has no landing page); city furnished/unfurnished pages are not listed. It also lists `/properties?…` query URLs for Rented facets.
 - Filters with no landing page (keyword, bedrooms, price, rented facets) keep their `?query=` URL.
 
@@ -183,17 +183,17 @@ On any query error — including a cast error from input like `?rent=abc` — th
 |---|---|---|---|---|
 | GET | `/properties/` | public | HTML | Search results page |
 | GET | `/properties/count` | public | JSON `{count}` | Result count; duplicates the pipeline logic |
-| GET | `/properties/random` | public | JSON | 3 random listings (+ favourites if logged in; ⚠️ includes favouriters' user ids — VLR-19) |
+| GET | `/properties/random` | public | JSON | 3 random listings (+ favourites if logged in; ⚠️ includes favouriters' user ids — [VLR-19]) |
 | GET | `/properties/featured` | public | JSON | From the `showRoom` `featuredProperties` category |
 | GET | `/properties/recentlyRented` | public | JSON | From `recentlyRentedProperties` |
 | GET | `/properties/banner` | public | JSON | From `bannerProperties` |
 | GET | `/properties/rented` | public | JSON `{count}` | Count of `status != "Available"` (includes unlisted) + 500 |
 | GET | `/properties/forRent` | public | JSON `{count}` | Available count |
-| GET | `/properties/api/all` | public | JSON | ⚠️ Every property, every status (incl. "Not list property"), all fields except `searchColumn` — VLR-19 |
-| GET | `/properties/id/:id` | public | JSON | ⚠️ Full document by `propertyId`, incl. `searchColumn` — VLR-19 |
+| GET | `/properties/api/all` | public | JSON | ⚠️ Every property, every status (incl. "Not list property"), all fields except `searchColumn` — [VLR-19] |
+| GET | `/properties/id/:id` | public | JSON | ⚠️ Full document by `propertyId`, incl. `searchColumn` — [VLR-19] |
 | GET | `/properties/agent/:name` | public | JSON | Agent name/email/phone from `admins` |
 | GET | `/properties/attributes` | SuperAdmin | JSON | Attribute reference list |
-| GET | `/properties/debug-search` | public | JSON | ⚠️ Leftover diagnostic endpoint — VLR-19 |
+| GET | `/properties/debug-search` | public | JSON | ⚠️ Leftover diagnostic endpoint — [VLR-19] |
 | POST | `/properties/new` | SuperAdmin | JSON `{id}` | Create property (`body.property` is a JSON string) |
 | PUT | `/properties/id/:id` | SuperAdmin | JSON | Update property (~90 fields); creates it if missing; may fire availability/price-change emails (§6.2) |
 | PUT | `/properties/id/:id/images` | SuperAdmin | JSON | Reconcile image set → resize + watermark + S3 upload/delete (§4.4) |
@@ -201,13 +201,13 @@ On any query error — including a cast error from input like `?rent=abc` — th
 | GET | `/properties/image/:id/:filename` | SuperAdmin | JSON | Fetch one image from S3 |
 | DELETE | `/properties/id/:id` | SuperAdmin | JSON `{id}` | Delete property |
 
-`PUT /properties/id/:id` also rebuilds `searchColumn` (JSON.stringify of the document) and, for a new property, writes its id to the `dbstatuses` `maxId` counter. Known bug: it reads `req.body.createdAt`, but the form sends `form.createdAt`, so every edit resets `createdAt` (and the sitemap `<lastmod>`) to now (VLR-21).
+`PUT /properties/id/:id` also rebuilds `searchColumn` (JSON.stringify of the document) and, for a new property, writes its id to the `dbstatuses` `maxId` counter. Known bug: it reads `req.body.createdAt`, but the form sends `form.createdAt`, so every edit resets `createdAt` (and the sitemap `<lastmod>`) to now ([VLR-21]).
 
 ### 4.4 Image Upload Pipeline
 
-1. **Upload to temp.** Fine Uploader in the admin posts each file to `POST /VLR-admin/images/uploads` (`routes/images.js`, 5 MB limit). It lands in `uploads/<qquuid>/<qqfilename>`; `DELETE /VLR-admin/images/uploads/:uuid` removes it. Nothing goes to S3 here. ⚠️ This router has no auth and builds paths from request input — VLR-18.
+1. **Upload to temp.** Fine Uploader in the admin posts each file to `POST /VLR-admin/images/uploads` (`routes/images.js`, 5 MB limit). It lands in `uploads/<qquuid>/<qqfilename>`; `DELETE /VLR-admin/images/uploads/:uuid` removes it. Nothing goes to S3 here. ⚠️ This router has no auth and builds paths from request input — [VLR-18].
 2. **Process on save.** When the admin saves the image set, `PUT /properties/id/:id/images` diffs it against `imgs[]`. Each new photo goes through `lib/imageProcessing.js` (`sharp`): resized to 1920 px wide (smaller photos are enlarged), watermarked with `public/img/vlr-logo-watermark.png`, JPEG re-encoded at quality 82 (PNG and GIF keep their format; other types are rejected). It is then uploaded to S3 as `{propertyId}/{filename}`; removed photos are deleted from S3.
-3. **Cleanup.** The temp folders are deleted asynchronously just before the response is sent, and the cleaner worker sweeps `uploads/` every 10 min. The S3 upload (`uploadToS3`) is fire-and-forget and reads the temp file asynchronously, so the deletion can race it; a lost race throws inside a callback and kills the worker (VLR-20).
+3. **Cleanup.** The temp folders are deleted asynchronously just before the response is sent, and the cleaner worker sweeps `uploads/` every 10 min. The S3 upload (`uploadToS3`) is fire-and-forget and reads the temp file asynchronously, so the deletion can race it; a lost race throws inside a callback and kills the worker ([VLR-20]).
 
 ### 4.5 Image URL Construction
 
@@ -215,9 +215,9 @@ Three different strategies coexist for the same images:
 
 | Where | URL produced |
 |---|---|
-| `routes/properties.js` (5 places: search page, `/random`, featured/recentlyRented/banner) | `s3.getSignedUrl('getObject', …)` → presigned URL that **expires after 15 min** (`https://s3.us-west-2.amazonaws.com/vancouverluxuryrental.com/…` with `AWS_REGION=us-west-2`). The `.replace("https://vancouverluxuryrentals.com/", …)` after it never matches (it names the website domain, not the bucket), so it does nothing (VLR-21). |
-| `routes/listing.js`, `routes/user.js` (2) | `http://<bucket>.s3-website-us-west-2.amazonaws.com/<propertyId>/<file>` (spaces → `+`). On the listing page, client JS rewrites these to the REST endpoint; the server-rendered `og:image` and JSON-LD `image` keep the website URL (VLR-21). |
-| `routes/showRoom.js` (upload forms) | `https://` on the website endpoint, which S3 doesn't serve over HTTPS. The public tenant-forms page rewrites it to path-style in the browser (`views/tenant-forms.ejs`), so only consumers of the raw stored value break (VLR-21). |
+| `routes/properties.js` (5 places: search page, `/random`, featured/recentlyRented/banner) | `s3.getSignedUrl('getObject', …)` → presigned URL that **expires after 15 min** (`https://s3.us-west-2.amazonaws.com/vancouverluxuryrental.com/…` with `AWS_REGION=us-west-2`). The `.replace("https://vancouverluxuryrentals.com/", …)` after it never matches (it names the website domain, not the bucket), so it does nothing ([VLR-21]). |
+| `routes/listing.js`, `routes/user.js` (2) | `http://<bucket>.s3-website-us-west-2.amazonaws.com/<propertyId>/<file>` (spaces → `+`). On the listing page, client JS rewrites these to the REST endpoint; the server-rendered `og:image` and JSON-LD `image` keep the website URL ([VLR-21]). |
+| `routes/showRoom.js` (upload forms) | `https://` on the website endpoint, which S3 doesn't serve over HTTPS. The public tenant-forms page rewrites it to path-style in the browser (`views/tenant-forms.ejs`), so only consumers of the raw stored value break ([VLR-21]). |
 | `lib/teamPhotos.js` | `https://s3-us-west-2.amazonaws.com/<bucket>/<key>` (legacy path-style). `lib/seoHelpers.js` builds the same form in its unused `property` generator. |
 
 The bucket name is also hardcoded in some views (see TAKEOVER §5).
@@ -229,7 +229,7 @@ The bucket name is also hardcoded in some views (see TAKEOVER §5).
 ### 5.1 URL & Canonicalization
 
 - Slug format: `address-property-id-123`. Everything after the first `-property-id-` is taken as the id; the address portion is decorative.
-- `getListing` extracts `N`, looks up the property (excluding `Not list property`), and attaches `req.property` + image `req.urls`. A missing property goes to the error handler (302 to `/`), not a 404. A non-numeric id (`…-property-id-abc`) fails the lookup instead, and that error is thrown in a callback and kills the worker; repeated requests can take the site down (VLR-20).
+- `getListing` extracts `N`, looks up the property (excluding `Not list property`), and attaches `req.property` + image `req.urls`. A missing property goes to the error handler (302 to `/`), not a 404. A non-numeric id (`…-property-id-abc`) fails the lookup instead, and that error is thrown in a callback and kills the worker; repeated requests can take the site down ([VLR-20]).
 - `redirectToCanonical()` 301s any non-canonical spelling (GET only) to the canonical path built by `lib/urls.buildListingPath` — the same function used by JSON-LD and the sitemap. They must stay in sync or it loops. (`lib/seoHelpers.js` has its own `toSlug`, which lowercases, used for the area-page canonicals; don't use it for listing URLs.)
 - Per-property SEO overrides (`seoTitle`, `seoDescription`, `seoCanonical`, `seoRobots`) from the admin panel take precedence over generated values.
 - A logged-in tenant's view increments that user's `visitCount`.
@@ -267,19 +267,19 @@ new LeadsModel(...).save()             → MongoDB `leads` collection (model 'Le
 
 The lead form captures marketing attribution: `formSource`, `leadSource`, `utmSource`, `utmMedium`, `utmCampaign`.
 
-The admin's "forward lead to agent" (`POST /VLR-admin/mail/ownerLeads/:id`) also calls `sendOwnerLeadMail`, which always sends to `info@`, so forwarded owner leads never reach the agent even though the lead is marked forwarded (VLR-21). Forwarding a viewing request (`POST /VLR-admin/mail/schedule/:id`) does reach the agent.
+The admin's "forward lead to agent" (`POST /VLR-admin/mail/ownerLeads/:id`) also calls `sendOwnerLeadMail`, which always sends to `info@`, so forwarded owner leads never reach the agent even though the lead is marked forwarded ([VLR-21]). Forwarding a viewing request (`POST /VLR-admin/mail/schedule/:id`) does reach the agent.
 
 ### 6.2 Availability & Price-Change Notifications (`lib/setAvailable.js`)
 
 - **`checkAvailable()`** — runs daily (00:10 server time). Finds properties where `availableDate <= now` AND `status = "Rented"` and calls `sendAvailableForProperty` for each.
-- **`sendAvailableForProperty()`** — for each `propertyFavorite` doc of the property, emails its users and sets the property to `Available`. Known bug: the status flip happens inside that loop, so a property that has never had a `propertyFavorite` doc stays `Rented` forever (VLR-21). Also called from `PUT /properties/id/:id` when an existing property's status changes from a non-empty, non-Available value to `Available`.
+- **`sendAvailableForProperty()`** — for each `propertyFavorite` doc of the property, emails its users and sets the property to `Available`. Known bug: the status flip happens inside that loop, so a property that has never had a `propertyFavorite` doc stays `Rented` forever ([VLR-21]). Also called from `PUT /properties/id/:id` when an existing property's status changes from a non-empty, non-Available value to `Available`.
 - **`setPriceChangeForProperty()`** — called from `PUT /properties/id/:id` when an existing property had a rent, the rent changes, and the new status is `Available`. Emails favouriters.
 
 ---
 
 ## 7. Tenant Users & Favourites (`routes/user.js`)
 
-Tenant identity is **an email address with no password or verification**: `POST /user/new` or `POST /user/myfavorites` with any email signs that browser in as that user (`req.session.user` = the email). Contrast with admin Passport auth. Several favourites endpoints don't even read the session and trust `req.body.user` instead (VLR-19).
+Tenant identity is **an email address with no password or verification**: `POST /user/new` or `POST /user/myfavorites` with any email signs that browser in as that user (`req.session.user` = the email). Contrast with admin Passport auth. Several favourites endpoints don't even read the session and trust `req.body.user` instead ([VLR-19]).
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
@@ -288,8 +288,8 @@ Tenant identity is **an email address with no password or verification**: `POST 
 | GET | `/user/myfavorites` | session | Render favourites page |
 | POST | `/user/myfavorites` | none | Sign in by email + render favourites |
 | POST | `/user/newfavorite` | ⚠️ none (trusts `body.user`) | Add a property to a user's favourites |
-| POST | `/user/newfavoriteform` | ⚠️ none (trusts `body.user`) | Add favourite + capture name/phone (upserts any email's user, overwriting name/phone) — VLR-19 |
-| POST | `/user/checkFavorites/:id` | session | Is this property favourited? (no response without a session — VLR-20) |
+| POST | `/user/newfavoriteform` | ⚠️ none (trusts `body.user`) | Add favourite + capture name/phone (upserts any email's user, overwriting name/phone) — [VLR-19] |
+| POST | `/user/checkFavorites/:id` | session | Is this property favourited? (no response without a session — [VLR-20]) |
 | DELETE | `/user/favorite` | ⚠️ none (trusts `body.user`) | Remove favourite; also used by the email unsubscribe page |
 | GET | `/user/api/all` | SuperAdmin | List all users (admin view) |
 | DELETE | `/user/id/:id` | SuperAdmin | Delete a user (`:id` is matched against `email`) |
@@ -305,7 +305,7 @@ Collection names are Mongoose's pluralisation of the model name (no model sets `
 | Collection | Model file | Key fields / role |
 |---|---|---|
 | `properties` | `models/properties.js` | ~90 flat fields. `propertyId` (numeric, unique), `status` (free string; the app uses `Available`/`Rented`/`Not list property`), `imgs[]`, `coverImg`, `rent`, `availableDate`, `agent`, geo, amenities, `searchColumn` (JSON.stringify of the whole doc, for regex search), SEO overrides. Pre-save hook sets `createdAt` if empty |
-| `admins` | `models/admins.js` | Agents & SuperAdmins. Passport-authenticated. `role`, `name`, `email`, `phone`. Passwords: single-round HMAC-SHA1 with a per-user salt (VLR-19) |
+| `admins` | `models/admins.js` | Agents & SuperAdmins. Passport-authenticated. `role`, `name`, `email`, `phone`. Passwords: single-round HMAC-SHA1 with a per-user salt ([VLR-19]) |
 | `users` | `models/users.js` | Tenants (email-only identity). `favorites[]` (property refs), `visitCount` |
 | `propertyfavorites` | `models/propertyFavorite.js` | `_id` (= the property's `_id`), `propertyId` (String, the lookup key), `users[]`. Powers availability alerts |
 | `schedules` | `models/schedule.js` | Viewing requests submitted from listing pages |
@@ -374,7 +374,7 @@ Supporting pieces:
 
 ## 11. Known Architectural Risks & Future Work
 
-Bugs and security problems found while checking this document are tracked in Linear: **VLR-18** (unauthenticated upload endpoint), **VLR-19** (tenant auth and data exposure), **VLR-20** (crash resilience), **VLR-21** (correctness bugs). Structural risks:
+Bugs and security problems found while checking this document are tracked in Asana: **[VLR-18]** (unauthenticated upload endpoint), **[VLR-19]** (tenant auth and data exposure), **[VLR-20]** (crash resilience), **[VLR-21]** (correctness bugs). Structural risks:
 
 1. **Error handling** — async callback errors crash workers, and enough of them in a row can latch the systemd unit as `failed` (§2). Some paths never respond.
 2. **Three image-URL strategies** (§4.5), some HTTP-only and some expiring. Consolidate, ideally behind CloudFront/HTTPS.
@@ -400,3 +400,10 @@ Bugs and security problems found while checking this document are tracked in Lin
 | Scripts | `Scripts/build_sitemap.js`, `Scripts/optimize_s3_images.js`, `Scripts/migrate_team_photos.js` (see `Scripts/readme.txt`) |
 | Deploy | `deploy.sh`, `vlr.service`, `server_restart.sh`, `git_pull_and_update.sh` (wrapper for `deploy.sh`) |
 | Tests | `test/unit/*.test.js`, `test/fixtures/` |
+
+<!-- Task links: Asana, Vancouver Luxury Realty › Developer Tasks Tracker -->
+[VLR-16]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304662869648
+[VLR-18]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304895151778
+[VLR-19]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304792173110
+[VLR-20]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304792144552
+[VLR-21]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304663362463
