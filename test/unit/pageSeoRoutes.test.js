@@ -4,6 +4,7 @@
 //     node --test test/unit/pageSeoRoutes.test.js
 'use strict';
 const test = require('node:test');
+const { afterEach } = test;
 const assert = require('node:assert');
 const path = require('node:path');
 const express = require('express');
@@ -21,6 +22,22 @@ const forRentPages = require('../../lib/forRentPages');
 const propertiesRouter = require('../../routes/properties');
 
 const SITE = 'https://www.vancouverluxuryrentals.com';
+
+// Put the real model methods back after every test (see pageSeo.test.js).
+const REAL = {
+    pageSeo: { find: PageSeoModel.find, deleteOne: PageSeoModel.deleteOne, findOneAndUpdate: PageSeoModel.findOneAndUpdate },
+    property: { find: PropertyModel.find, distinct: PropertyModel.distinct }
+};
+afterEach(() => {
+    Object.assign(PageSeoModel, REAL.pageSeo);
+    Object.assign(PropertyModel, REAL.property);
+    pageSeo.invalidate();
+});
+
+function stubProperties() {
+    PropertyModel.distinct = (field, filter, cb) => cb(null, ['Burnaby']);
+    PropertyModel.find = () => ({ lean: () => ({ exec: cb => cb(null, []) }) });
+}
 
 function stubOverrides(docs) {
     PageSeoModel.find = () => ({ lean: () => ({ exec: () => Promise.resolve(docs) }) });
@@ -40,8 +57,7 @@ function getSitemap() {
 }
 
 test('sitemap: hides noindex and canonical-elsewhere pages, keeps the rest, updates without a rebuild', async () => {
-    PropertyModel.distinct = (field, filter, cb) => cb(null, ['Burnaby']);
-    PropertyModel.find = () => ({ lean: () => ({ exec: cb => cb(null, []) }) });
+    stubProperties();
 
     stubOverrides([]);
     const before = locs(await getSitemap());
@@ -70,6 +86,7 @@ test('sitemap: hides noindex and canonical-elsewhere pages, keeps the rest, upda
 });
 
 test('sitemap: a failing override lookup keeps the last known overrides instead of dropping them', async () => {
+    stubProperties();
     stubOverrides([{ pageKey: 'terms', noindex: true }]);
     assert.ok(!locs(await getSitemap()).includes(SITE + '/terms'));
 
@@ -77,10 +94,12 @@ test('sitemap: a failing override lookup keeps the last known overrides instead 
     pageSeo.invalidate();
     const duringOutage = locs(await getSitemap());
     assert.ok(!duringOutage.includes(SITE + '/terms'), 'last known noindex must still apply');
-    assert.ok(duringOutage.includes(SITE + '/contact') || duringOutage.includes(SITE + '/about'), 'rest of the sitemap still served');
+    assert.ok(duringOutage.includes(SITE + '/about'), 'rest of the sitemap still served');
+    assert.ok(duringOutage.includes(SITE + '/owners'), 'rest of the sitemap still served');
 });
 
 test('sitemap: with no override ever loaded, a failing lookup serves the full sitemap', async () => {
+    stubProperties();
     stubOverrides([]);
     await getSitemap();
     PageSeoModel.find = () => ({ lean: () => ({ exec: () => Promise.reject(new Error('db down')) }) });

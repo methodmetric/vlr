@@ -3,6 +3,7 @@
 //     node --test test/unit/pageSeo.test.js
 'use strict';
 const test = require('node:test');
+const { afterEach } = test;
 const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -11,6 +12,18 @@ const PageSeoModel = require('../../models/pageSeo');
 const pageSeo = require('../../lib/pageSeo');
 
 const SITE = 'https://www.vancouverluxuryrentals.com';
+
+// Tests replace model methods; put the real ones back so no test depends on the
+// stubs a previous one left behind, and start every test with a cold cache.
+const REAL = {
+    find: PageSeoModel.find,
+    deleteOne: PageSeoModel.deleteOne,
+    findOneAndUpdate: PageSeoModel.findOneAndUpdate
+};
+afterEach(() => {
+    Object.assign(PageSeoModel, REAL);
+    pageSeo.invalidate();
+});
 
 function stubFind(impl) {
     PageSeoModel.find = () => ({ lean: () => ({ exec: impl }) });
@@ -179,6 +192,32 @@ test('loadOverrides: a save during an in-flight load is not overwritten by that 
 
     stubFind(() => Promise.resolve(db));
     assert.strictEqual((await pageSeo.loadOverrides()).contact.title, 'NEW');
+});
+
+test('loadOverrides: a second load started before the first finishes wins, whichever finishes last', async () => {
+    // Load A reads the database, an admin saves (invalidate), load B starts and
+    // reads the saved data. A must neither replace B's result nor stamp the cache.
+    for (const order of ['A first', 'B first']) {
+        pageSeo.invalidate();
+        const loads = [];
+        let queries = 0;
+        PageSeoModel.find = () => ({ lean: () => ({ exec: () => {
+            queries++;
+            const data = [{ pageKey: 'contact', title: queries === 1 ? 'OLD' : 'NEW' }];
+            return new Promise(resolve => loads.push(() => resolve(data)));
+        } }) });
+
+        const a = pageSeo.loadOverrides();
+        pageSeo.invalidate();
+        const b = pageSeo.loadOverrides();
+        assert.strictEqual(queries, 2, 'invalidate must let a new load start instead of joining the old one');
+
+        if (order === 'A first') { loads[0](); loads[1](); } else { loads[1](); loads[0](); }
+        await Promise.all([a, b]);
+
+        assert.strictEqual((await pageSeo.loadOverrides()).contact.title, 'NEW', order);
+        assert.strictEqual(queries, 2, order + ': the result of B must be cached');
+    }
 });
 
 test('loadOverrides: caches for the TTL, one query for concurrent callers', async () => {
