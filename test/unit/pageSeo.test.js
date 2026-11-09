@@ -27,6 +27,41 @@ test('registry: unique keys, and every page that applies defaults has a title an
     });
 });
 
+test('registry: keys inherited from Object.prototype are not pages', async () => {
+    ['constructor', '__proto__', 'toString', 'hasOwnProperty'].forEach(key =>
+        assert.strictEqual(pageSeo.find(key), null, key));
+
+    let writes = 0;
+    PageSeoModel.findOneAndUpdate = () => { writes++; return { lean: () => ({ exec: () => Promise.resolve({}) }) }; };
+    const outcome = await pageSeo.saveOverride('constructor', { title: 'x' }, 'a@b.c');
+    assert.ok(outcome.unknownPage);
+    assert.strictEqual(writes, 0);
+});
+
+test('registry: every /for-rent page is registered under for-rent/<slug>', () => {
+    const forRentPages = require('../../lib/forRentPages');
+    forRentPages.all().forEach(landing => {
+        const entry = pageSeo.find('for-rent/' + landing.slug);
+        assert.ok(entry, landing.slug);
+        assert.strictEqual(entry.url, landing.url);
+        assert.strictEqual(entry.applyDefaults, false); // buildPropertiesSeo() owns these defaults
+    });
+});
+
+test('forRentMiddleware: reads the page from req._forRentPage and exposes its override', async () => {
+    stubFind(() => Promise.resolve([{ pageKey: 'for-rent/all', title: 'Edited', noindex: true }]));
+    pageSeo.invalidate();
+    const res = { locals: {} };
+    await new Promise(resolve => pageSeo.forRentMiddleware()({ _forRentPage: { slug: 'all' } }, res, resolve));
+    assert.strictEqual(res.locals.pageSeoOverride.title, 'Edited');
+    assert.strictEqual(res.locals.seoTitle, 'Edited');
+    assert.strictEqual(res.locals.seoRobots, 'noindex');
+
+    const other = { locals: {} };
+    await new Promise(resolve => pageSeo.forRentMiddleware()({}, other, resolve)); // not a for-rent request
+    assert.deepStrictEqual(other.locals, {});
+});
+
 test('registry: every key a route asks for exists', () => {
     const dir = path.join(__dirname, '..', '..', 'routes');
     const used = [];
@@ -123,6 +158,27 @@ test('loadOverrides: a database error falls back to the last known set and never
     pageSeo.invalidate();
     const map = await pageSeo.loadOverrides();
     assert.strictEqual(map.contact.title, 'Hello');
+});
+
+test('loadOverrides: a save during an in-flight load is not overwritten by that load', async () => {
+    // The load starts, an admin saves and invalidates, then the load finishes with
+    // what the database held before the save. The next request must see the save.
+    let db = [{ pageKey: 'contact', title: 'OLD' }];
+    let finishFirstLoad;
+    PageSeoModel.find = () => ({ lean: () => ({ exec: () => {
+        const snapshot = db.slice();
+        return new Promise(resolve => { finishFirstLoad = () => resolve(snapshot); });
+    } }) });
+    pageSeo.invalidate();
+    const inFlight = pageSeo.loadOverrides();
+
+    db = [{ pageKey: 'contact', title: 'NEW' }];
+    pageSeo.invalidate();
+    finishFirstLoad();
+    await inFlight;
+
+    stubFind(() => Promise.resolve(db));
+    assert.strictEqual((await pageSeo.loadOverrides()).contact.title, 'NEW');
 });
 
 test('loadOverrides: caches for the TTL, one query for concurrent callers', async () => {

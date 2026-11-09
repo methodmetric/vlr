@@ -154,7 +154,7 @@
 
     // The placeholder is what the page uses today, so editors can see what they
     // are replacing; the field itself stays blank until they type.
-    function show_(page) {
+    function showPage(page) {
         current = page;
         var override = page.override || {};
         clearErrors();
@@ -187,7 +187,7 @@
         var page = pages.filter(function (p) { return p.key === selectedKey; })[0] || pages[0];
         if (page) {
             select.val(page.key);
-            show_(page);
+            showPage(page);
         }
     }
 
@@ -229,7 +229,7 @@
     $(function () {
         $('#page-select').on('change', function () {
             var key = $(this).val();
-            show_(pages.filter(function (p) { return p.key === key; })[0]);
+            showPage(pages.filter(function (p) { return p.key === key; })[0]);
         });
         $('#f-title, #f-description').on('input', updateCounts);
 

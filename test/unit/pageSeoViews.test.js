@@ -25,7 +25,8 @@ const robots = html => (html.match(/<meta name="robots" content="([^"]*)"/) || [
 const OWN_HEAD_VIEWS = ['northVancouver', 'westVancouver', 'richmond', 'coquitlam', 'burnaby',
     'landing', 'property-management'];
 // Pages that use header.ejs.
-const HEADER_VIEWS = ['aboutUs', 'profile', 'team', 'career', 'testimonials', 'contact', 'terms', 'owners'];
+const HEADER_VIEWS = ['aboutUs', 'profile', 'team', 'career', 'testimonials', 'contact', 'terms', 'owners',
+    'owner-FAQ', 'tenant-FAQ'];
 
 const OVERRIDE = {
     seoTitle: 'Edited <b>"title"</b>',

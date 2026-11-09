@@ -69,11 +69,23 @@ test('sitemap: hides noindex and canonical-elsewhere pages, keeps the rest, upda
     assert.deepStrictEqual(locs(await getSitemap()), before);
 });
 
-test('sitemap: a failing override lookup serves the full sitemap', async () => {
+test('sitemap: a failing override lookup keeps the last known overrides instead of dropping them', async () => {
+    stubOverrides([{ pageKey: 'terms', noindex: true }]);
+    assert.ok(!locs(await getSitemap()).includes(SITE + '/terms'));
+
     PageSeoModel.find = () => ({ lean: () => ({ exec: () => Promise.reject(new Error('db down')) }) });
     pageSeo.invalidate();
-    const xml = await getSitemap();
-    assert.ok(locs(xml).includes(SITE + '/terms'));
+    const duringOutage = locs(await getSitemap());
+    assert.ok(!duringOutage.includes(SITE + '/terms'), 'last known noindex must still apply');
+    assert.ok(duringOutage.includes(SITE + '/contact') || duringOutage.includes(SITE + '/about'), 'rest of the sitemap still served');
+});
+
+test('sitemap: with no override ever loaded, a failing lookup serves the full sitemap', async () => {
+    stubOverrides([]);
+    await getSitemap();
+    PageSeoModel.find = () => ({ lean: () => ({ exec: () => Promise.reject(new Error('db down')) }) });
+    pageSeo.invalidate();
+    assert.ok(locs(await getSitemap()).includes(SITE + '/terms'));
 });
 
 // ---------------------------------------------------------------------------
@@ -86,7 +98,8 @@ function seoFor(query, landing, override) {
 }
 
 test('for-rent: no override leaves the computed title, description and canonical', () => {
-    const landing = forRentPages.resolve('burnaby') || forRentPages.all()[1];
+    const landing = forRentPages.resolve('downtown-vancouver');
+    assert.ok(landing, 'downtown-vancouver must stay a for-rent page for this test');
     const seo = seoFor(landing.query, landing, null);
     assert.strictEqual(seo.seoTitle, landing.seoTitle);
     assert.strictEqual(seo.seoDescription, landing.seoDescription);
