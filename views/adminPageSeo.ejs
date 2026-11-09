@@ -18,10 +18,11 @@
         }
         .seo-hint { color: #888; font-size: 13px; margin-top: 4px; }
         .seo-hint code { color: #c7254e; }
-        .seo-count { float: right; }
+        .seo-count { text-align: right; color: #888; font-size: 12px; margin-top: 2px; }
         .seo-count.warn { color: #c0392b; }
         .seo-radio { display: block; font-weight: normal; margin: 6px 0; }
         .field-error { color: #c0392b; font-size: 13px; margin-top: 4px; display: none; }
+        .seo-field .newbtn { vertical-align: top; width: auto; min-width: 120px; height: 44px; padding: 0 20px; }
         #seo-status { margin: 10px 0; font-size: 14px; min-height: 20px; }
         #seo-status.ok { color: #155724; }
         #seo-status.bad { color: #c0392b; }
@@ -66,8 +67,8 @@
                 <div class="seo-label">Page Title</div>
                 <div class="seo-field">
                     <input type="text" id="f-title" maxlength="<%= maxLength %>">
+                    <div class="seo-count" id="title-count"></div>
                     <div class="seo-hint">
-                        <span class="seo-count" id="title-count"></span>
                         Overrides the default <code>&lt;title&gt;page title&lt;/title&gt;</code> for this page.
                         Leave blank to use the page's current title.
                     </div>
@@ -79,8 +80,8 @@
                 <div class="seo-label">Meta Description</div>
                 <div class="seo-field">
                     <textarea id="f-description" rows="3" maxlength="<%= maxLength %>"></textarea>
+                    <div class="seo-count" id="description-count"></div>
                     <div class="seo-hint">
-                        <span class="seo-count" id="description-count"></span>
                         Overrides <code>&lt;meta name="description" content="description..."&gt;</code>.
                         Aim for 120–158 characters. Leave blank to use the page's current description.
                     </div>
@@ -116,7 +117,7 @@
                 <div class="seo-label"></div>
                 <div class="seo-field">
                     <button class="newbtn" id="btn-save">Save</button>
-                    <button class="newbtn" id="btn-reset" style="background:#999;">Reset to current text</button>
+                    <button class="newbtn" id="btn-reset" style="background:#999; white-space:nowrap;">Reset to current text</button>
                     <div id="seo-status"></div>
                     <div id="seo-meta"></div>
                 </div>
