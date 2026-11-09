@@ -10,6 +10,7 @@ var teamPhotos = require('../lib/teamPhotos');
 var log = require('log4js').getLogger('routes');
 var resourcePages = require('../lib/resourcePages');
 var forRentPages = require('../lib/forRentPages');
+var pageSeo = require('../lib/pageSeo');
 var propertiesRouter = require('./properties');
 
 var s3 = new AWS.S3({
@@ -20,6 +21,7 @@ var s3 = new AWS.S3({
 
 router.get('/', 
   seoMiddleware({ pageType: 'homepage' }),
+  pageSeo.middleware('home'),
   function (req, res) {
     res.render('homepage.ejs');
   }
@@ -37,7 +39,7 @@ router.get('/sitemap.xml', function (req, res) {
   });
 });
 
-router.get('/about', function (req, res) {
+router.get('/about', pageSeo.middleware('about'), function (req, res) {
   res.render('aboutUs.ejs');
 });
 
@@ -49,11 +51,11 @@ router.get('/email', function (req, res) {
   res.render('emailTemplate.ejs');
 });
 
-router.get('/about/profile', function (req, res) {
+router.get('/about/profile', pageSeo.middleware('about-profile'), function (req, res) {
   res.render('profile.ejs');
 });
 
-router.get('/about/team', function (req, res) {
+router.get('/about/team', pageSeo.middleware('about-team'), function (req, res) {
   // Select explicitly: the legacy `profile` Buffer must never reach the view.
   // Serialising it into the page is what inflated this page to 4.3 MB.
   MeetTeamModel
@@ -73,77 +75,59 @@ router.get('/about/team', function (req, res) {
     });
 });
 
-router.get('/about/career', function (req, res) {
+router.get('/about/career', pageSeo.middleware('about-career'), function (req, res) {
   res.render('career.ejs');
 });
 
-router.get('/about/testimonials', function (req, res) {
+router.get('/about/testimonials', pageSeo.middleware('about-testimonials'), function (req, res) {
   res.render('testimonials.ejs');
 });
 
-router.get('/contact', function (req, res) {
+router.get('/contact', pageSeo.middleware('contact'), function (req, res) {
   res.render('contact.ejs');
 });
 
-router.get('/terms', function (req, res) {
+router.get('/terms', pageSeo.middleware('terms'), function (req, res) {
   res.render('terms.ejs');
 });
 
 router.get('/property-management-vancouver', 
-  seoMiddleware({ 
-    pageType: 'area',
-    dataExtractor: function(req) { return { city: 'Vancouver' }; }
-  }),
+  pageSeo.middleware('city-vancouver'),
   function (req, res) {
     res.render('landing.ejs');
   }
 );
 
 router.get('/property-management-north-vancouver', 
-  seoMiddleware({ 
-    pageType: 'area',
-    dataExtractor: function(req) { return { city: 'North Vancouver' }; }
-  }),
+  pageSeo.middleware('city-north-vancouver'),
   function (req, res) {
     res.render('northVancouver.ejs');
   }
 );
 
 router.get('/west-vancouver-property-management', 
-  seoMiddleware({ 
-    pageType: 'area',
-    dataExtractor: function(req) { return { city: 'West Vancouver', canonicalPath: '/west-vancouver-property-management' }; }
-  }),
+  pageSeo.middleware('city-west-vancouver'),
   function (req, res) {
     res.render('westVancouver.ejs');
   }
 );
 
 router.get('/property-management-burnaby', 
-  seoMiddleware({ 
-    pageType: 'area',
-    dataExtractor: function(req) { return { city: 'Burnaby' }; }
-  }),
+  pageSeo.middleware('city-burnaby'),
   function (req, res) {
     res.render('burnaby.ejs');
   }
 );
 
 router.get('/property-management-coquitlam', 
-  seoMiddleware({ 
-    pageType: 'area',
-    dataExtractor: function(req) { return { city: 'Coquitlam' }; }
-  }),
+  pageSeo.middleware('city-coquitlam'),
   function (req, res) {
     res.render('coquitlam.ejs');
   }
 );
 
 router.get('/richmond-property-management', 
-  seoMiddleware({ 
-    pageType: 'area',
-    dataExtractor: function(req) { return { city: 'Richmond', canonicalPath: '/richmond-property-management' }; }
-  }),
+  pageSeo.middleware('city-richmond'),
   function (req, res) {
     res.render('richmond.ejs');
   }
@@ -209,11 +193,12 @@ router.get('/for-rent', function (req, res) {
 router.get(
   '/for-rent/:slug',
   resolveForRentPage,
+  pageSeo.forRentMiddleware(),
   propertiesRouter.getProperties,
   propertiesRouter.renderPropertiesPage
 );
 
-router.get('/property-management/', function (req, res) {
+router.get('/property-management/', pageSeo.middleware('property-management'), function (req, res) {
   res.render('property-management.ejs');
 });
 

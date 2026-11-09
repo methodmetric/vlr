@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var ShowRoomModel = require('../models/showRoom');
+var pageSeo = require('../lib/pageSeo');
 
 router.get('/', function (req, res) {
   res.render('tenants.ejs');
@@ -28,7 +29,7 @@ router.get('/maintenance-request', function (req, res) {
   res.render('maintenance-request.ejs');
 });
 
-router.get('/FAQ', function (req, res) {
+router.get('/FAQ', pageSeo.middleware('tenant-faq'), function (req, res) {
   ShowRoomModel.findOne({
     category: 'faq'
   }, function (err, faqData) {
@@ -75,9 +76,7 @@ router.get('/FAQ', function (req, res) {
 
     res.render('tenant-FAQ.ejs', {
       faqItems: finalFaqItems,
-      seoTitle: "How To Rent A Property in Vancouver BC | VLR",
-      seoDescription: "Find answers to common tenant questions about Vancouver rental listings, lease terms, fees, and viewing process.",
-      canonicalUrl: "https://www.vancouverluxuryrentals.com/tenants/FAQ",
+      // title, description and canonical come from res.locals: lib/pageSeo.js
       structuredData: [faqSchema]
     });
   });

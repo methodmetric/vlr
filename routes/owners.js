@@ -5,9 +5,11 @@ var LeadsModel = require('../models/ownerLeads');
 var log = require('log4js').getLogger("owners");
 var AdminController = require('../middlewares/admin');
 var seoMiddleware = require('../middlewares/seo');
+var pageSeo = require('../lib/pageSeo');
 
 router.get('/', 
   seoMiddleware({ pageType: 'owners' }),
+  pageSeo.middleware('owners'),
   function(req, res) {
     res.render('owners.ejs');
   }
@@ -32,7 +34,7 @@ router.get('/property-management', function(req, res) {
   res.render('owners-property-management.ejs');
 });
 
-router.get('/FAQ', function(req, res) {
+router.get('/FAQ', pageSeo.middleware('owner-faq'), function(req, res) {
   var faqItems = [
     {
       question: "Why VLR is Right for Your Property",
@@ -90,9 +92,7 @@ router.get('/FAQ', function(req, res) {
 
   res.render('owner-FAQ.ejs', {
     faqItems: faqItems,
-    seoTitle: "Property Owner FAQ | Vancouver Luxury Rentals",
-    seoDescription: "Answers to common property owner questions about VLR's property management services, tenant screening, marketing, rental income, fees, and non-resident owners.",
-    canonicalUrl: "https://www.vancouverluxuryrentals.com/owners/FAQ",
+    // title, description and canonical come from res.locals: lib/pageSeo.js
     structuredData: [faqSchema]
   });
 });

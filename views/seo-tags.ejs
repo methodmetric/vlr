@@ -1,0 +1,11 @@
+<%# Title, description, canonical and robots for pages with their own <head>.
+    Values come from lib/pageSeo.js via res.locals; the fallbacks only apply
+    if that lookup was skipped. %>
+  <title><%= (typeof seoTitle !== 'undefined' && seoTitle) ? seoTitle : 'Vancouver Luxury Rentals | VLR' %></title>
+  <meta name="description" content="<%= (typeof seoDescription !== 'undefined' && seoDescription) ? seoDescription : 'Vancouver Luxury Rentals is the premier specialist in Residential Property Management.' %>" />
+  <% if (typeof canonicalUrl !== 'undefined' && canonicalUrl) { %>
+  <link rel="canonical" href="<%= canonicalUrl %>">
+  <% } %>
+  <% if (typeof seoRobots !== 'undefined' && seoRobots) { %>
+  <meta name="robots" content="<%= seoRobots %>">
+  <% } %>

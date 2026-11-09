@@ -8,12 +8,12 @@ VancouverLuxuryRentals.com (VLR): a Node/Express 4 + EJS + MongoDB rental site w
 npm ci                                       # install; `npm run dev`/`prod` need Node >= 22.9 (not enforced); prod runs 24 (per vendor)
 cp .env.example .env                         # then set SESSION_SECRET (or the server exits) and placeholder AWS keys (see Rules)
 npm run dev                                  # nodemon, loads .env, port 3000; needs MongoDB (MONGO_URL or localhost:27017/VLR)
-npm test                                     # 48 unit tests, no DB/AWS needed
+npm test                                     # 91 unit tests, no DB/AWS needed
 node --test test/unit/imageProcessing.test.js   # one node:test file
 node test/unit/restartPolicy.test.js            # this one has its own runner, not node:test
 ```
 
-There are no route, SEO or email tests. Tests cover `lib/restartPolicy.js`, `lib/mongooseCompat.js` (it also loads the `showRoom`, `propertyFavorite` and `meetTeam` models), `lib/imageProcessing.js` and `lib/s3Restore.js`.
+There are no email tests, and no general route tests. Tests cover `lib/restartPolicy.js`, `lib/mongooseCompat.js` (it also loads the `showRoom`, `propertyFavorite` and `meetTeam` models), `lib/imageProcessing.js`, `lib/s3Restore.js` and Page SEO (`lib/pageSeo.js`, the page views' head tags, the sitemap filter, the Page SEO admin routes and `/for-rent` overrides; see `test/unit/pageSeo*.test.js`).
 
 ## Rules
 
@@ -26,6 +26,7 @@ There are no route, SEO or email tests. Tests cover `lib/restartPolicy.js`, `lib
 - **config-lite merges command-line flags into the config**, along with JSON from the `CONFIG` (or, if unset, `NODE_CONFIG`) env var. A flag named after a config key (`--port`, `--bucket`, `--mongodb`, `--session`) silently overrides it. `config/production.js` is shallow-merged over `config/default.js`, so a partial top-level key there replaces the whole default object.
 - **Canonical URLs come from `lib/urls.js`.** It builds the listing canonical link, JSON-LD, sitemap entries and the listing 301 comparison; use it for anything new, and never another slug function for the 301 (mismatches cause redirect loops). Views and email templates still build listing links inline and rely on the 301; the admin's per-property `seoCanonical` overrides the canonical. Search landing pages (`/for-rent/:slug`) come from `lib/forRentPages.js`, but their links are hardcoded across 13 views, including the site navigation (`grep -rl for-rent/ views`); renaming a slug means updating them. The sitemap is generated at `/sitemap.xml`; a `public/sitemap.xml` file would shadow it.
 - **Admin auth is per route, with no router-level guard.** Write `AdminController.isAuthenticated` then `AdminController.isSuperAdmin`, in that order (`isSuperAdmin` reads `req.user`, and on failure it never responds). Admin endpoints also live under `/properties` and `/user`. Some routes that should have auth have none: the upload router ([VLR-18]) and several public data and favourites endpoints ([VLR-19]).
+- **Branches and PRs.** Name branches `<type>/<short-slug>`, where type is `feature`, `fix`, `docs` or `chore`, and the slug is five words or fewer, lowercase with hyphens (e.g. `feature/page-seo-admin`). No author prefix and no invented VLR number. Put the Asana task URL at the top of the PR description and the PR link back on the task. Older `jose/vlr-<n>-…` branches keep their names.
 
 ## Where to look
 

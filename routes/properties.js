@@ -52,7 +52,7 @@ function toViewProperties(docs) {
   });
 }
 
-function buildPropertiesSeo(req, properties) {
+function buildPropertiesSeo(req, properties, override) {
   var query = Object.assign({}, req.query || {});
   var page = query.page ? parseInt(query.page, 10) : 1;
   delete query.page;
@@ -70,6 +70,14 @@ function buildPropertiesSeo(req, properties) {
   if (landing) {
     seoTitle = landing.seoTitle;
     seoDescription = landing.seoDescription;
+  }
+  // Admin "Page SEO" override for a /for-rent/... page (lib/pageSeo.js). Blank
+  // fields keep what was computed above. Not applied to the /properties query
+  // form, which has no page of its own to edit.
+  if (override && landing) {
+    if (override.title) seoTitle = override.title;
+    if (override.description) seoDescription = override.description;
+    if (override.canonical) canonicalUrl = override.canonical;
   }
   var itemListSchema = {
     "@context": "https://schema.org",
@@ -91,6 +99,7 @@ function buildPropertiesSeo(req, properties) {
     seoTitle: page > 1 ? (seoTitle + " - Page " + page) : seoTitle,
     seoDescription: seoDescription,
     canonicalUrl: canonicalUrl,
+    seoRobots: override && landing && override.noindex ? "noindex" : undefined,
     ogImage: SITE_ORIGIN + "/new-img/favicon.ico",
     structuredData: [itemListSchema]
   };
@@ -272,7 +281,7 @@ router.get("/debug-search", router.getProperties, function (req, res) {
  */
 function renderPropertiesPage(req, res) {
   var landing = req._forRentPage;
-  var seoData = buildPropertiesSeo(req, req._properties);
+  var seoData = buildPropertiesSeo(req, req._properties, res.locals.pageSeoOverride);
   var coverImgs = [];
   for (var i = 0; i < req._properties.length; i++) {
     if (req._properties[i].coverImg && req._properties[i].coverImg != "") {
@@ -301,6 +310,7 @@ function renderPropertiesPage(req, res) {
     seoTitle: seoData.seoTitle,
     seoDescription: seoData.seoDescription,
     canonicalUrl: seoData.canonicalUrl,
+    seoRobots: seoData.seoRobots,
     ogImage: seoData.ogImage,
     structuredData: seoData.structuredData,
     // Empty on /properties: there the filters are already in the address bar,
@@ -314,6 +324,7 @@ function renderPropertiesPage(req, res) {
 router.get("/", router.getProperties, renderPropertiesPage);
 
 router.renderPropertiesPage = renderPropertiesPage;
+router.buildPropertiesSeo = buildPropertiesSeo; // exported for tests
 
 router.get(
   "/random",
