@@ -8,7 +8,7 @@ VancouverLuxuryRentals.com (VLR): a Node/Express 4 + EJS + MongoDB rental site w
 npm ci                                       # install; `npm run dev`/`prod` need Node >= 22.9 (not enforced); prod runs 24 (per vendor)
 cp .env.example .env                         # then set SESSION_SECRET (or the server exits) and placeholder AWS keys (see Rules)
 npm run dev                                  # nodemon, loads .env, port 3000; needs MongoDB (MONGO_URL or localhost:27017/VLR)
-npm test                                     # 91 unit tests, no DB/AWS needed
+npm test                                     # 92 unit tests, no DB/AWS needed
 node --test test/unit/imageProcessing.test.js   # one node:test file
 node test/unit/restartPolicy.test.js            # this one has its own runner, not node:test
 ```
@@ -30,7 +30,7 @@ There are no email tests, and no general route tests. Tests cover `lib/restartPo
 
 ## Where to look
 
-- `ARCHITECTURE.md`: read before changing request flow, search, listing pages, emails, the data model or the image pipeline. Checked against the code 2026-10-20.
+- `ARCHITECTURE.md`: read before changing request flow, search, listing pages, emails, the data model or the image pipeline. Checked against the code 2026-10-20; §10.1 (Page SEO) added 2026-11-09.
 - `docs/TAKEOVER.md`: accounts, servers, secrets, backups, open questions. Wins over any other doc.
 - `IMAGE_OPTIMIZATION.md`: read before touching images in S3, the upload path or `Scripts/optimize_s3_images.js`; that script's own header comment and messages are stale, so follow the doc. The backfill ran on the whole bucket on 2026-10-29; the originals are kept as old S3 versions until the client signs off, so don't add an S3 lifecycle rule that expires old versions.
 - `docs/vendor/`: the previous vendor's docs, kept for history, and `FACT-CHECK.md`, the log of what they got wrong. Check the code before trusting a vendor claim.

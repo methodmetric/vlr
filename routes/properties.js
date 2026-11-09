@@ -27,6 +27,7 @@ var setPriceChangeForProperty = require("../lib/setAvailable")
   .setPriceChangeForProperty;
 var urls = require("../lib/urls");
 var forRentPages = require("../lib/forRentPages");
+var pageSeo = require("../lib/pageSeo");
 var SITE_ORIGIN = urls.SITE_ORIGIN;
 
 var AWS = require("aws-sdk");
@@ -74,11 +75,10 @@ function buildPropertiesSeo(req, properties, override) {
   // Admin "Page SEO" override for a /for-rent/... page (lib/pageSeo.js). Blank
   // fields keep what was computed above. Not applied to the /properties query
   // form, which has no page of its own to edit.
-  if (override && landing) {
-    if (override.title) seoTitle = override.title;
-    if (override.description) seoDescription = override.description;
-    if (override.canonical) canonicalUrl = override.canonical;
-  }
+  var applied = landing ? pageSeo.overrideLocals(override) : {};
+  seoTitle = applied.seoTitle || seoTitle;
+  seoDescription = applied.seoDescription || seoDescription;
+  canonicalUrl = applied.canonicalUrl || canonicalUrl;
   var itemListSchema = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -99,7 +99,7 @@ function buildPropertiesSeo(req, properties, override) {
     seoTitle: page > 1 ? (seoTitle + " - Page " + page) : seoTitle,
     seoDescription: seoDescription,
     canonicalUrl: canonicalUrl,
-    seoRobots: override && landing && override.noindex ? "noindex" : undefined,
+    seoRobots: applied.seoRobots,
     ogImage: SITE_ORIGIN + "/new-img/favicon.ico",
     structuredData: [itemListSchema]
   };

@@ -60,6 +60,15 @@ test('localsFor: overrides win field by field, noindex sets robots', () => {
     assert.strictEqual(locals.seoRobots, 'noindex');
 });
 
+test('overrideLocals: only the fields that were set, nothing for a missing or blank override', () => {
+    assert.deepStrictEqual(pageSeo.overrideLocals(null), {});
+    assert.deepStrictEqual(pageSeo.overrideLocals({ title: '', description: '', canonical: '', noindex: false }), {});
+    assert.deepStrictEqual(pageSeo.overrideLocals({ title: 'T', noindex: true }),
+        { seoTitle: 'T', seoRobots: 'noindex' });
+    assert.deepStrictEqual(pageSeo.overrideLocals({ description: 'D', canonical: SITE + '/x' }),
+        { seoDescription: 'D', canonicalUrl: SITE + '/x' });
+});
+
 test('localsFor: pages whose defaults come from elsewhere only get the override', () => {
     const home = pageSeo.find('home');
     assert.deepStrictEqual(pageSeo.localsFor(home, null), {});
