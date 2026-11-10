@@ -85,6 +85,22 @@ test('sitemap: hides noindex and canonical-elsewhere pages, keeps the rest, upda
     assert.deepStrictEqual(locs(await getSitemap()), before);
 });
 
+test('sitemap: the Owner and Tenant pages are listed, and noindex drops each one', async () => {
+    // Guards a registry path that drifts from the sitemap's: noindex would then
+    // add the robots tag but leave the page in the sitemap.
+    const keys = ['owner-list-properties', 'owner-property-management', 'tenant-services', 'tenant-forms'];
+    stubProperties();
+
+    stubOverrides([]);
+    const before = locs(await getSitemap());
+    keys.forEach(key => assert.ok(before.includes(pageSeo.find(key).url), key + ' not in the sitemap'));
+
+    stubOverrides(keys.map(key => ({ pageKey: key, noindex: true })));
+    const after = locs(await getSitemap());
+    keys.forEach(key => assert.ok(!after.includes(pageSeo.find(key).url), key + ' still in the sitemap'));
+    assert.strictEqual(after.length, before.length - keys.length);
+});
+
 test('sitemap: a failing override lookup keeps the last known overrides instead of dropping them', async () => {
     stubProperties();
     stubOverrides([{ pageKey: 'terms', noindex: true }]);

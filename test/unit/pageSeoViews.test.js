@@ -26,7 +26,7 @@ const OWN_HEAD_VIEWS = ['northVancouver', 'westVancouver', 'richmond', 'coquitla
     'landing', 'property-management'];
 // Pages that use header.ejs.
 const HEADER_VIEWS = ['aboutUs', 'profile', 'team', 'career', 'testimonials', 'contact', 'terms', 'owners',
-    'owner-FAQ', 'tenant-FAQ'];
+    'owner-FAQ', 'tenant-FAQ', 'list-properties', 'owners-property-management', 'tenant-services', 'tenant-forms'];
 
 const OVERRIDE = {
     seoTitle: 'Edited <b>"title"</b>',
@@ -80,8 +80,8 @@ test('registered pages do not rewrite their title or description in the browser'
     // Views of pages in the registry (including the About subpages and Owners).
     // A jQuery/document.title rewrite here would undo an admin override.
     const registered = ['aboutUs', 'profile', 'team', 'career', 'testimonials', 'contact', 'terms', 'owners',
-        'owner-FAQ', 'tenant-FAQ', 'homepage', 'property-management', 'landing', 'burnaby', 'coquitlam',
-        'northVancouver', 'westVancouver', 'richmond'];
+        'owner-FAQ', 'tenant-FAQ', 'list-properties', 'owners-property-management', 'tenant-services', 'tenant-forms',
+        'homepage', 'property-management', 'landing', 'burnaby', 'coquitlam', 'northVancouver', 'westVancouver', 'richmond'];
     const rewrite = /document\.title\s*=|\$\(\s*["']title["']\s*\)|\$\(\s*["']meta\[name=.?description/;
     registered.forEach(view => {
         const source = fs.readFileSync(path.join(VIEWS, view + '.ejs'), 'utf8');

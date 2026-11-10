@@ -15,7 +15,7 @@ router.get('/',
   }
 );
 
-router.get('/list-properties', function(req, res) {
+router.get('/list-properties', pageSeo.middleware('owner-list-properties'), function(req, res) {
   res.render('list-properties.ejs');
 });
 
@@ -30,7 +30,7 @@ router.get('/tenant-placement', function(req, res) {
 // The general-audience owners page. Kept separate from property-management.ejs,
 // which is the Google Ads landing page (paid traffic only, at /property-management/)
 // and carries a promotional offer not meant for organic visitors.
-router.get('/property-management', function(req, res) {
+router.get('/property-management', pageSeo.middleware('owner-property-management'), function(req, res) {
   res.render('owners-property-management.ejs');
 });
 

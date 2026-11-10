@@ -7,11 +7,11 @@ router.get('/', function (req, res) {
   res.render('tenants.ejs');
 });
 
-router.get('/services', function (req, res) {
+router.get('/services', pageSeo.middleware('tenant-services'), function (req, res) {
   res.render('tenant-services.ejs');
 });
 
-router.get('/forms', function (req, res) {
+router.get('/forms', pageSeo.middleware('tenant-forms'), function (req, res) {
   ShowRoomModel.findOne({
     category: 'uploadForms'
   }, function (err, uploadForms) {
