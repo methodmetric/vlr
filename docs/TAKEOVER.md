@@ -96,10 +96,12 @@ State and snapshots **verified**; descriptions **per vendor**.
 
 `deploy.sh` in the zip is the current script for this server (not Node 8, despite what the docs say). It:
 1. pulls the branch from git (`origin`), runs `npm ci --omit=dev`
-2. stops `vlr.service` and copies the code to `/opt/vlr/app` with `rsync --delete`, keeping only `uploads/` and `log/`. Anything else there that isn't in the repo is deleted, including the gitignored `config/aws.json`, which the vendor's code now running reads. The repo's code and the database backup (§7) read `/etc/vlr/env` instead
+2. stops `vlr.service` and copies the code to `/opt/vlr/app` with `rsync --delete`, keeping only `uploads/` and `log/`. Anything else there that isn't in the repo is deleted, including the gitignored `config/aws.json`, which only the vendor's code read (the first deploy removed it). The repo's code and the database backup (§7) read `/etc/vlr/env` instead
 3. installs `vlr.service`, starts it, and waits for `http://localhost/` to return 200
 
-It must run from a git checkout on the server. Our repo is `github.com/methodmetric/vlr` (moved from `seta-workshop/vlr` on 2026-11-06); the server's checkout is `~ubuntu/vlr` (since 2026-10-28). No deploy has run from it yet. The vendor warns: don't deploy any older copy of the code.
+**First deploy from our repo: 2026-11-02, about 20:22 UTC**, `main` at `89c3c95` (logged on Linear VLR-29). Smoke tests passed, `config/aws.json` was removed and the app reads its secrets from `/etc/vlr/env`. A rollback to the vendor release is at `~/deploy-20261102/rollback.sh` on the server (it uses `/opt/vlr/rollback/`, which holds the vendor's secrets; delete both once the move is confirmed). It restores the vendor release, not an earlier release of ours: to undo one of our deploys, revert on `main` and deploy again.
+
+It must run from a git checkout on the server. Our repo is `github.com/methodmetric/vlr` (moved from `seta-workshop/vlr` on 2026-11-06); the server's checkout is `~ubuntu/vlr` (since 2026-10-28). Before the next deploy, check that its `origin` points at `methodmetric/vlr` and fetches (`git remote -v && git fetch origin main`); after the move it may still point at `seta-workshop/vlr`, and the read-only deploy key may not yet be on the new repo. The vendor warns: don't deploy any older copy of the code.
 
 ---
 
@@ -127,8 +129,8 @@ Security problems and bugs found while checking the docs ([VLR-16]) are tracked 
 - `npm audit`: 33 vulnerable dependencies (10 critical), mostly via `nodemailer`, `nodemailer-mailgun-transport`, `config-lite`, `ejs`.
 - AWS SDK v2 is end-of-support.
 - The zip's text files have Windows (CRLF) line endings, added by the export: the copies on the server are LF. Harmless for the app; run `dos2unix *.sh vlr.service` if copying scripts straight from the zip to Linux.
-- **Files on the server that are not in the zip or the repo** ([VLR-8]). The first `deploy.sh` run deletes them (`rsync --delete`). All except the `.bak` are also in `~/vlr-vendor-2026-10-16`, which deploy doesn't touch:
-  - `public/update_at_march_5.csv` and `public/VLR Properties from Trusted Tenant - Properties Revised.csv`: the same listing export (address, rent, amenities, `agent`, `Additional Note`, lat/lng; no tenant or owner contacts). **Publicly downloadable** from the site root (200 on 2026-11-02). Left in place until the first deploy removes them; check they 404 afterwards.
+- **Files on the server that are not in the zip or the repo** ([VLR-8]). The first `deploy.sh` run (2026-11-02) deleted them from `/opt/vlr/app` (`rsync --delete`). All except the `.bak` are also in `~/vlr-vendor-2026-10-16`, which deploy doesn't touch:
+  - `public/update_at_march_5.csv` and `public/VLR Properties from Trusted Tenant - Properties Revised.csv`: the same listing export (address, rent, amenities, `agent`, `Additional Note`, lat/lng; no tenant or owner contacts). **Publicly downloadable** from the site root (200 on 2026-11-02). Gone since the 2026-11-02 deploy: on 2026-11-11 both URLs returned the site's HTML page, not the CSV. (The site answers any unknown URL with that page and status 200, not a 404.)
   - `JSON FILES/`: about 130 MB of 2019 production property dumps and recovery reports. Not served.
   - `designs/` (home page mockups), `google_review.txt`, `.kiro/specs/seo-ux-improvements/` (the vendor's SEO/UX plan, now in `docs/vendor/kiro-seo-ux-spec/`), `.vscode/`, `.DS_Store`.
   - `config/aws.json` (current key) and `config/aws.json.bak-20261027T120301Z` (the old, deactivated key; remove with [VLR-27]).
@@ -141,7 +143,7 @@ All committed in plain text in the zip. In our repo they were redacted at the ba
 
 | Where (in the zip) | What | Action |
 |---|---|---|
-| `config/aws.json` | Access key for IAM user `vlr-web`, which has `AmazonEC2FullAccess` and `AmazonS3FullAccess` (attached directly and through the group `web`), although the code only uses S3 | **Rotated 2026-10-27.** The new key (ending `T3YU`) is in `/etc/vlr/env`, which the database backup (§7) and the repo's code read, and in `/opt/vlr/app/config/aws.json`, which the running app reads until the first deploy from our repo. The old key (ending `FPDQ`, the one in the zip) is deactivated; delete it after 2026-11-03 ([VLR-27]). |
+| `config/aws.json` | Access key for IAM user `vlr-web`, which has `AmazonEC2FullAccess` and `AmazonS3FullAccess` (attached directly and through the group `web`), although the code only uses S3 | **Rotated 2026-10-27.** The new key (ending `T3YU`) is in `/etc/vlr/env`, which the database backup (§7) and the repo's code read, and was also in `/opt/vlr/app/config/aws.json` for the vendor's code, until the first deploy from our repo removed that file (2026-11-02). The old key (ending `FPDQ`, the one in the zip) is deactivated; delete it after 2026-11-03 ([VLR-27]). |
 | `lib/mailer.js` | Mailgun API key, repeated 8 times | Rotate after taking over Mailgun; put the new key in `/etc/vlr/env`. |
 | `config/default.js`, `config/production.js` | Session secret | Rotate (logs everyone out); put the new value in `/etc/vlr/env`. |
 | `README.md` (bottom; now `docs/vendor/README-notes.md`) | Cloudflare login and password | Change the password. Already redacted in our repo. |
@@ -235,6 +237,7 @@ The AWS root, Cloudflare and README passwords were **the same password**, and th
 | 2026-10-19 | We audited the package and the live setup. |
 | 2026-10-20 | Our questions answered by Oscar and Edward; vendor contract ended. easyrent-prod stopped with a final snapshot. |
 | 2026-10-29 | Image optimization run on the whole photo bucket (66,336 photos, −81%). |
+| 2026-11-02 ~20:22 UTC | First deploy from our repo (`main` at `89c3c95`) with `deploy.sh`. |
 
 <!-- Task links: Asana, Vancouver Luxury Realty › Developer Tasks Tracker -->
 [VLR-1]: https://app.asana.com/1/434348667841725/project/1215564525763108/task/1220304608648537
