@@ -1,9 +1,4 @@
 <%- include('header') %>
-<script>
-// update title and meta tag
-document.title = "Tenant Services Vancouver | Vancouver Luxury Rentals";
-// $("meta[name='description'").attr("content", 'VancouverLuxuryRentals: Search Luxury Furnished and Unfurnished Rental Listings in Vancouver.');
-</script>
 <link href="/libs/css/content.css" rel="stylesheet">
 <div class="container">
     <div class="col-md-12">
@@ -215,11 +210,6 @@ document.title = "Tenant Services Vancouver | Vancouver Luxury Rentals";
         </div>
     </div>
     <script>
-        $(document).ready(function () {
-            //for SEO and meta keywords
-            $("meta[name=description]").attr("content", "Vancouver Luxury Rentals (VLR) specializes in luxury property rentals, both short and long term furnished and unfurnished. If you are looking for luxury property rentals, please review our properties.");
-            $("title").html("Vancouver Luxury Rentals: Services for Tenants");
-        });
         function downloadAndNavi() {
             document.getElementById('ForceDownload').click();
             window.location = 'https://app.propertyware.com/pw/portals/vancouverluxuryrentals/tenantApplication.action';

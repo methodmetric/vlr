@@ -122,6 +122,7 @@ Auth is per route, not per prefix: each admin route lists its own `AdminControll
 | `/VLR-admin/images/*` | `images.js` | ⚠️ **none** | JSON | Fine Uploader temp-upload endpoint (§4.4). Mounted before `/VLR-admin` and has no auth middleware — [VLR-18] |
 | `/VLR-admin/*` | `admin.js` | admin, mostly SuperAdmin | HTML+JSON | Admin panel: properties, admins, CSV import/export/drop, schedules and lead forwarding, renewal mail, redirect rules, log viewer. `GET /VLR-admin/csv`, `/login` and `/logout` are public. A non-SuperAdmin on a SuperAdmin route gets no response (`isSuperAdmin` sets status 550 without sending; [VLR-20]) |
 | `/VLR-admin/showRoom/*` | `showRoom.js` | SuperAdmin | JSON | Featured / banner / recently-rented lists, FAQ, announcement, upload forms, team members |
+| `/VLR-admin/page-seo/*` | `pageSeoAdmin.js` | SuperAdmin | HTML+JSON | Page SEO editor (§10.1). Writes must be `application/json` (the admin has no CSRF protection) |
 | `GET *` | `index.js` | public | HTML | Renders `404.ejs` **with status 200** |
 
 ---
@@ -314,6 +315,7 @@ Collection names are Mongoose's pluralisation of the model name (no model sets `
 | `attributes` | `models/attributes.js` | Reference lists for the admin property form |
 | `meetteams` | `models/meetTeam.js` | Team page members. Photo is an S3 key in `profileImage` (under `team/`, resolved by `lib/teamPhotos.js`). The legacy `profile` Buffer field is still in the schema and must be excluded from queries |
 | `redirects` | `models/redirect.js` | Admin-editable 301 rules (`active: true` ones are applied), cached 60 s per worker |
+| `pageseos` | `models/pageSeo.js` | Admin-editable SEO overrides for key pages: `pageKey` (unique, a key from `lib/pageSeo.js`), `title`, `description`, `canonical`, `noindex`, `updatedBy`, `updatedAt`. No document = no override; cached 60 s per worker (§10.1) |
 | `dbstatuses` | `models/dbStatus.js` | Counters, e.g. `maxId` for property ID allocation |
 | `sessions` | (connect-mongo) | Express sessions |
 
@@ -366,9 +368,24 @@ Two patterns coexist:
 
 Supporting pieces:
 - `lib/urls.js` — canonical URL/path builders, shared by the listing canonical `<link>`, JSON-LD, sitemap, `forRentPages` and the listing 301 redirect. Changing its normalisation can cause redirect loops.
-- `lib/sitemap.js` — generates `/sitemap.xml` from the DB, cached 1 h per worker; serves the stale copy if a rebuild fails. Its `invalidateCache()` has no caller. There must be no `public/sitemap.xml`: `express.static` would shadow the route.
+- `lib/sitemap.js` — generates `/sitemap.xml` from the DB, cached 1 h per worker as a list of entries; serves the stale copy if a rebuild fails. Pages hidden in Page SEO (noindex, or canonical set to another URL) are filtered out each time it is served, so that part is as fresh as the 60 s override cache. Its `invalidateCache()` has no caller. There must be no `public/sitemap.xml`: `express.static` would shadow the route.
 - `lib/forRentPages.js` — clean-URL search landing pages (§4.2).
+- `lib/pageSeo.js` — admin-editable page SEO (§10.1).
 - DB `redirects` collection — editable 301 rules, 60 s cache (§2.1).
+
+### 10.1 Page SEO (admin-editable)
+
+Super admins edit four fields per key page at `/VLR-admin/page-seo`: title, meta description, indexing (index / noindex) and canonical URL. Same fields and wording as the per-property SEO form. Blank means "keep the page's own text". Property listings are not covered; they keep their per-property SEO (`routes/listing.js`).
+
+- **Registry.** `lib/pageSeo.js` lists the editable pages (home, About + subpages, Contact, Terms, Owners, Owners: List a property, Owners: Property management, Tenants: Services, Tenants: Forms, Owner/Tenant FAQ, Property Management (the Google Ads landing page at `/property-management/`; the organic `/owners/property-management` is a separate entry), the six city pages, and every `/for-rent/:slug` page from `lib/forRentPages.js`). Each entry holds the page's default title, description and canonical, which the admin screen shows as the field placeholders. Adding a page means adding an entry and putting `pageSeo.middleware('<key>')` on its route.
+- **Applying it.** `pageSeo.middleware(key)` writes `seoTitle`, `seoDescription`, `canonicalUrl` and `seoRobots` (`noindex`) into `res.locals`; `views/header.ejs` already reads them. For pages with `applyDefaults: true` the registry also supplies the defaults, so the text lives in one place: Contact, Terms, About and its subpages, Owners (title, description and canonical), the four Owner/Tenant pages above, Owner and Tenant FAQ, Property Management and the city pages. Home and `/for-rent/*` produce their own defaults (`middlewares/seo.js`, `buildPropertiesSeo()`), and only the override is applied on top; `/for-rent/*` keeps its " - Page N" suffix.
+- **Routes that pass SEO to `res.render` directly win over `res.locals`**, so those values were removed from the Owner and Tenant FAQ render calls. Do the same for any page you register.
+- **Own `<head>` views.** The city pages, `landing.ejs` and `pm-header.ejs` have their own heads; the first two use `views/seo-tags.ejs` (title, description, canonical, robots). The city pages no longer run `seoMiddleware`, because their views never used its output and rendering it would have added a canonical tag they never had.
+- **No browser-side rewrites.** The `$("title")` / meta-description jQuery that About, Contact, Owners, etc. ran after load is gone: it would overwrite an override in the browser, and in crawlers that run JavaScript. The strings it set are now the registry defaults.
+- **Cache and failure.** All overrides are loaded in one query and cached per worker for 60 s, so an edit reaches every worker within about a minute. A database error never throws: the last known overrides (or none) are used and the lookup retries after 10 s.
+- **Canonical rule.** An override canonical must be an absolute `https://www.vancouverluxuryrentals.com/...` URL; anything else is rejected.
+- **Sitemap.** `pageSeo.hiddenUrls()` drops pages set to noindex, or whose canonical points at a different URL, the same rule listings already follow. `robots.txt` is not touched: a disallowed page can't be crawled, so Google would never see its noindex.
+- **Tests.** `test/unit/pageSeo.test.js` (override merge, validation, cache and fail-open, registry/route key check), `pageSeoViews.test.js` (head tags rendered by each page's view, escaping, and a guard that registered pages don't rewrite their title or description in the browser) and `pageSeoRoutes.test.js` (sitemap filtering, a check that every named registry page is in the sitemap at the same URL, `/for-rent` overrides, and the admin routes' auth, JSON-only and validation rules). None needs a database; `lib/mongo` is stubbed so `routes/properties.js` can load.
 
 ---
 

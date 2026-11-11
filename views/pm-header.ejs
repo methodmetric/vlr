@@ -6,16 +6,20 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Vancouver Luxury Rentals is the premier specialist in Residential Property Management in Metro Vancouver." />
+  <meta name="description" content="<%= (typeof seoDescription !== 'undefined' && seoDescription) ? seoDescription : 'Vancouver Luxury Rentals is the premier specialist in Residential Property Management in Metro Vancouver.' %>" />
   <meta name="author" content="Vancouver Luxury Rentals (VLR)" />
-  <title>Professional Property Management Services in Metro Vancouver | VLR</title>
+  <title><%= (typeof seoTitle !== 'undefined' && seoTitle) ? seoTitle : 'Professional Property Management Services in Metro Vancouver | VLR' %></title>
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Professional Property Management Services in Metro Vancouver | VLR">
-  <meta property="og:description" content="Vancouver Luxury Rentals is the premier specialist in Residential Property Management.">
+  <meta property="og:title" content="<%= (typeof seoTitle !== 'undefined' && seoTitle) ? seoTitle : 'Professional Property Management Services in Metro Vancouver | VLR' %>">
+  <%# Not seoDescription: that always holds the registry default, which is longer than this tag's own text. Only an admin override replaces it. %>
+  <meta property="og:description" content="<%= (typeof pageSeoOverride !== 'undefined' && pageSeoOverride && pageSeoOverride.description) ? pageSeoOverride.description : 'Vancouver Luxury Rentals is the premier specialist in Residential Property Management.' %>">
   <meta property="og:url" content="https://www.vancouverluxuryrentals.com/property-management/">
   <meta property="og:image" content="https://www.vancouverluxuryrentals.com/new-img/favicon.ico">
   <% if (typeof canonicalUrl !== 'undefined' && canonicalUrl) { %>
   <link rel="canonical" href="<%= canonicalUrl %>">
+  <% } %>
+  <% if (typeof seoRobots !== 'undefined' && seoRobots) { %>
+  <meta name="robots" content="<%= seoRobots %>">
   <% } %>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
   <link href="/libs/css/main.css" rel="stylesheet">

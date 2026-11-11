@@ -754,6 +754,7 @@ router.delete('/redirects/:id', AdminController.isAuthenticated, AdminController
 });
 
 router.use('/showRoom', require('./showRoom'));
+router.use('/page-seo', require('./pageSeoAdmin'));
 
 //make sure that we are closing the connection to mongo if something happens to node (like Ctrl + C)
 process.on('SIGINT', function () {
