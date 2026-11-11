@@ -101,6 +101,27 @@ test('sitemap: the Owner and Tenant pages are listed, and noindex drops each one
     assert.strictEqual(after.length, before.length - keys.length);
 });
 
+test('sitemap: every named page in the Page SEO registry is in the sitemap at the same URL', async () => {
+    // The registry (lib/pageSeo.js PAGES) and the sitemap (lib/sitemap.js
+    // STATIC_PAGES) each spell a page's path. If they drift, noindex adds the robots
+    // tag but leaves the page in the sitemap, silently. /for-rent pages share
+    // forRentPages' URLs, so only the named pages are checked here.
+    // Not in the sitemap today; remove from this list when they are added.
+    const NOT_IN_SITEMAP = ['contact', 'about-testimonials', 'owner-faq'];
+    stubProperties();
+    stubOverrides([]);
+    const listed = locs(await getSitemap());
+
+    const named = pageSeo.all().filter(entry => !entry.key.startsWith('for-rent/'));
+    named.forEach(entry => {
+        if (NOT_IN_SITEMAP.includes(entry.key)) {
+            assert.ok(!listed.includes(entry.url), entry.key + ' is now in the sitemap: drop it from NOT_IN_SITEMAP');
+        } else {
+            assert.ok(listed.includes(entry.url), entry.key + ' (' + entry.url + ') is not in the sitemap at that URL');
+        }
+    });
+});
+
 test('sitemap: a failing override lookup keeps the last known overrides instead of dropping them', async () => {
     stubProperties();
     stubOverrides([{ pageKey: 'terms', noindex: true }]);
